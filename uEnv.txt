@@ -1,0 +1,7 @@
+videomode=video=mxcfb0:dev=hdmi,1920x1080M@60,if=RGB24
+bootargs_base=setenv bootargs console=ttymxc0,115200
+bootargs_fat=setenv bootargs ${bootargs} ${fatbootdev} rootwait rw ${videomode}
+bootcmd_fat=run bootargs_base bootargs_fat;run loaduimage;bootm;
+uenvcmd=run bootcmd_fat
+
+
