@@ -278,7 +278,7 @@
 			"mmc dev ${mmcdev}; mmc read ${loadaddr} 0x800 0x2200;bootm\0" \
 		"bootcmd_sata=run bootargs_base bootargs_sata; "	\
 			"sata read ${loadaddr} 0x800 0x2200;bootm\0" \
-		"bootenv=uEnv.txt\0" \
+		"bootenv=boot/uEnv.txt\0" \
 		"loadbootenv_mmc=fatload mmc ${mmcdev} ${loadaddr} ${bootenv}\0" \
 		"loadbootenv_sata=fatload sata ${satadev} ${loadaddr} ${bootenv}\0" \
 		"importbootenv=echo Importing environment...; " \
