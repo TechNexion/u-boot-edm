@@ -250,6 +250,7 @@
 		"bootargs_nand=setenv bootargs ${bootargs} ubi.mtd=5 root=ubi0:rootfs rootfstype=ubifs rootwait rw ${mtdparts} ${videomode}\0"	\
 		"bootargs_sata=setenv bootargs ${bootargs} ${rootdevice} ${videomode}\0"	\
 		"mmc_rootdevice=root=/dev/mmcblk0p1 rootwait rw\0"	\
+		"fat_rootdevice=root=/dev/mmcblk0p2 rootwait rw\0"	\
 		"sata_rootdevice=root=/dev/sda1 rootwait rw\0"	\
 		"rootdevice=\0"	\
 		"android_hdmi_bootargs=console=ttymxc0,115200 "		\
@@ -301,7 +302,7 @@
 		"setenv bootcmd ${bootcmd_mmc};" \
 		"setenv rootdevice ${mmc_rootdevice};" \
 		"setenv bootargs_bootdev ${bootargs_mmc};" \
-		"setenv fatbootdev root=/dev/mmcblk0p2 rootwait rw;" \
+		"setenv fatbootdev ${fat_rootdevice} rootwait rw;" \
 	"fi;" \
 	"if test ${bootmode} = SATA; then " \
 		"setenv loadbootenv ${loadbootenv_sata};" \
@@ -309,7 +310,7 @@
 		"setenv bootcmd ${bootcmd_sata};" \
 		"setenv rootdevice ${sata_rootdevice};" \
 		"setenv bootargs_bootdev ${bootargs_sata};" \
-		"setenv fatbootdev root=/dev/sda2 rootwait rw;" \
+		"setenv fatbootdev ${fat_rootdevice} rootwait rw;" \
 	"fi;" \
 	"if test ${bootmode} = NAND; then " \
 		"run bootcmd_nand;" \
