@@ -53,22 +53,7 @@ DECLARE_GLOBAL_DATA_PTR;
 
 int dram_init(void)
 {
-	u32 sdram_size;
-
-	switch (get_cpu_type()) {
-	case MXC_CPU_MX6SOLO:
-		sdram_size = 512 * 1024 * 1024;
-		break;
-	case MXC_CPU_MX6Q:
-		sdram_size = 2u * 1024 * 1024 * 1024;
-		break;
-	case MXC_CPU_MX6DL:
-	default:
-		sdram_size = 1u * 1024 * 1024 * 1024;;
-		break;
-	};
-
-	gd->ram_size = get_ram_size((void *)PHYS_SDRAM, sdram_size);
+	gd->ram_size = imx_ddr_size();
 
 	return 0;
 }

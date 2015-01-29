@@ -19,340 +19,240 @@ DECLARE_GLOBAL_DATA_PTR;
 
 #if defined(CONFIG_SPL_BUILD)
 
-static void spl_dram_init_mx6solo_512mb(void);
-static void spl_dram_init_mx6dl_1g(void);
-static void spl_dram_init_mx6q_2g(void);
-static void spl_dram_init(void);
+/* configure MX6Q/DUAL mmdc DDR io registers */
+struct mx6dq_iomux_ddr_regs mx6dq_ddr_ioregs = {
+	.dram_sdclk_0 = 0x00000030,
+	.dram_sdclk_1 = 0x00000030,
+	.dram_cas = 0x00000030,
+	.dram_ras = 0x00000030,
+	.dram_reset = 0x000c0030,
+	.dram_sdcke0 = 0x00003000,
+	.dram_sdcke1 = 0x00003000,
+	.dram_sdba2 = 0x00000000,
+	.dram_sdodt0 = 0x00003030,
+	.dram_sdodt1 = 0x00003030,
+	.dram_sdqs0 = 0x00000030,
+	.dram_sdqs1 = 0x00000030,
+	.dram_sdqs2 = 0x00000030,
+	.dram_sdqs3 = 0x00000030,
+	.dram_sdqs4 = 0x00000030,
+	.dram_sdqs5 = 0x00000030,
+	.dram_sdqs6 = 0x00000030,
+	.dram_sdqs7 = 0x00000030,
+	.dram_dqm0 = 0x00000030,
+	.dram_dqm1 = 0x00000030,
+	.dram_dqm2 = 0x00000030,
+	.dram_dqm3 = 0x00000030,
+	.dram_dqm4 = 0x00000030,
+	.dram_dqm5 = 0x00000030,
+	.dram_dqm6 = 0x00000030,
+	.dram_dqm7 = 0x00000030,
+};
 
-static void spl_mx6q_dram_setup_iomux(void)
-{
-	volatile struct mx6dq_iomux_ddr_regs *mx6q_ddr_iomux;
-	volatile struct mx6dq_iomux_grp_regs *mx6q_grp_iomux;
+/* configure MX6Q/DUAL mmdc GRP io registers */
+struct mx6dq_iomux_grp_regs mx6dq_grp_ioregs = {
+	.grp_ddr_type = 0x000c0000,
+	.grp_ddrmode_ctl = 0x00020000,
+	.grp_ddrpke = 0x00000000,
+	.grp_addds = 0x00000030,
+	.grp_ctlds = 0x00000030,
+	.grp_ddrmode = 0x00020000,
+	.grp_b0ds = 0x00000030,
+	.grp_b1ds = 0x00000030,
+	.grp_b2ds = 0x00000030,
+	.grp_b3ds = 0x00000030,
+	.grp_b4ds = 0x00000030,
+	.grp_b5ds = 0x00000030,
+	.grp_b6ds = 0x00000030,
+	.grp_b7ds = 0x00000030,
+};
 
-	mx6q_ddr_iomux = (struct mx6dq_iomux_ddr_regs *) MX6DQ_IOM_DDR_BASE;
-	mx6q_grp_iomux = (struct mx6dq_iomux_grp_regs *) MX6DQ_IOM_GRP_BASE;
+/* configure MX6SOLO/DUALLITE mmdc DDR io registers */
+struct mx6sdl_iomux_ddr_regs mx6sdl_ddr_ioregs = {
+	.dram_sdclk_0 = 0x00000030,
+	.dram_sdclk_1 = 0x00000030,
+	.dram_cas = 0x00000030,
+	.dram_ras = 0x00000030,
+	.dram_reset = 0x000c0030,
+	.dram_sdcke0 = 0x00003000,
+	.dram_sdcke1 = 0x00003000,
+	.dram_sdba2 = 0x00000000,
+	.dram_sdodt0 = 0x00003030,
+	.dram_sdodt1 = 0x00003030,
+	.dram_sdqs0 = 0x00000030,
+	.dram_sdqs1 = 0x00000030,
+	.dram_sdqs2 = 0x00000030,
+	.dram_sdqs3 = 0x00000030,
+	.dram_sdqs4 = 0x00000030,
+	.dram_sdqs5 = 0x00000030,
+	.dram_sdqs6 = 0x00000030,
+	.dram_sdqs7 = 0x00000030,
+	.dram_dqm0 = 0x00000030,
+	.dram_dqm1 = 0x00000030,
+	.dram_dqm2 = 0x00000030,
+	.dram_dqm3 = 0x00000030,
+	.dram_dqm4 = 0x00000030,
+	.dram_dqm5 = 0x00000030,
+	.dram_dqm6 = 0x00000030,
+	.dram_dqm7 = 0x00000030,
+};
 
-	mx6q_grp_iomux->grp_ddr_type = (u32)0x000c0000;
-	mx6q_grp_iomux->grp_ddrpke = (u32)0x00000000;
-	mx6q_ddr_iomux->dram_sdclk_0 = (u32)0x00000030;
-	mx6q_ddr_iomux->dram_sdclk_1 = (u32)0x00000030;
-	mx6q_ddr_iomux->dram_cas = (u32)0x00000030;
-	mx6q_ddr_iomux->dram_ras = (u32)0x00000030;
-	mx6q_grp_iomux->grp_addds = (u32)0x00000030;
-	mx6q_ddr_iomux->dram_reset = (u32)0x000c0030;
-	mx6q_ddr_iomux->dram_sdcke0 = (u32)0x00003000;
-	mx6q_ddr_iomux->dram_sdcke1 = (u32)0x00003000;
-	mx6q_ddr_iomux->dram_sdba2 = (u32)0x00000000;
-	mx6q_ddr_iomux->dram_sdodt0 = (u32)0x00003030;
-	mx6q_ddr_iomux->dram_sdodt1 = (u32)0x00003030;
-	mx6q_grp_iomux->grp_ctlds = (u32)0x00000030;
-	mx6q_grp_iomux->grp_ddrmode_ctl = (u32)0x00020000;
-	mx6q_ddr_iomux->dram_sdqs0 = (u32)0x00000030;
-	mx6q_ddr_iomux->dram_sdqs1 = (u32)0x00000030;
-	mx6q_ddr_iomux->dram_sdqs2 = (u32)0x00000030;
-	mx6q_ddr_iomux->dram_sdqs3 = (u32)0x00000030;
-	mx6q_ddr_iomux->dram_sdqs4 = (u32)0x00000030;
-	mx6q_ddr_iomux->dram_sdqs5 = (u32)0x00000030;
-	mx6q_ddr_iomux->dram_sdqs6 = (u32)0x00000030;
-	mx6q_ddr_iomux->dram_sdqs7 = (u32)0x00000030;
-	mx6q_grp_iomux->grp_ddrmode = (u32)0x00020000;
-	mx6q_grp_iomux->grp_b0ds = (u32)0x00000030;
-	mx6q_grp_iomux->grp_b1ds = (u32)0x00000030;
-	mx6q_grp_iomux->grp_b2ds = (u32)0x00000030;
-	mx6q_grp_iomux->grp_b3ds = (u32)0x00000030;
-	mx6q_grp_iomux->grp_b4ds = (u32)0x00000030;
-	mx6q_grp_iomux->grp_b5ds = (u32)0x00000030;
-	mx6q_grp_iomux->grp_b6ds = (u32)0x00000030;
-	mx6q_grp_iomux->grp_b7ds = (u32)0x00000030;
-	mx6q_ddr_iomux->dram_dqm0 = (u32)0x00000030;
-	mx6q_ddr_iomux->dram_dqm1 = (u32)0x00000030;
-	mx6q_ddr_iomux->dram_dqm2 = (u32)0x00000030;
-	mx6q_ddr_iomux->dram_dqm3 = (u32)0x00000030;
-	mx6q_ddr_iomux->dram_dqm4 = (u32)0x00000030;
-	mx6q_ddr_iomux->dram_dqm5 = (u32)0x00000030;
-	mx6q_ddr_iomux->dram_dqm6 = (u32)0x00000030;
-	mx6q_ddr_iomux->dram_dqm7 = (u32)0x00000030;
-}
+/* configure MX6SOLO/DUALLITE mmdc GRP io registers */
+struct mx6sdl_iomux_grp_regs mx6sdl_grp_ioregs = {
+	.grp_ddr_type = 0x000c0000,
+	.grp_ddrmode_ctl = 0x00020000,
+	.grp_ddrpke = 0x00000000,
+	.grp_addds = 0x00000030,
+	.grp_ctlds = 0x00000030,
+	.grp_ddrmode = 0x00020000,
+	.grp_b0ds = 0x00000030,
+	.grp_b1ds = 0x00000030,
+	.grp_b2ds = 0x00000030,
+	.grp_b3ds = 0x00000030,
+	.grp_b4ds = 0x00000030,
+	.grp_b5ds = 0x00000030,
+	.grp_b6ds = 0x00000030,
+	.grp_b7ds = 0x00000030,
+};
 
-static void spl_mx6dl_dram_setup_iomux(void)
-{
-	volatile struct mx6sdl_iomux_ddr_regs *mx6dl_ddr_iomux;
-	volatile struct mx6sdl_iomux_grp_regs *mx6dl_grp_iomux;
+/* H5T04G63AFR-PB */
+static struct mx6_ddr3_cfg h5t04g63afr = {
+	.mem_speed = 1600,
+	.density = 4,
+	.width = 16,
+	.banks = 8,
+	.rowaddr = 15,
+	.coladdr = 10,
+	.pagesz = 2,
+	.trcd = 1375,
+	.trcmin = 4875,
+	.trasmin = 3500,
+};
 
-	mx6dl_ddr_iomux = (struct mx6sdl_iomux_ddr_regs *) MX6SDL_IOM_DDR_BASE;
-	mx6dl_grp_iomux = (struct mx6sdl_iomux_grp_regs *) MX6SDL_IOM_GRP_BASE;
+/* H5TQ2G63DFR-H9 */
+static struct mx6_ddr3_cfg h5tq2g63dfr = {
+	.mem_speed = 1333,
+	.density = 2,
+	.width = 16,
+	.banks = 8,
+	.rowaddr = 14,
+	.coladdr = 10,
+	.pagesz = 2,
+	.trcd = 1350,
+	.trcmin = 4950,
+	.trasmin = 3600,
+};
 
-	mx6dl_grp_iomux->grp_ddr_type = (u32)0x000c0000;
-	mx6dl_grp_iomux->grp_ddrpke = (u32)0x00000000;
-	mx6dl_ddr_iomux->dram_sdclk_0 = (u32)0x00000030;
-	mx6dl_ddr_iomux->dram_sdclk_1 = (u32)0x00000030;
-	mx6dl_ddr_iomux->dram_cas = (u32)0x00000030;
-	mx6dl_ddr_iomux->dram_ras = (u32)0x00000030;
-	mx6dl_grp_iomux->grp_addds = (u32)0x00000030;
-	mx6dl_ddr_iomux->dram_reset = (u32)0x000c0030;
-	mx6dl_ddr_iomux->dram_sdcke0 = (u32)0x00003000;
-	mx6dl_ddr_iomux->dram_sdcke1 = (u32)0x00003000;
-	mx6dl_ddr_iomux->dram_sdba2 = (u32)0x00000000;
-	mx6dl_ddr_iomux->dram_sdodt0 = (u32)0x00003030;
-	mx6dl_ddr_iomux->dram_sdodt1 = (u32)0x00003030;
-	mx6dl_grp_iomux->grp_ctlds = (u32)0x00000030;
-	mx6dl_grp_iomux->grp_ddrmode_ctl = (u32)0x00020000;
-	mx6dl_ddr_iomux->dram_sdqs0 = (u32)0x00000030;
-	mx6dl_ddr_iomux->dram_sdqs1 = (u32)0x00000030;
-	mx6dl_ddr_iomux->dram_sdqs2 = (u32)0x00000030;
-	mx6dl_ddr_iomux->dram_sdqs3 = (u32)0x00000030;
-	mx6dl_ddr_iomux->dram_sdqs4 = (u32)0x00000030;
-	mx6dl_ddr_iomux->dram_sdqs5 = (u32)0x00000030;
-	mx6dl_ddr_iomux->dram_sdqs6 = (u32)0x00000030;
-	mx6dl_ddr_iomux->dram_sdqs7 = (u32)0x00000030;
-	mx6dl_grp_iomux->grp_ddrmode = (u32)0x00020000;
-	mx6dl_grp_iomux->grp_b0ds = (u32)0x00000030;
-	mx6dl_grp_iomux->grp_b1ds = (u32)0x00000030;
-	mx6dl_grp_iomux->grp_b2ds = (u32)0x00000030;
-	mx6dl_grp_iomux->grp_b3ds = (u32)0x00000030;
-	mx6dl_grp_iomux->grp_b4ds = (u32)0x00000030;
-	mx6dl_grp_iomux->grp_b5ds = (u32)0x00000030;
-	mx6dl_grp_iomux->grp_b6ds = (u32)0x00000030;
-	mx6dl_grp_iomux->grp_b7ds = (u32)0x00000030;
-	mx6dl_ddr_iomux->dram_dqm0 = (u32)0x00000030;
-	mx6dl_ddr_iomux->dram_dqm1 = (u32)0x00000030;
-	mx6dl_ddr_iomux->dram_dqm2 = (u32)0x00000030;
-	mx6dl_ddr_iomux->dram_dqm3 = (u32)0x00000030;
-	mx6dl_ddr_iomux->dram_dqm4 = (u32)0x00000030;
-	mx6dl_ddr_iomux->dram_dqm5 = (u32)0x00000030;
-	mx6dl_ddr_iomux->dram_dqm6 = (u32)0x00000030;
-	mx6dl_ddr_iomux->dram_dqm7 = (u32)0x00000030;
-}
+/*
+ * calibration - these are the various CPU/DDR3 combinations we support
+ */
 
-static void spl_dram_init_mx6solo_512mb(void)
-{
-	volatile struct mmdc_p_regs *mmdc_p0;
-	volatile struct mmdc_p_regs *mmdc_p1;
-	mmdc_p0 = (struct mmdc_p_regs *) MMDC_P0_BASE_ADDR;
-	mmdc_p1 = (struct mmdc_p_regs *) MMDC_P1_BASE_ADDR;
+static struct mx6_mmdc_calibration mx6q_2g_mmdc_calib = {
+	.p0_mpwldectrl0 = 0x001f001f,
+	.p0_mpwldectrl1 = 0x001f001f,
+	.p1_mpwldectrl0 = 0x001f001f,
+	.p1_mpwldectrl1 = 0x001f001f,
+	.p0_mpdgctrl0 = 0x4301030d,
+	.p0_mpdgctrl1 = 0x03020277,
+	.p1_mpdgctrl0 = 0x4300030a,
+	.p1_mpdgctrl1 = 0x02780248,
+	.p0_mprddlctl = 0x4536393b,
+	.p1_mprddlctl = 0x36353441,
+	.p0_mpwrdlctl = 0x41414743,
+	.p1_mpwrdlctl = 0x462f453f,
+};
 
-	/* ZQ */
-	mmdc_p0->mpzqhwctrl = (u32)0xa1390003;
-	mmdc_p1->mpzqhwctrl = (u32)0xa1390003;
-	/* Write leveling */
-	mmdc_p0->mpwldectrl0 = (u32)0x0040003c;
-	mmdc_p0->mpwldectrl1 = (u32)0x0032003e;
+//DDR 64bit 2GB
+static struct mx6_ddr_sysinfo edm_sysinfo_q = {
+	.dsize		= 2,
+	.cs1_mirror	= 0,
+	/* config for full 4GB range so that get_mem_size() works */
+	.cs_density	= 32,
+	.ncs		= 1,
+	.bi_on		= 1,
+	.rtt_nom	= 2,
+	.rtt_wr		= 2,
+	.ralat		= 5,
+	.walat		= 0,
+	.mif3_mode	= 3,
+	.rst_to_cke	= 0x23,
+	.sde_to_rst	= 0x10,
+};
 
-	mmdc_p0->mpdgctrl0 = (u32)0x42350231;
-	mmdc_p0->mpdgctrl1 = (u32)0x021a0218;
-	mmdc_p0->mprddlctl = (u32)0x4b4b4e49;
-	mmdc_p0->mpwrdlctl = (u32)0x3f3f3035;
-	/* Read data bit delay */
-	mmdc_p0->mprddqby0dl = (u32)0x33333333;
-	mmdc_p0->mprddqby1dl = (u32)0x33333333;
-	mmdc_p0->mprddqby2dl = (u32)0x33333333;
-	mmdc_p0->mprddqby3dl = (u32)0x33333333;
-	mmdc_p1->mprddqby0dl = (u32)0x33333333;
-	mmdc_p1->mprddqby1dl = (u32)0x33333333;
-	mmdc_p1->mprddqby2dl = (u32)0x33333333;
-	mmdc_p1->mprddqby3dl = (u32)0x33333333;
-	/* Complete calibration by forced measurement */
-	mmdc_p0->mpmur0 = (u32)0x00000800;
-	mmdc_p0->mdpdc = (u32)0x0002002d;
-	mmdc_p0->mdotc = (u32)0x00333030;
-	mmdc_p0->mdcfg0 = (u32)0x696d5323;
-	mmdc_p0->mdcfg1 = (u32)0xb66e8c63;
-	mmdc_p0->mdcfg2 = (u32)0x01ff00db;
-	mmdc_p0->mdmisc = (u32)0x00081740;
-	mmdc_p0->mdscr = (u32)0x00008000;
-	mmdc_p0->mdrwd = (u32)0x000026d2;
-	mmdc_p0->mdor = (u32)0x006d0e21;
-	mmdc_p0->mdasp = (u32)0x00000027;
-	mmdc_p0->mdctl = (u32)0x84190000;
-	mmdc_p0->mdscr = (u32)0x04008032;
-	mmdc_p0->mdscr = (u32)0x00008033;
-	mmdc_p0->mdscr = (u32)0x00048031;
-	mmdc_p0->mdscr = (u32)0x07208030;
-	mmdc_p0->mdscr = (u32)0x04008040;
-	mmdc_p0->mdref = (u32)0x00005800;
-	mmdc_p0->mpodtctrl = (u32)0x00011117;
-	mmdc_p1->mpodtctrl = (u32)0x00011117;
-	mmdc_p0->mdpdc = (u32)0x0002556d;
-	mmdc_p1->mdpdc = (u32)0x00011006;
-	mmdc_p0->mdscr = (u32)0x00000000;
-}
+static struct mx6_mmdc_calibration mx6dl_1g_mmdc_calib = {
+	.p0_mpwldectrl0 = 0x001f001f,
+	.p0_mpwldectrl1 = 0x001f001f,
+	.p1_mpwldectrl0 = 0x001f001f,
+	.p1_mpwldectrl1 = 0x001f001f,
+	.p0_mpdgctrl0 = 0x420e020e,
+	.p0_mpdgctrl1 = 0x02000200,
+	.p1_mpdgctrl0 = 0x42020202,
+	.p1_mpdgctrl1 = 0x01720172,
+	.p0_mprddlctl = 0x494c4f4c,
+	.p1_mprddlctl = 0x4a4c4c49,
+	.p0_mpwrdlctl = 0x3f3f3133,
+	.p1_mpwrdlctl = 0x39373f2e,
+};
 
-//Copy from DCD in flash_header.S
-//CONFIG_MX6DL_DDR3
-static void spl_dram_init_mx6dl_1g(void)
-{
-	volatile struct mmdc_p_regs *mmdc_p0;
-	volatile struct mmdc_p_regs *mmdc_p1;
-	mmdc_p0 = (struct mmdc_p_regs *) MMDC_P0_BASE_ADDR;
-	mmdc_p1 = (struct mmdc_p_regs *) MMDC_P1_BASE_ADDR;
+static struct mx6_mmdc_calibration mx6s_512m_mmdc_calib = {
+	.p0_mpwldectrl0 = 0x0040003c,
+	.p0_mpwldectrl1 = 0x0032003e,
+	.p0_mpdgctrl0 = 0x42350231,
+	.p0_mpdgctrl1 = 0x021a0218,
+	.p0_mprddlctl = 0x4b4b4e49,
+	.p0_mpwrdlctl = 0x3f3f3035,
+};
 
-	/* Calibrations */
-	/* ZQ */
-	mmdc_p0->mpzqhwctrl = (u32)0xa1390003;
-	mmdc_p1->mpzqhwctrl = (u32)0xa1390003;
-	/* write leveling */
-	mmdc_p0->mpwldectrl0 = (u32)0x001f001f;
-	mmdc_p0->mpwldectrl1 = (u32)0x001f001f;
-	mmdc_p1->mpwldectrl0 = (u32)0x001f001f;
-	mmdc_p1->mpwldectrl1 = (u32)0x001f001f;
-	/* DQS gating, read delay, write delay calibration values
-	based on calibration compare of 0x00ffff00 */
-	mmdc_p0->mpdgctrl0 = (u32)0x420e020e;
-	mmdc_p0->mpdgctrl1 = (u32)0x02000200;
-	mmdc_p1->mpdgctrl0 = (u32)0x42020202;
-	mmdc_p1->mpdgctrl1 = (u32)0x01720172;
-	mmdc_p0->mprddlctl = (u32)0x494c4f4c;
-	mmdc_p1->mprddlctl = (u32)0x4a4c4c49;
-	mmdc_p0->mpwrdlctl = (u32)0x3f3f3133;
-	mmdc_p1->mpwrdlctl = (u32)0x39373f2e;
-	/* read data bit delay */
-	mmdc_p0->mprddqby0dl = (u32)0x33333333;
-	mmdc_p0->mprddqby1dl = (u32)0x33333333;
-	mmdc_p0->mprddqby2dl = (u32)0x33333333;
-	mmdc_p0->mprddqby3dl = (u32)0x33333333;
-	mmdc_p1->mprddqby0dl = (u32)0x33333333;
-	mmdc_p1->mprddqby1dl = (u32)0x33333333;
-	mmdc_p1->mprddqby2dl = (u32)0x33333333;
-	mmdc_p1->mprddqby3dl = (u32)0x33333333;
-	/* Complete calibration by forced measurment */
-	mmdc_p0->mpmur0 = (u32)0x00000800;
-	mmdc_p1->mpmur0 = (u32)0x00000800;
-	/* MMDC init:
-	 in DDR3, 64-bit mode, only MMDC0 is initiated: */
-	mmdc_p0->mdpdc = (u32)0x0002002d;
-	mmdc_p0->mdotc = (u32)0x00333030;
+//DDR 64bit 1GB
+static struct mx6_ddr_sysinfo edm_sysinfo_dl = {
+	.dsize		= 2,
+	.cs1_mirror	= 0,
+	/* config for full 4GB range so that get_mem_size() works */
+	.cs_density	= 32,
+	.ncs		= 1,
+	.bi_on		= 1,
+	.rtt_nom	= 2,
+	.rtt_wr		= 0,
+	.ralat		= 5,
+	.walat		= 0,
+	.mif3_mode	= 3,
+	.rst_to_cke	= 0x23,
+	.sde_to_rst	= 0x10,
+};
 
-	mmdc_p0->mdcfg0 = (u32)0x40445323;
-	mmdc_p0->mdcfg1 = (u32)0xb66e8c63;
-
-	mmdc_p0->mdcfg2 = (u32)0x01ff00db;
-	mmdc_p0->mdmisc = (u32)0x00081740;
-	mmdc_p0->mdscr = (u32)0x00008000;
-	mmdc_p0->mdrwd = (u32)0x000026d2;
-	mmdc_p0->mdor = (u32)0x00440e21;
-	mmdc_p0->mdasp = (u32)0x00000027;
-	mmdc_p0->mdctl = (u32)0xc31a0000;
-
-	/* Initialize 2GB DDR3 - Micron MT41J128M */
-	/* MR2 */
-	mmdc_p0->mdscr = (u32)0x04008032;
-	mmdc_p0->mdscr = (u32)0x0400803a;
-	/* MR3 */
-	mmdc_p0->mdscr = (u32)0x00008033;
-	mmdc_p0->mdscr = (u32)0x0000803b;
-	/* MR1 */
-	mmdc_p0->mdscr = (u32)0x00428031;
-	mmdc_p0->mdscr = (u32)0x00428039;
-	/* MR0 */
-	mmdc_p0->mdscr = (u32)0x07208030;
-	mmdc_p0->mdscr = (u32)0x07208038;
-	/* ZQ calibration */
-	mmdc_p0->mdscr = (u32)0x04008040;
-	mmdc_p0->mdscr = (u32)0x04008040;
-	/* final DDR setup */
-	mmdc_p0->mdref = (u32)0x00005800;
-	mmdc_p0->mpodtctrl = (u32)0x00000007;
-	mmdc_p1->mpodtctrl = (u32)0x00000007;
-	mmdc_p0->mdpdc = (u32)0x0002556d;
-	mmdc_p1->mapsr = (u32)0x00011006;
-	mmdc_p0->mdscr = (u32)0x00000000;
-}
-
-/* i.MX6Q */
-static void spl_dram_init_mx6q_2g(void)
-{
-	volatile struct mmdc_p_regs *mmdc_p0;
-	volatile struct mmdc_p_regs *mmdc_p1;
-	mmdc_p0 = (struct mmdc_p_regs *) MMDC_P0_BASE_ADDR;
-	mmdc_p1 = (struct mmdc_p_regs *) MMDC_P1_BASE_ADDR;
-
-	/* Calibrations */
-	/* ZQ */
-	mmdc_p0->mpzqhwctrl = (u32)0xa1390003;
-	/* write leveling */
-	mmdc_p0->mpwldectrl0 = (u32)0x001f001f;
-	mmdc_p0->mpwldectrl1 = (u32)0x001f001f;
-	mmdc_p1->mpwldectrl0 = (u32)0x001f001f;
-	mmdc_p1->mpwldectrl1 = (u32)0x001f001f;
-	/* DQS gating, read delay, write delay calibration values
-	 based on calibration compare of 0x00ffff00  */
-	mmdc_p0->mpdgctrl0 = (u32)0x4301030d;
-	mmdc_p0->mpdgctrl1 = (u32)0x03020277;
-	mmdc_p1->mpdgctrl0 = (u32)0x4300030a;
-	mmdc_p1->mpdgctrl1 = (u32)0x02780248;
-
-	mmdc_p0->mprddlctl = (u32)0x4536393b;
-	mmdc_p1->mprddlctl = (u32)0x36353441;
-
-	mmdc_p0->mpwrdlctl = (u32)0x41414743;
-	mmdc_p1->mpwrdlctl = (u32)0x462f453f;
-
-	mmdc_p0->mprddqby0dl = (u32)0x33333333;
-	mmdc_p0->mprddqby1dl = (u32)0x33333333;
-	mmdc_p0->mprddqby2dl = (u32)0x33333333;
-	mmdc_p0->mprddqby3dl = (u32)0x33333333;
-	mmdc_p1->mprddqby0dl = (u32)0x33333333;
-	mmdc_p1->mprddqby1dl = (u32)0x33333333;
-	mmdc_p1->mprddqby2dl = (u32)0x33333333;
-	mmdc_p1->mprddqby3dl = (u32)0x33333333;
-
-	mmdc_p0->mpmur0 = (u32)0x00000800;
-	mmdc_p1->mpmur0 = (u32)0x00000800;
-	/* MMDC init:
-	  in DDR3, 64-bit mode, only MMDC0 is initiated: */
-	mmdc_p0->mdpdc = (u32)0x00020036;
-	mmdc_p0->mdotc = (u32)0x09444040;
-	mmdc_p0->mdcfg0 = (u32)0x555a7975;
-	mmdc_p0->mdcfg1 = (u32)0xff538f64;
-	mmdc_p0->mdcfg2 = (u32)0x01ff00db;
-	mmdc_p0->mdmisc = (u32)0x00081740;
-
-	mmdc_p0->mdscr = (u32)0x00008000;
-	mmdc_p0->mdrwd = (u32)0x000026d2;
-	mmdc_p0->mdor = (u32)0x005a1023;
-
-	/* 2G */
-	mmdc_p0->mdasp = (u32)0x00000047;
-	mmdc_p0->mdctl = (u32)0x841a0000;
-
-	/* 1G
-	mmdc_p0->mdasp = (u32)0x00000027;
-	mmdc_p0->mdctl = (u32)0x831a0000;*/
-
-	mmdc_p0->mdscr = (u32)0x04088032;
-	mmdc_p0->mdscr = (u32)0x00008033;
-	mmdc_p0->mdscr = (u32)0x00048031;
-	mmdc_p0->mdscr = (u32)0x09408030;
-	mmdc_p0->mdscr = (u32)0x04008040;
-
-	mmdc_p0->mdref = (u32)0x00005800;
-
-	mmdc_p0->mpodtctrl = (u32)0x00011117;
-	mmdc_p1->mpodtctrl = (u32)0x00011117;
-
-	mmdc_p0->mdpdc = (u32)0x00025576;
-	mmdc_p0->mapsr = (u32)0x00011006;
-	mmdc_p0->mdscr = (u32)0x00000000;
-
-}
+//DDR 32bit 512MB
+static struct mx6_ddr_sysinfo edm_sysinfo_s = {
+	.dsize		= 1,
+	.cs1_mirror	= 0,
+	/* config for full 4GB range so that get_mem_size() works */
+	.cs_density	= 32,
+	.ncs		= 1,
+	.bi_on		= 1,
+	.rtt_nom	= 2,
+	.rtt_wr		= 0,
+	.ralat		= 5,
+	.walat		= 0,
+	.mif3_mode	= 3,
+	.rst_to_cke	= 0x23,
+	.sde_to_rst	= 0x10,
+};
 
 static void spl_dram_init(void)
 {
 	switch (get_cpu_type()) {
 	case MXC_CPU_MX6SOLO:
-		spl_mx6dl_dram_setup_iomux();
-		spl_dram_init_mx6solo_512mb();
-		break;
-	case MXC_CPU_MX6Q:
-		spl_mx6q_dram_setup_iomux();
-		spl_dram_init_mx6q_2g();
+		mx6sdl_dram_iocfg(32, &mx6sdl_ddr_ioregs, &mx6sdl_grp_ioregs);
+		mx6_dram_cfg(&edm_sysinfo_s, &mx6s_512m_mmdc_calib, &h5tq2g63dfr);
 		break;
 	case MXC_CPU_MX6DL:
-	default:
-		spl_mx6dl_dram_setup_iomux();
-		spl_dram_init_mx6dl_1g();
+		mx6sdl_dram_iocfg(64, &mx6sdl_ddr_ioregs, &mx6sdl_grp_ioregs);
+		mx6_dram_cfg(&edm_sysinfo_dl, &mx6dl_1g_mmdc_calib, &h5tq2g63dfr);
 		break;
-	};
+	case MXC_CPU_MX6Q:
+		mx6dq_dram_iocfg(64, &mx6dq_ddr_ioregs, &mx6dq_grp_ioregs);
+		mx6_dram_cfg(&edm_sysinfo_q, &mx6q_2g_mmdc_calib, &h5t04g63afr);
+		break;
+	}
 	udelay(100);
 }
 
@@ -375,6 +275,7 @@ void board_init_f(ulong dummy)
 	/* UART clocks enabled and gd valid - init serial console */
 	preloader_console_init();
 
+	/* DDR initialization */
 	spl_dram_init();
 
 	/* Clear the BSS. */
