@@ -5,3 +5,4 @@
 #
 
 obj-y  := wandboard.o
+obj-$(CONFIG_SPL_BUILD) += wandboard_spl.o
