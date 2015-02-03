@@ -21,6 +21,7 @@
 #include <fdt_support.h>
 #include <asm/bootm.h>
 #include <linux/compiler.h>
+#include <malloc.h>
 
 #if defined(CONFIG_ARMV7_NONSEC) || defined(CONFIG_ARMV7_VIRT)
 #include <asm/armv7.h>
@@ -69,6 +70,7 @@ static void announce_and_cleanup(int fake)
 {
 	printf("\nStarting kernel ...%s\n\n", fake ?
 		"(fake run for tracing)" : "");
+
 	bootstage_mark_name(BOOTSTAGE_ID_BOOTM_HANDOFF, "start_kernel");
 #ifdef CONFIG_BOOTSTAGE_FDT
 	if (flag == BOOTM_STATE_OS_FAKE_GO)
@@ -133,8 +135,40 @@ static void setup_commandline_tag(bd_t *bd, char *commandline)
 	params->hdr.size =
 		(sizeof (struct tag_header) + strlen (p) + 1 + 4) >> 2;
 
-	strcpy (params->u.cmdline.cmdline, p);
+#if defined(CONFIG_NO_CONSOLE)
+#define NO_CONSOLE_CMD " noconsole "
+#define USB_CONSOLE_CMD " console=ttymxc0,115200 console=ttyUSB0,115200 "
 
+	char szBuf[512];
+	char szCmd[512];
+	
+	char *usb_serial=getenv("usbserial");
+	char *szConsole=strstr(p, "console=tty");
+	
+	if (NULL == szConsole) {
+		strcpy(szBuf, p);
+	}
+	else {
+		*szConsole='\0';
+		strcpy(szBuf, p);
+		char *szSpace=strstr(szConsole+1, " ");
+		if (szSpace) {
+			strcat(szBuf, szSpace);
+		}
+	}
+
+	strcpy(szCmd, (NULL != usb_serial ? USB_CONSOLE_CMD : NO_CONSOLE_CMD));
+	params->hdr.size += strlen(szCmd);
+	
+	strcat(szCmd, szBuf);
+	szConsole=strstr(szCmd, "androidboot.console=");
+	if (szConsole) {
+		memcpy(szConsole+20, "ttyUSB0", 7);
+	}
+	strcpy (params->u.cmdline.cmdline, szCmd);
+#else
+	strcpy (params->u.cmdline.cmdline, p);
+#endif		
 	params = tag_next (params);
 }
 

@@ -780,6 +780,20 @@ int do_bootm(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 	}
 #endif
 
+#if defined(CONFIG_NO_CONSOLE) && !defined(CONFIG_SPL_BUILD)
+	struct usb_device* dev;
+	int i;
+	usb_stop();
+	usb_init();
+	for (i=2; i<USB_MAX_DEVICE; ++i) {
+		dev = usb_get_dev_index(i);
+		if (strstr(dev->prod, "USB-Serial")) {
+			setenv("usbserial", "y");
+			break;
+		}
+	}
+#endif	
+
 	/* determine if we have a sub command */
 	argc--; argv++;
 	if (argc > 0) {

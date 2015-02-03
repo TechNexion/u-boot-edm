@@ -586,7 +586,11 @@ int board_early_init_f(void)
  */
 int overwrite_console(void)
 {
+#ifdef CONFIG_NO_CONSOLE
+	return 0;
+#else 
 	return 1;
+#endif
 }
 
 #ifdef CONFIG_CMD_SATA
@@ -646,7 +650,6 @@ int board_init(void)
 #ifdef CONFIG_CMD_SATA
 	setup_sata();
 #endif
-
 	return 0;
 }
 

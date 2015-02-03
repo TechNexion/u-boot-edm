@@ -10,7 +10,6 @@
 #include <asm/arch/clock.h>
 #include <serial.h>
 #include <linux/compiler.h>
-
 #define __REG(x)     (*((volatile u32 *)(x)))
 
 #ifndef CONFIG_MXC_UART_BASE
@@ -132,6 +131,13 @@ DECLARE_GLOBAL_DATA_PTR;
 
 static void mxc_serial_setbrg(void)
 {
+#if defined(CONFIG_NO_CONSOLE) && !defined(CONFIG_SPL_BUILD)
+	if (!tn_usb_serial_detect()) {
+		return;
+	}
+#elif defined(CONFIG_NO_CONSOLE) && defined(CONFIG_SPL_BUILD)
+	return;
+#endif
 	u32 clk = imx_get_uartclk();
 
 	if (!gd->baudrate)
@@ -145,6 +151,13 @@ static void mxc_serial_setbrg(void)
 
 static int mxc_serial_getc(void)
 {
+#if defined(CONFIG_NO_CONSOLE) && !defined(CONFIG_SPL_BUILD)
+	if (!tn_usb_serial_detect()) {
+		return 0;
+	}
+#elif defined(CONFIG_NO_CONSOLE) && defined(CONFIG_SPL_BUILD)
+	return 0;	
+#endif
 	while (__REG(UART_PHYS + UTS) & UTS_RXEMPTY)
 		WATCHDOG_RESET();
 	return (__REG(UART_PHYS + URXD) & URXD_RX_DATA); /* mask out status from upper word */
@@ -152,6 +165,13 @@ static int mxc_serial_getc(void)
 
 static void mxc_serial_putc(const char c)
 {
+#if defined(CONFIG_NO_CONSOLE) && !defined(CONFIG_SPL_BUILD)
+	if (!tn_usb_serial_detect()) {
+		return;
+	}
+#elif defined(CONFIG_NO_CONSOLE) && defined(CONFIG_SPL_BUILD)
+	return;	
+#endif
 	__REG(UART_PHYS + UTXD) = c;
 
 	/* wait for transmitter to be ready */
@@ -168,10 +188,30 @@ static void mxc_serial_putc(const char c)
  */
 static int mxc_serial_tstc(void)
 {
+#if defined(CONFIG_NO_CONSOLE) && !defined(CONFIG_SPL_BUILD)
+	if (!tn_usb_serial_detect()) {
+		return 0;
+	};
+#elif defined(CONFIG_NO_CONSOLE) && defined(CONFIG_SPL_BUILD)
+	return 0;	
+#endif
 	/* If receive fifo is empty, return false */
 	if (__REG(UART_PHYS + UTS) & UTS_RXEMPTY)
 		return 0;
 	return 1;
+}
+
+int tn_usb_serial_detect() {
+#if defined(CONFIG_NO_CONSOLE) && !defined(CONFIG_SPL_BUILD)
+	char *usb_serial=NULL;
+	usb_serial=getenv("usbserial");
+	if (!usb_serial) {
+		return (0 == strcmp(usb_serial, "y"));
+	}
+	return 0;
+#else
+	return 1;
+#endif
 }
 
 /*
@@ -181,6 +221,13 @@ static int mxc_serial_tstc(void)
  */
 static int mxc_serial_init(void)
 {
+#if defined(CONFIG_NO_CONSOLE) && !defined(CONFIG_SPL_BUILD)
+	if (!tn_usb_serial_detect()) {
+		return 0;
+	}
+#elif defined(CONFIG_NO_CONSOLE) && defined(CONFIG_SPL_BUILD)
+	//return 0;	
+#endif
 	__REG(UART_PHYS + UCR1) = 0x0;
 	__REG(UART_PHYS + UCR2) = 0x0;
 
