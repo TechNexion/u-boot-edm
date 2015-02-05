@@ -58,7 +58,7 @@
 
 /* Define the payload for FAT/EXT support */
 #if defined(CONFIG_SPL_FAT_SUPPORT) || defined(CONFIG_SPL_EXT_SUPPORT)
-#define CONFIG_SPL_FAT_LOAD_PAYLOAD_NAME  "u-boot.img"
+#define CONFIG_SPL_FAT_LOAD_PAYLOAD_NAME  "boot/u-boot.img"
 #define CONFIG_SPL_LIBDISK_SUPPORT
 #endif
 

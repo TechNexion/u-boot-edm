@@ -10,6 +10,7 @@ config SYS_SOC
 	default "mx6"
 
 config SYS_CONFIG_NAME
+	string "configuration file name"
 	default "wandboard"
 
 endif

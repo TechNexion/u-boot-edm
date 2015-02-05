@@ -1,0 +1,25 @@
+#
+# Automatically generated file; DO NOT EDIT.
+# U-Boot 2014.10 Configuration
+#
+
+#
+# General setup
+#
+CONFIG_LOCALVERSION=""
+CONFIG_LOCALVERSION_AUTO=y
+CONFIG_CC_OPTIMIZE_FOR_SIZE=y
+
+#
+# Boot images
+#
+CONFIG_SPL=y
+CONFIG_SYS_EXTRA_OPTIONS="IMX_CONFIG=board/wandboard/wandboard.cfg,MX6QDL"
++S:CONFIG_ARM=y
++S:CONFIG_TARGET_WANDBOARD=y
+CONFIG_SYS_ARCH="arm"
+CONFIG_SYS_CPU="armv7"
+CONFIG_SYS_SOC="mx6"
+CONFIG_SYS_BOARD="wandboard"
+CONFIG_SYS_CONFIG_NAME="wand-lolli"
+
