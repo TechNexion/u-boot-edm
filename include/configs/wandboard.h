@@ -124,7 +124,7 @@
 
 #define CONFIG_EXTRA_ENV_SETTINGS \
 	"script=boot.scr\0" \
-	"image=zImage\0" \
+	"image=boot/zImage\0" \
 	"console=ttymxc0\0" \
 	"splashpos=m,m\0" \
 	"fdt_high=0xffffffff\0" \

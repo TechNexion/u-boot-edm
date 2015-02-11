@@ -429,9 +429,9 @@ int misc_init_r(void)
 {
 	if (!getenv("fdt_file")) {
 		if (is_cpu_type(MXC_CPU_MX6Q) || is_cpu_type(MXC_CPU_MX6D))
-			setenv("fdt_file", "imx6q-wandboard.dtb");
+			setenv("fdt_file", "boot/imx6q-wandboard.dtb");
 		else
-			setenv("fdt_file", "imx6dl-wandboard.dtb");
+			setenv("fdt_file", "boot/imx6dl-wandboard.dtb");
 	}
 
 	return 0;
