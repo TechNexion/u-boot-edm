@@ -50,6 +50,47 @@ DECLARE_GLOBAL_DATA_PTR;
 #define USDHC3_CD_GPIO		IMX_GPIO_NR(3, 9)
 #define ETH_PHY_RESET		IMX_GPIO_NR(3, 29)
 
+enum boot_device {
+        MX6_SD0_BOOT,
+        MX6_SD1_BOOT,
+        MX6_MMC_BOOT,
+        MX6_NAND_BOOT,
+        MX6_SATA_BOOT,
+        MX6_WEIM_NOR_BOOT,
+        MX6_ONE_NAND_BOOT,
+        MX6_PATA_BOOT,
+        MX6_I2C_BOOT,
+        MX6_SPI_NOR_BOOT,
+        MX6_UNKNOWN_BOOT,
+        MX6_BOOT_DEV_NUM = MX6_UNKNOWN_BOOT,
+};
+
+enum boot_device get_boot_device(void)
+{
+	uint soc_sbmr = readl(SRC_BASE_ADDR + 0x4);
+	uint bt_mem_ctl = (soc_sbmr & 0x000000FF) >> 4 ;
+	uint bt_mem_mmc = (soc_sbmr & 0x00001000) >> 12;
+
+	switch (bt_mem_ctl) {
+	case 0x2:
+		return MX6_SATA_BOOT;
+		break;
+	case 0x4:
+	case 0x5:
+		if (bt_mem_mmc)
+			return MX6_SD0_BOOT;
+		else
+			return MX6_SD1_BOOT;
+	case 0x6:
+	case 0x7:
+		return MX6_MMC_BOOT;
+	case 0x8 ... 0xf:
+		return MX6_NAND_BOOT;
+	default:
+		return MX6_UNKNOWN_BOOT;
+	}
+}
+
 int dram_init(void)
 {
 	gd->ram_size = imx_ddr_size();
@@ -163,23 +204,39 @@ int board_mmc_init(bd_t *bis)
 	/*
 	 * Following map is done:
 	 * (U-boot device node)    (Physical Port)
-	 * mmc0                    SOM MicroSD
+	 * mmc0                    SOM MicroSD/MMC
 	 * mmc1                    Carrier board MicroSD
 	 */
+	switch (get_boot_device()) {
+		case MX6_SD1_BOOT:
+			usdhc_cfg[0].esdhc_base = USDHC1_BASE_ADDR;
+			usdhc_cfg[0].sdhc_clk = mxc_get_clock(MXC_ESDHC_CLK);
+			usdhc_cfg[0].max_bus_width = 4;
+			usdhc_cfg[1].esdhc_base = USDHC3_BASE_ADDR;
+			usdhc_cfg[1].sdhc_clk = mxc_get_clock(MXC_ESDHC3_CLK);
+			usdhc_cfg[1].max_bus_width = 4;
+		break;
+		case MX6_SD0_BOOT:
+		default:
+			usdhc_cfg[0].esdhc_base = USDHC3_BASE_ADDR;
+			usdhc_cfg[0].sdhc_clk = mxc_get_clock(MXC_ESDHC3_CLK);
+			usdhc_cfg[0].max_bus_width = 4;
+			usdhc_cfg[1].esdhc_base = USDHC1_BASE_ADDR;
+			usdhc_cfg[1].sdhc_clk = mxc_get_clock(MXC_ESDHC_CLK);
+			usdhc_cfg[1].max_bus_width = 4;
+		break;
+	}
+
 	for (index = 0; index < CONFIG_SYS_FSL_USDHC_NUM; ++index) {
 		switch (index) {
 		case 0:
 			setup_iomux_usdhc3();
-			usdhc_cfg[0].sdhc_clk = mxc_get_clock(MXC_ESDHC3_CLK);
 			gd->arch.sdhc_clk = usdhc_cfg[0].sdhc_clk;
-			usdhc_cfg[0].max_bus_width = 4;
 			gpio_direction_input(USDHC3_CD_GPIO);
 			break;
 		case 1:
 			setup_iomux_usdhc1();
-			usdhc_cfg[1].sdhc_clk = mxc_get_clock(MXC_ESDHC_CLK);
 			gd->arch.sdhc_clk = usdhc_cfg[0].sdhc_clk;
-			usdhc_cfg[1].max_bus_width = 4;
 			gpio_direction_input(USDHC1_CD_GPIO);
 			break;
 		default:
