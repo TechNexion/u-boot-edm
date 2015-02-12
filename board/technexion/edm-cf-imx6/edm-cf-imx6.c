@@ -544,6 +544,19 @@ int misc_init_r(void)
 		}
 	}
 
+	if (!getenv("bootdev")) {
+		switch (get_boot_device()) {
+		case MX6_SD0_BOOT:
+		case MX6_MMC_BOOT:
+			setenv("bootdev", "SD0");
+			break;
+		case MX6_SD1_BOOT:
+			setenv("bootdev", "SD1");
+			break;
+		default:
+			printf("Wrong boot device!");
+		}
+	}
 	return 0;
 }
 
