@@ -49,6 +49,9 @@ DECLARE_GLOBAL_DATA_PTR;
 #define USDHC1_CD_GPIO		IMX_GPIO_NR(1, 2)
 #define USDHC3_CD_GPIO		IMX_GPIO_NR(3, 9)
 #define ETH_PHY_RESET		IMX_GPIO_NR(3, 29)
+#define EDM_SOM_DET_R149	IMX_GPIO_NR(2, 28)
+#define EDM_SOM_DET_R170	IMX_GPIO_NR(3, 12)
+#define EDM_SOM_DET_R173	IMX_GPIO_NR(3, 5)
 
 enum boot_device {
         MX6_SD0_BOOT,
@@ -63,6 +66,13 @@ enum boot_device {
         MX6_SPI_NOR_BOOT,
         MX6_UNKNOWN_BOOT,
         MX6_BOOT_DEV_NUM = MX6_UNKNOWN_BOOT,
+};
+
+enum edm_som_type {
+	EDM1_CF_IMX6_SOM,
+	EDM2_CF_IMX6_SOM,
+	WANDBOARD_B1_SOM,
+	WANDBOARD_C1_SOM,
 };
 
 enum boot_device get_boot_device(void)
@@ -148,6 +158,14 @@ static iomux_v3_cfg_t const enet_pads[] = {
 	IOMUX_PADS(PAD_EIM_D29__GPIO3_IO29    | MUX_PAD_CTRL(NO_PAD_CTRL)),
 };
 
+static iomux_v3_cfg_t const som_detection_pads[] = {
+	/* R149 */
+	IOMUX_PADS(PAD_EIM_EB0__GPIO2_IO28  | MUX_PAD_CTRL(NO_PAD_CTRL)),
+	/* R170 */
+	IOMUX_PADS(PAD_EIM_DA12__GPIO3_IO12  | MUX_PAD_CTRL(NO_PAD_CTRL)),
+	/* R173 */
+	IOMUX_PADS(PAD_EIM_DA5__GPIO3_IO05  | MUX_PAD_CTRL(NO_PAD_CTRL)),
+};
 
 static void setup_iomux_uart(void)
 {
@@ -172,6 +190,11 @@ static void setup_iomux_usdhc1(void)
 static void setup_iomux_usdhc3(void)
 {
 	SETUP_IOMUX_PADS(usdhc3_pads);
+}
+
+static void setup_iomux_som_detection(void)
+{
+	SETUP_IOMUX_PADS(som_detection_pads);
 }
 
 static struct fsl_esdhc_cfg usdhc_cfg[2] = {
@@ -481,13 +504,44 @@ int board_late_init(void)
 	return 0;
 }
 
+static enum edm_som_type som_detection(void)
+{
+	/*
+	* Wandboard boots from SD3
+	* EDM boots from i-NAND or SD1
+	*/
+	if (!gpio_get_value(EDM_SOM_DET_R173) && gpio_get_value(EDM_SOM_DET_R170)) {
+		if (!gpio_get_value(EDM_SOM_DET_R149))
+			return WANDBOARD_B1_SOM;
+		else
+			return WANDBOARD_C1_SOM;
+	} else {
+		if (!gpio_get_value(EDM_SOM_DET_R149))
+			return EDM1_CF_IMX6_SOM;
+		else
+			return EDM2_CF_IMX6_SOM;
+	}
+}
+
 int misc_init_r(void)
 {
 	if (!getenv("fdt_file")) {
-		if (is_cpu_type(MXC_CPU_MX6Q) || is_cpu_type(MXC_CPU_MX6D))
-			setenv("fdt_file", "boot/imx6q-edm1-cf.dtb");
-		else
-			setenv("fdt_file", "boot/imx6dl-edm1-cf.dtb");
+		switch (som_detection()) {
+		case EDM1_CF_IMX6_SOM:
+		case EDM2_CF_IMX6_SOM:
+			if (is_cpu_type(MXC_CPU_MX6Q) || is_cpu_type(MXC_CPU_MX6D))
+				setenv("fdt_file", "boot/imx6q-edm1-cf.dtb");
+			else
+				setenv("fdt_file", "boot/imx6dl-edm1-cf.dtb");
+			break;
+		case WANDBOARD_B1_SOM:
+		case WANDBOARD_C1_SOM:
+			if (is_cpu_type(MXC_CPU_MX6Q) || is_cpu_type(MXC_CPU_MX6D))
+				setenv("fdt_file", "boot/imx6q-wandboard.dtb");
+			else
+				setenv("fdt_file", "boot/imx6dl-wandboard.dtb");
+			break;
+		}
 	}
 
 	return 0;
@@ -510,7 +564,25 @@ int board_init(void)
 
 int checkboard(void)
 {
-	puts("Board: edm1-cf-imx6\n");
+	setup_iomux_som_detection();
+	gpio_direction_input(EDM_SOM_DET_R149);
+	gpio_direction_input(EDM_SOM_DET_R170);
+	gpio_direction_input(EDM_SOM_DET_R173);
+
+	switch (som_detection()) {
+	case EDM1_CF_IMX6_SOM:
+		puts("Board: edm1-cf-imx6\n");
+		break;
+	case EDM2_CF_IMX6_SOM:
+		puts("Board: edm2-cf-imx6\n");
+		break;
+	case WANDBOARD_B1_SOM:
+		puts("Board: wandboard rev.B1\n");
+		break;
+	case WANDBOARD_C1_SOM:
+		puts("Board: wandboard rev.C1\n");
+		break;
+	}
 
 	return 0;
 }
