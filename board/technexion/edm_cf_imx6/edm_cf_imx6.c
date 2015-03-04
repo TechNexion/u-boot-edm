@@ -34,7 +34,7 @@
 DECLARE_GLOBAL_DATA_PTR;
 
 #define MX6QDL_SET_PAD(p, q) \
-        if (is_cpu_type(MXC_CPU_MX6Q)) \
+        if (is_cpu_type(MXC_CPU_MX6Q) || is_cpu_type(MXC_CPU_MX6D)) \
                 imx_iomux_v3_setup_pad(MX6Q_##p | q); \
         else \
                 imx_iomux_v3_setup_pad(MX6DL_##p | q);
@@ -62,6 +62,7 @@ DECLARE_GLOBAL_DATA_PTR;
 
 #define DRIVE_STRENGTH_IMX6SOLO 0x28U
 #define DRIVE_STRENGTH_IMX6DL 0x28U
+#define DRIVE_STRENGTH_IMX6D 0x28U
 
 static enum boot_device boot_dev;
 enum boot_device get_boot_device(void);
@@ -128,6 +129,9 @@ int dram_init(void)
 		break;
 	case MXC_CPU_MX6Q:
 		sdram_size = 2u * 1024 * 1024 * 1024;
+		break;
+	case MXC_CPU_MX6D:
+		sdram_size = 1u * 1024 * 1024 * 1024;
 		break;
 	case MXC_CPU_MX6DL:
 	default:
@@ -890,6 +894,123 @@ static void spl_dram_init_mx6dl_1g(void)
 	writel(0x00000000, MMDC_P0_BASE_ADDR + 0x01c);
 }
 
+static void spl_dram_init_mx6d_1g(void)
+{
+	 /* i.MX6D */
+	/* DDR IO TYPE */
+	writel(0x000C0000, IOMUXC_BASE_ADDR + 0x798);
+	writel(0x00000000, IOMUXC_BASE_ADDR + 0x758);
+	/* Clock */
+	writel(DRIVE_STRENGTH_IMX6D, IOMUXC_BASE_ADDR + 0x588);
+	writel(DRIVE_STRENGTH_IMX6D, IOMUXC_BASE_ADDR + 0x594);
+	/* Address */
+	writel(DRIVE_STRENGTH_IMX6D, IOMUXC_BASE_ADDR + 0x56c);
+	writel(DRIVE_STRENGTH_IMX6D, IOMUXC_BASE_ADDR + 0x578);
+	writel(DRIVE_STRENGTH_IMX6D, IOMUXC_BASE_ADDR + 0x74c);
+	/* Control */
+	writel(DRIVE_STRENGTH_IMX6D, IOMUXC_BASE_ADDR + 0x57c);
+
+	writel(0x00000000, IOMUXC_BASE_ADDR + 0x58c);
+	writel(DRIVE_STRENGTH_IMX6D, IOMUXC_BASE_ADDR + 0x59c);
+	writel(DRIVE_STRENGTH_IMX6D, IOMUXC_BASE_ADDR + 0x5a0);
+	writel(DRIVE_STRENGTH_IMX6D, IOMUXC_BASE_ADDR + 0x78c);
+	/* Data Strobe */
+	writel(0x00020000, IOMUXC_BASE_ADDR + 0x750);
+
+	writel(DRIVE_STRENGTH_IMX6D, IOMUXC_BASE_ADDR + 0x5a8);
+	writel(DRIVE_STRENGTH_IMX6D, IOMUXC_BASE_ADDR + 0x5b0);
+	writel(DRIVE_STRENGTH_IMX6D, IOMUXC_BASE_ADDR + 0x524);
+	writel(DRIVE_STRENGTH_IMX6D, IOMUXC_BASE_ADDR + 0x51c);
+	writel(DRIVE_STRENGTH_IMX6D, IOMUXC_BASE_ADDR + 0x518);
+	writel(DRIVE_STRENGTH_IMX6D, IOMUXC_BASE_ADDR + 0x50c);
+	writel(DRIVE_STRENGTH_IMX6D, IOMUXC_BASE_ADDR + 0x5b8);
+	writel(DRIVE_STRENGTH_IMX6D, IOMUXC_BASE_ADDR + 0x5c0);
+	/* Data */
+	writel(0x00020000, IOMUXC_BASE_ADDR + 0x774);
+
+	writel(DRIVE_STRENGTH_IMX6D, IOMUXC_BASE_ADDR + 0x784);
+	writel(DRIVE_STRENGTH_IMX6D, IOMUXC_BASE_ADDR + 0x788);
+	writel(DRIVE_STRENGTH_IMX6D, IOMUXC_BASE_ADDR + 0x794);
+	writel(DRIVE_STRENGTH_IMX6D, IOMUXC_BASE_ADDR + 0x79c);
+	writel(DRIVE_STRENGTH_IMX6D, IOMUXC_BASE_ADDR + 0x7a0);
+	writel(DRIVE_STRENGTH_IMX6D, IOMUXC_BASE_ADDR + 0x7a4);
+	writel(DRIVE_STRENGTH_IMX6D, IOMUXC_BASE_ADDR + 0x7a8);
+	writel(DRIVE_STRENGTH_IMX6D, IOMUXC_BASE_ADDR + 0x748);
+
+	writel(DRIVE_STRENGTH_IMX6D, IOMUXC_BASE_ADDR + 0x5ac);
+	writel(DRIVE_STRENGTH_IMX6D, IOMUXC_BASE_ADDR + 0x5b4);
+	writel(DRIVE_STRENGTH_IMX6D, IOMUXC_BASE_ADDR + 0x528);
+	writel(DRIVE_STRENGTH_IMX6D, IOMUXC_BASE_ADDR + 0x520);
+	writel(DRIVE_STRENGTH_IMX6D, IOMUXC_BASE_ADDR + 0x514);
+	writel(DRIVE_STRENGTH_IMX6D, IOMUXC_BASE_ADDR + 0x510);
+	writel(DRIVE_STRENGTH_IMX6D, IOMUXC_BASE_ADDR + 0x5bc);
+	writel(DRIVE_STRENGTH_IMX6D, IOMUXC_BASE_ADDR + 0x5c4);
+
+	/* Calibrations */
+	/* ZQ */
+	writel(0xa1390003, MMDC_P0_BASE_ADDR + 0x800);
+	/* write leveling */
+	writel(0x00000000, MMDC_P0_BASE_ADDR + 0x80c);
+	writel(0x00000000, MMDC_P0_BASE_ADDR + 0x810);
+	writel(0x00000000, MMDC_P1_BASE_ADDR + 0x80c);
+	writel(0x00000000, MMDC_P1_BASE_ADDR + 0x810);
+	/* DQS gating, read delay, write delay calibration values
+	 based on calibration compare of 0x00ffff00  */
+	writel(0x03280334, MMDC_P0_BASE_ADDR + 0x83c);
+	writel(0x03280320, MMDC_P0_BASE_ADDR + 0x840);
+	writel(0x0330033C, MMDC_P1_BASE_ADDR + 0x83c);
+	writel(0x033C0278, MMDC_P1_BASE_ADDR + 0x840);
+
+	writel(0x423A3A3E, MMDC_P0_BASE_ADDR + 0x848);
+	writel(0x3C3E3842, MMDC_P1_BASE_ADDR + 0x848);
+
+	writel(0x36384240, MMDC_P0_BASE_ADDR + 0x850);
+	writel(0x4A384440, MMDC_P1_BASE_ADDR + 0x850);
+
+	writel(0x33333333, MMDC_P0_BASE_ADDR + 0x81c);
+	writel(0x33333333, MMDC_P0_BASE_ADDR + 0x820);
+	writel(0x33333333, MMDC_P0_BASE_ADDR + 0x824);
+	writel(0x33333333, MMDC_P0_BASE_ADDR + 0x828);
+	writel(0x33333333, MMDC_P1_BASE_ADDR + 0x81c);
+	writel(0x33333333, MMDC_P1_BASE_ADDR + 0x820);
+	writel(0x33333333, MMDC_P1_BASE_ADDR + 0x824);
+	writel(0x33333333, MMDC_P1_BASE_ADDR + 0x828);
+
+	writel(0x00000800, MMDC_P0_BASE_ADDR + 0x8b8);
+	writel(0x00000800, MMDC_P1_BASE_ADDR + 0x8b8);
+	/* MMDC init:
+	  in DDR3, 64-bit mode, only MMDC0 is initiated: */
+	writel(0x00020036, MMDC_P0_BASE_ADDR + 0x004);
+	writel(0x09444040, MMDC_P0_BASE_ADDR + 0x008);
+	writel(0x54597975, MMDC_P0_BASE_ADDR + 0x00c);
+	writel(0xFF538F64, MMDC_P0_BASE_ADDR + 0x010);
+	writel(0x01FF00DB, MMDC_P0_BASE_ADDR + 0x014);
+
+	writel(0x00011740, MMDC_P0_BASE_ADDR + 0x018);
+	writel(0x00008000, MMDC_P0_BASE_ADDR + 0x01c);
+	writel(0x000026D2, MMDC_P0_BASE_ADDR + 0x02c);
+	writel(0x00591023, MMDC_P0_BASE_ADDR + 0x030);
+
+	/* 1G */
+	writel(0x00000027, MMDC_P0_BASE_ADDR + 0x040);
+	writel(0x831A0000, MMDC_P0_BASE_ADDR + 0x000);
+
+	writel(0x02088032, MMDC_P0_BASE_ADDR + 0x01c);
+	writel(0x00008033, MMDC_P0_BASE_ADDR + 0x01c);
+	writel(0x00048031, MMDC_P0_BASE_ADDR + 0x01c);
+	writel(0x09408030, MMDC_P0_BASE_ADDR + 0x01c);
+	writel(0x04008040, MMDC_P0_BASE_ADDR + 0x01c);
+
+	writel(0x00007800, MMDC_P0_BASE_ADDR + 0x020);
+
+	writel(0x00022227, MMDC_P0_BASE_ADDR + 0x818);
+	writel(0x00022227, MMDC_P1_BASE_ADDR + 0x818);
+
+	writel(0x00025576, MMDC_P0_BASE_ADDR + 0x004);
+	writel(0x00011006, MMDC_P0_BASE_ADDR + 0x404);
+	writel(0x00000000, MMDC_P0_BASE_ADDR + 0x01c);
+}
+
 static void spl_dram_init_mx6q_2g(void)
 {
 	 /* i.MX6Q */
@@ -1026,6 +1147,9 @@ static void spl_dram_init(void)
 		break;
 	case MXC_CPU_MX6Q:
 		spl_dram_init_mx6q_2g();
+		break;
+	case MXC_CPU_MX6D:
+		spl_dram_init_mx6d_1g();
 		break;
 	case MXC_CPU_MX6DL:
 	default:

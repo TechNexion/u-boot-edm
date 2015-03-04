@@ -35,14 +35,19 @@ u32 get_cpu_rev(void)
 
 	if (type != MXC_CPU_MX6SL) {
 		reg = readl(&anatop->digprog);
+		struct scu_regs *scu = (struct scu_regs *)SCU_BASE_ADDR;
+		u32 cfg = readl(&scu->config) & 3;
 		type = ((reg >> 16) & 0xff);
 		if (type == MXC_CPU_MX6DL) {
-			struct scu_regs *scu = (struct scu_regs *)SCU_BASE_ADDR;
-			u32 cfg = readl(&scu->config) & 3;
-
 			if (!cfg)
 				type = MXC_CPU_MX6SOLO;
 		}
+
+		if (type == MXC_CPU_MX6Q) {
+			if (cfg == 1)
+				type = MXC_CPU_MX6D;
+		}
+
 	}
 	reg &= 0xff;		/* mx6 silicon revision */
 	return (type << 12) | (reg + 0x10);
@@ -214,9 +219,10 @@ const struct boot_mode soc_boot_modes[] = {
 void s_init(void)
 {
 	struct anatop_regs *anatop = (struct anatop_regs *)ANATOP_BASE_ADDR;
-	int is_6q = is_cpu_type(MXC_CPU_MX6Q);
+	struct mxc_ccm_reg *ccm = (struct mxc_ccm_reg *)CCM_BASE_ADDR;
 	u32 mask480;
 	u32 mask528;
+	u32 reg, periph1, periph2;
 
 	/* Due to hardware limitation, on MX6Q we need to gate/ungate all PFDs
 	 * to make sure PFD is working right, otherwise, PFDs may
@@ -228,15 +234,23 @@ void s_init(void)
 		ANATOP_PFD_CLKGATE_MASK(1) |
 		ANATOP_PFD_CLKGATE_MASK(2) |
 		ANATOP_PFD_CLKGATE_MASK(3);
-	mask528 = ANATOP_PFD_CLKGATE_MASK(0) |
-		ANATOP_PFD_CLKGATE_MASK(1) |
+	mask528 = ANATOP_PFD_CLKGATE_MASK(1) |
 		ANATOP_PFD_CLKGATE_MASK(3);
 
-	/*
-	 * Don't reset PFD2 on DL/S
-	 */
-	if (is_6q)
+	reg = readl(&ccm->cbcmr);
+	periph2 = ((reg & MXC_CCM_CBCMR_PRE_PERIPH2_CLK_SEL_MASK)
+		>> MXC_CCM_CBCMR_PRE_PERIPH2_CLK_SEL_OFFSET);
+	periph1 = ((reg & MXC_CCM_CBCMR_PRE_PERIPH_CLK_SEL_MASK)
+		>> MXC_CCM_CBCMR_PRE_PERIPH_CLK_SEL_OFFSET);
+
+	/* Checking if PLL2 PFD0 or PLL2 PFD2 is using for periph clock */
+	if ((periph2 != 0x2) && (periph1 != 0x2))
+		mask528 |= ANATOP_PFD_CLKGATE_MASK(0);
+
+	if ((periph2 != 0x1) && (periph1 != 0x1) &&
+		(periph2 != 0x3) && (periph1 != 0x3))
 		mask528 |= ANATOP_PFD_CLKGATE_MASK(2);
+
 	writel(mask480, &anatop->pfd_480_set);
 	writel(mask528, &anatop->pfd_528_set);
 	writel(mask480, &anatop->pfd_480_clr);
