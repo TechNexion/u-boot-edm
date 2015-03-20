@@ -189,6 +189,21 @@ static struct mx6_ddr_sysinfo edm_sysinfo_q = {
 	.sde_to_rst	= 0x10,
 };
 
+static struct mx6_mmdc_calibration mx6d_1g_mmdc_calib = {
+	.p0_mpwldectrl0 = 0x00000000,
+	.p0_mpwldectrl1 = 0x00000000,
+	.p1_mpwldectrl0 = 0x00000000,
+	.p1_mpwldectrl1 = 0x00000000,
+	.p0_mpdgctrl0 = 0x03280334,
+	.p0_mpdgctrl1 = 0x03280320,
+	.p1_mpdgctrl0 = 0x0330033C,
+	.p1_mpdgctrl1 = 0x033C0278,
+	.p0_mprddlctl = 0x423A3A3E,
+	.p1_mprddlctl = 0x3C3E3842,
+	.p0_mpwrdlctl = 0x36384240,
+	.p1_mpwrdlctl = 0x4A384440,
+};
+
 static struct mx6_mmdc_calibration mx6dl_1g_mmdc_calib = {
 	.p0_mpwldectrl0 = 0x001f001f,
 	.p0_mpwldectrl1 = 0x001f001f,
@@ -257,6 +272,10 @@ static void spl_dram_init(void)
 	case MXC_CPU_MX6DL:
 		mx6sdl_dram_iocfg(64, &mx6sdl_ddr_ioregs, &mx6sdl_grp_ioregs);
 		mx6_dram_cfg(&edm_sysinfo_dl, &mx6dl_1g_mmdc_calib, &h5tq2g63dfr);
+		break;
+	case MXC_CPU_MX6D:
+		mx6sdl_dram_iocfg(64, &mx6sdl_ddr_ioregs, &mx6sdl_grp_ioregs);
+		mx6_dram_cfg(&edm_sysinfo_dl, &mx6d_1g_mmdc_calib, &h5tq2g63dfr);
 		break;
 	case MXC_CPU_MX6Q:
 		mx6dq_dram_iocfg(64, &mx6dq_ddr_ioregs, &mx6dq_grp_ioregs);
