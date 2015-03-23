@@ -158,18 +158,18 @@ static struct mx6_ddr3_cfg h5tq2g63dfr = {
  */
 
 static struct mx6_mmdc_calibration mx6q_2g_mmdc_calib = {
-	.p0_mpwldectrl0 = 0x001f001f,
-	.p0_mpwldectrl1 = 0x001f001f,
-	.p1_mpwldectrl0 = 0x001f001f,
-	.p1_mpwldectrl1 = 0x001f001f,
-	.p0_mpdgctrl0 = 0x4301030d,
-	.p0_mpdgctrl1 = 0x03020277,
-	.p1_mpdgctrl0 = 0x4300030a,
-	.p1_mpdgctrl1 = 0x02780248,
-	.p0_mprddlctl = 0x4536393b,
-	.p1_mprddlctl = 0x36353441,
-	.p0_mpwrdlctl = 0x41414743,
-	.p1_mpwrdlctl = 0x462f453f,
+	.p0_mpwldectrl0 = 0x00000000,
+	.p0_mpwldectrl1 = 0x00000000,
+	.p1_mpwldectrl0 = 0x00000000,
+	.p1_mpwldectrl1 = 0x00000000,
+	.p0_mpdgctrl0 = 0x032C0340,
+	.p0_mpdgctrl1 = 0x03300324,
+	.p1_mpdgctrl0 = 0x032C0338,
+	.p1_mpdgctrl1 = 0x03300274,
+	.p0_mprddlctl = 0x423A383E,
+	.p1_mprddlctl = 0x3638323E,
+	.p0_mpwrdlctl = 0x363C4640,
+	.p1_mpwrdlctl = 0x4034423C,
 };
 
 //DDR 64bit 2GB
@@ -205,18 +205,18 @@ static struct mx6_mmdc_calibration mx6d_1g_mmdc_calib = {
 };
 
 static struct mx6_mmdc_calibration mx6dl_1g_mmdc_calib = {
-	.p0_mpwldectrl0 = 0x001f001f,
-	.p0_mpwldectrl1 = 0x001f001f,
-	.p1_mpwldectrl0 = 0x001f001f,
-	.p1_mpwldectrl1 = 0x001f001f,
-	.p0_mpdgctrl0 = 0x420e020e,
-	.p0_mpdgctrl1 = 0x02000200,
-	.p1_mpdgctrl0 = 0x42020202,
-	.p1_mpdgctrl1 = 0x01720172,
-	.p0_mprddlctl = 0x494c4f4c,
-	.p1_mprddlctl = 0x4a4c4c49,
-	.p0_mpwrdlctl = 0x3f3f3133,
-	.p1_mpwrdlctl = 0x39373f2e,
+	.p0_mpwldectrl0 = 0x003E0047,
+	.p0_mpwldectrl1 = 0x00300036,
+	.p1_mpwldectrl0 = 0x0018001B,
+	.p1_mpwldectrl1 = 0x0010002C,
+	.p0_mpdgctrl0 = 0x02380234,
+	.p0_mpdgctrl1 = 0x02300230,
+	.p1_mpdgctrl0 = 0x0218021C,
+	.p1_mpdgctrl1 = 0x0210020C,
+	.p0_mprddlctl = 0x40464846,
+	.p1_mprddlctl = 0x40444640,
+	.p0_mpwrdlctl = 0x3A302E30,
+	.p1_mpwrdlctl = 0x3630302C,
 };
 
 static struct mx6_mmdc_calibration mx6s_512m_mmdc_calib = {
