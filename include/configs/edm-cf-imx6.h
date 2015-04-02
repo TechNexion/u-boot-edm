@@ -167,9 +167,11 @@
 		"fi\0" \
 	"mmcargs=setenv bootargs console=${console},${baudrate} " \
 		"root=${mmcroot}; run videoargs\0" \
-	"custom_display=no\0" \
+	"fdt_file_autodetect=on\0" \
+	"bootdev_autodetect=on\0" \
+	"display_autodetect=on\0" \
 	"videoargs=" \
-		"if test ${custom_display} = yes; then " \
+		"if test ${display_autodetect} = off; then " \
 			"echo Applying custom display setting...;" \
 			"setenv bootargs ${bootargs} ${displayinfo} ${fbmem};" \
 		"else " \

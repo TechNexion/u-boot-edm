@@ -577,36 +577,42 @@ static enum edm_som_type som_detection(void)
 
 int misc_init_r(void)
 {
-	if (!getenv("fdt_file")) {
-		switch (som_detection()) {
-		case EDM1_CF_IMX6_SOM:
-		case EDM2_CF_IMX6_SOM:
-			if (is_cpu_type(MXC_CPU_MX6Q) || is_cpu_type(MXC_CPU_MX6D))
-				setenv("fdt_file", "boot/imx6q-edm1-cf.dtb");
-			else
+	char *s;
+
+	if ((s = getenv ("fdt_file_autodetect")) != NULL) {
+		if (strncmp (s, "off", 3) != 0) {
+			switch (som_detection()) {
+			case EDM1_CF_IMX6_SOM:
+			case EDM2_CF_IMX6_SOM:
+				if (is_cpu_type(MXC_CPU_MX6Q) || is_cpu_type(MXC_CPU_MX6D))
+					setenv("fdt_file", "boot/imx6q-edm1-cf.dtb");
+				else
 				setenv("fdt_file", "boot/imx6dl-edm1-cf.dtb");
-			break;
-		case WANDBOARD_B1_SOM:
-		case WANDBOARD_C1_SOM:
-			if (is_cpu_type(MXC_CPU_MX6Q) || is_cpu_type(MXC_CPU_MX6D))
-				setenv("fdt_file", "boot/imx6q-wandboard.dtb");
-			else
-				setenv("fdt_file", "boot/imx6dl-wandboard.dtb");
-			break;
+				break;
+			case WANDBOARD_B1_SOM:
+			case WANDBOARD_C1_SOM:
+				if (is_cpu_type(MXC_CPU_MX6Q) || is_cpu_type(MXC_CPU_MX6D))
+					setenv("fdt_file", "boot/imx6q-wandboard.dtb");
+				else
+					setenv("fdt_file", "boot/imx6dl-wandboard.dtb");
+				break;
+			}
 		}
 	}
 
-	if (!getenv("bootdev")) {
-		switch (get_boot_device()) {
-		case MX6_SD0_BOOT:
-		case MX6_MMC_BOOT:
-			setenv("bootdev", "SD0");
-			break;
-		case MX6_SD1_BOOT:
-			setenv("bootdev", "SD1");
-			break;
-		default:
-			printf("Wrong boot device!");
+	if ((s = getenv ("bootdev_autodetect")) != NULL) {
+		if (strncmp (s, "off", 3) != 0) {
+			switch (get_boot_device()) {
+			case MX6_SD0_BOOT:
+			case MX6_MMC_BOOT:
+				setenv("bootdev", "SD0");
+				break;
+			case MX6_SD1_BOOT:
+				setenv("bootdev", "SD1");
+				break;
+			default:
+				printf("Wrong boot device!");
+			}
 		}
 	}
 	return 0;
