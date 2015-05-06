@@ -162,6 +162,7 @@
 		"fi\0" \
 	"mmcargs=setenv bootargs console=${console},${baudrate} " \
 		"root=${mmcroot}; run videoargs\0" \
+	"fdt_file_autodetect=on\0" \
 	"videoargs=" \
 		"setenv nextcon 0; " \
 		"if hdmidet; then " \
