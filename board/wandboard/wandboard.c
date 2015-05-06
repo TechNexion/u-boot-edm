@@ -50,6 +50,7 @@ DECLARE_GLOBAL_DATA_PTR;
 #define USDHC1_CD_GPIO		IMX_GPIO_NR(1, 2)
 #define USDHC3_CD_GPIO		IMX_GPIO_NR(3, 9)
 #define ETH_PHY_RESET		IMX_GPIO_NR(3, 29)
+#define REV_DET_R149	IMX_GPIO_NR(2, 28)
 
 int dram_init(void)
 {
@@ -108,6 +109,10 @@ static iomux_v3_cfg_t const enet_pads[] = {
 	IOMUX_PADS(PAD_EIM_D29__GPIO3_IO29    | MUX_PAD_CTRL(NO_PAD_CTRL)),
 };
 
+static iomux_v3_cfg_t const rev_detection_pads[] = {
+	/* R149 */
+	IOMUX_PADS(PAD_EIM_EB0__GPIO2_IO28  | MUX_PAD_CTRL(NO_PAD_CTRL)),
+};
 
 static void setup_iomux_uart(void)
 {
@@ -132,6 +137,11 @@ static void setup_iomux_usdhc1(void)
 static void setup_iomux_usdhc3(void)
 {
 	SETUP_IOMUX_PADS(usdhc3_pads);
+}
+
+static void setup_iomux_rev_detection(void)
+{
+	SETUP_IOMUX_PADS(rev_detection_pads);
 }
 
 static struct fsl_esdhc_cfg usdhc_cfg[2] = {
@@ -458,7 +468,13 @@ int board_init(void)
 
 int checkboard(void)
 {
-	puts("Board: Wandboard\n");
+	setup_iomux_rev_detection();
+	gpio_direction_input(REV_DET_R149);
+
+	if (!gpio_get_value(REV_DET_R149))
+		puts("Board: wandboard rev.B1\n");
+	else
+		puts("Board: wandboard rev.C1\n");
 
 	return 0;
 }
