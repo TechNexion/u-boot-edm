@@ -423,6 +423,9 @@ config TARGET_OT1200
 config TARGET_EDM_CF_IMX6
 	bool "Technexion edm-cf-imx6"
 
+config TARGET_PICOSOM_IMX6
+	bool "Technexion picosom-imx6"
+
 config OMAP34XX
 	bool "OMAP34XX SoC"
 
@@ -686,6 +689,7 @@ source "board/syteco/jadecpu/Kconfig"
 source "board/syteco/zmx25/Kconfig"
 source "board/taskit/stamp9g20/Kconfig"
 source "board/technexion/edm-cf-imx6/Kconfig"
+source "board/technexion/picosom-imx6/Kconfig"
 source "board/ti/am335x/Kconfig"
 source "board/ti/am43xx/Kconfig"
 source "board/ti/ti814x/Kconfig"

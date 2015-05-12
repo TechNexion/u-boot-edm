@@ -1,0 +1,4 @@
+CONFIG_SPL=y
+CONFIG_SYS_EXTRA_OPTIONS="IMX_CONFIG=board/technexion/picosom-imx6/picosom-imx6.cfg,MX6QDL"
++S:CONFIG_ARM=y
++S:CONFIG_TARGET_PICOSOM_IMX6=y
