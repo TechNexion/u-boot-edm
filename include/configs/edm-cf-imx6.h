@@ -43,11 +43,18 @@
 #define CONFIG_MXC_GPIO
 
 #define CONFIG_MXC_UART
+#ifdef CONFIG_DEBUG_CONSOLE
 #define CONFIG_MXC_UART_BASE		UART1_BASE
-
+#else
+#define CONFIG_MXC_UART_BASE		UART5_BASE
+#endif
 /* allow to overwrite serial and ethaddr */
 #define CONFIG_ENV_OVERWRITE
+#ifdef CONFIG_DEBUG_CONSOLE
 #define CONFIG_CONS_INDEX		1
+#else
+#define CONFIG_CONS_INDEX		5
+#endif
 #define CONFIG_BAUDRATE			115200
 
 /* Command definition */
@@ -133,10 +140,112 @@
 #define CONFIG_MXC_OCOTP
 #endif
 
+#ifdef CONFIG_DEBUG_CONSOLE
+#define CONFIG_EXTRA_ENV_SETTINGS \
+"script=boot.scr\0" \
+"image=boot/zImage\0" \
+"console=ttymxc0\0" \
+"splashpos=m,m\0" \
+"fdt_high=0xffffffff\0" \
+"initrd_high=0xffffffff\0" \
+"fdt_addr=0x18000000\0" \
+"boot_fdt=try\0" \
+"mmcdev=" __stringify(CONFIG_SYS_MMC_ENV_DEV) "\0" \
+"mmcpart=1\0" \
+"searchbootdev=" \
+	"if test ${bootdev} = SD0; then " \
+		"setenv mmcroot /dev/mmcblk2p2 rootwait rw; " \
+	"else " \
+		"setenv mmcroot /dev/mmcblk0p2 rootwait rw; " \
+	"fi\0" \
+"mmcargs=setenv bootargs console=${console},${baudrate} " \
+	"root=${mmcroot}; run videoargs\0" \
+"fdt_file_autodetect=on\0" \
+"bootdev_autodetect=on\0" \
+"display_autodetect=on\0" \
+"videoargs=" \
+	"if test ${display_autodetect} = off; then " \
+		"echo Applying custom display setting...;" \
+		"setenv bootargs ${bootargs} ${displayinfo} ${fbmem};" \
+	"else " \
+		"echo Detecting monitor...;" \
+		"setenv nextcon 0; " \
+		"i2c dev 1; " \
+		"if i2c probe 0x10; then " \
+			"setenv bootargs ${bootargs} " \
+				"video=mxcfb${nextcon}:dev=lcd,800x480@60," \
+					"if=RGB666,bpp=32; " \
+			"if test 0 -eq ${nextcon}; then " \
+				"setenv fbmem fbmem=10M; " \
+			"else " \
+				"setenv fbmem ${fbmem},10M; " \
+			"fi; " \
+			"setexpr nextcon ${nextcon} + 1; " \
+		"else " \
+			"echo '- no FWBADAPT-7WVGA-LCD-F07A-0102 display';" \
+		"fi; " \
+		"if hdmidet; then " \
+			"setenv bootargs ${bootargs} " \
+				"video=mxcfb${nextcon}:dev=hdmi,1280x720M@60," \
+					"if=RGB24; " \
+			"setenv fbmem fbmem=28M; " \
+			"setexpr nextcon ${nextcon} + 1; " \
+		"else " \
+			"echo - no HDMI monitor;" \
+		"fi; " \
+		"setenv bootargs ${bootargs} ${fbmem};" \
+	"fi;\0" \
+"loadbootscript=" \
+	"fatload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${script};\0" \
+"bootscript=echo Running bootscript from mmc ...; " \
+	"source\0" \
+"loadimage=fatload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${image}\0" \
+"loadfdt=fatload mmc ${mmcdev}:${mmcpart} ${fdt_addr} ${fdt_file}\0" \
+"mmcboot=echo Booting from mmc ...; " \
+	"run searchbootdev; " \
+	"run mmcargs; " \
+	"if test ${boot_fdt} = yes || test ${boot_fdt} = try; then " \
+		"if run loadfdt; then " \
+			"bootz ${loadaddr} - ${fdt_addr}; " \
+		"else " \
+			"if test ${boot_fdt} = try; then " \
+				"bootz; " \
+			"else " \
+				"echo WARN: Cannot load the DT; " \
+			"fi; " \
+		"fi; " \
+	"else " \
+		"bootz; " \
+	"fi;\0" \
+"bootenv=/boot/uEnv.txt\0" \
+"loadbootenv=fatload mmc ${mmcdev} ${loadaddr} ${bootenv}\0" \
+"importbootenv=echo Importing environment from mmc ...; " \
+	"env import -t -r $loadaddr $filesize\0" \
+
+#define CONFIG_BOOTCOMMAND \
+   "mmc dev ${mmcdev}; if mmc rescan; then " \
+	   "if run loadbootenv; then " \
+		   "echo Loaded environment from ${bootenv};" \
+		   "run importbootenv;" \
+	   "fi;" \
+	   "if test -n $uenvcmd; then " \
+		   "echo Running uenvcmd ...;" \
+		   "run uenvcmd;" \
+	   "fi;" \
+	   "if run loadbootscript; then " \
+		   "run bootscript; " \
+	   "else " \
+		   "if run loadimage; then " \
+			   "run mmcboot; " \
+		   "else run netboot; " \
+		   "fi; " \
+	   "fi; " \
+   "else run netboot; fi"
+#else
 #define CONFIG_EXTRA_ENV_SETTINGS \
 	"script=boot.scr\0" \
 	"image=boot/zImage\0" \
-	"console=ttymxc0\0" \
+	"console=ttyUSB0\0" \
 	"splashpos=m,m\0" \
 	"fdt_high=0xffffffff\0" \
 	"initrd_high=0xffffffff\0" \
@@ -233,7 +342,7 @@
 			   "fi; " \
 		   "fi; " \
 	   "else run netboot; fi"
-
+#endif
 /* Miscellaneous configurable options */
 #define CONFIG_SYS_LONGHELP
 #define CONFIG_SYS_HUSH_PARSER
