@@ -153,6 +153,20 @@ static struct mx6_ddr3_cfg h5tq2g63dfr = {
 	.trasmin = 3600,
 };
 
+/* H5TQ2G63FFR-H9 for i.mx6Solo/DL operating DDR at 400MHz */
+static struct mx6_ddr3_cfg h5tq2g63ffr_800mhz = {
+	.mem_speed = 800,
+	.density = 2,
+	.width = 16,
+	.banks = 8,
+	.rowaddr = 14,
+	.coladdr = 10,
+	.pagesz = 2,
+	.trcd = 1500,
+	.trcmin = 5250,
+	.trasmin = 3750,
+};
+
 /*
  * calibration - these are the various CPU/DDR3 combinations we support
  */
@@ -220,12 +234,12 @@ static struct mx6_mmdc_calibration mx6dl_1g_mmdc_calib = {
 };
 
 static struct mx6_mmdc_calibration mx6s_512m_mmdc_calib = {
-	.p0_mpwldectrl0 = 0x0040003c,
-	.p0_mpwldectrl1 = 0x0032003e,
-	.p0_mpdgctrl0 = 0x42350231,
-	.p0_mpdgctrl1 = 0x021a0218,
-	.p0_mprddlctl = 0x4b4b4e49,
-	.p0_mpwrdlctl = 0x3f3f3035,
+	.p0_mpwldectrl0 = 0x0033003C,
+	.p0_mpwldectrl1 = 0x002E0032,
+	.p0_mpdgctrl0 = 0x02300224,
+	.p0_mpdgctrl1 = 0x02140218,
+	.p0_mprddlctl = 0x40444A48,
+	.p0_mpwrdlctl = 0x38362E2E,
 };
 
 //DDR 64bit 1GB
@@ -267,7 +281,7 @@ static void spl_dram_init(void)
 	switch (get_cpu_type()) {
 	case MXC_CPU_MX6SOLO:
 		mx6sdl_dram_iocfg(32, &mx6sdl_ddr_ioregs, &mx6sdl_grp_ioregs);
-		mx6_dram_cfg(&edm_sysinfo_s, &mx6s_512m_mmdc_calib, &h5tq2g63dfr);
+		mx6_dram_cfg(&edm_sysinfo_s, &mx6s_512m_mmdc_calib, &h5tq2g63ffr_800mhz);
 		break;
 	case MXC_CPU_MX6DL:
 		mx6sdl_dram_iocfg(64, &mx6sdl_ddr_ioregs, &mx6sdl_grp_ioregs);
