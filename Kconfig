@@ -102,10 +102,10 @@ config SYS_EXTRA_OPTIONS
 
 config DEBUG_CONSOLE
     bool
-	string "EDM Debug Console"
+	prompt "IMX Debug Console Option" if !SPL_BUILD
 	default y
 	help
-	  If you want to enable debug console for EDM board, say Y.
+	  If you want to enable debug console for IMX board, say Y.
 
 endmenu		# Boot images
 
