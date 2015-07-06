@@ -49,6 +49,7 @@ DECLARE_GLOBAL_DATA_PTR;
 #define USDHC1_CD_GPIO		IMX_GPIO_NR(3, 9)
 #define USDHC3_CD_GPIO		IMX_GPIO_NR(1, 2)
 #define ETH_PHY_RESET		IMX_GPIO_NR(3, 29)
+#define WL_REG_ON		IMX_GPIO_NR(1, 7)
 
 enum boot_device {
         MX6_SD0_BOOT,
@@ -155,6 +156,11 @@ static iomux_v3_cfg_t const som_detection_pads[] = {
 	IOMUX_PADS(PAD_EIM_DA12__GPIO3_IO12  | MUX_PAD_CTRL(NO_PAD_CTRL)),
 	/* R173 */
 	IOMUX_PADS(PAD_EIM_DA5__GPIO3_IO05  | MUX_PAD_CTRL(NO_PAD_CTRL)),
+};
+
+static iomux_v3_cfg_t const wifi_pads[] = {
+	/* wifi wl-reg-on */
+	IOMUX_PADS(PAD_GPIO_7__GPIO1_IO07 | MUX_PAD_CTRL(NO_PAD_CTRL)),
 };
 
 static void setup_iomux_uart(void)
@@ -549,6 +555,12 @@ int board_late_init(void)
 int misc_init_r(void)
 {
 	char *s;
+
+	/* reset wifi chip */
+	SETUP_IOMUX_PADS(wifi_pads);
+	gpio_direction_output(WL_REG_ON, 0);
+	mdelay(10);
+	gpio_set_value(WL_REG_ON, 1);
 
 	if (is_cpu_type(MXC_CPU_MX6Q) || is_cpu_type(MXC_CPU_MX6D))
 		printf("PicoSom doesn't support i.mx6Q/DL\r\n");
