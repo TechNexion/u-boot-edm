@@ -156,7 +156,7 @@
 
 #ifdef CONFIG_VIDEO
 #define CONFIG_VIDEO_MODE \
-	"panel=Hannstar-XGA\0"
+	"panel=hj070na\0"
 #else
 #define CONFIG_VIDEO_MODE ""
 #endif
