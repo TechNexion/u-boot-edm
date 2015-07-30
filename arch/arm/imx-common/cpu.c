@@ -69,11 +69,12 @@ struct esd_mmdc_regs {
 	uint32_t	misc;
 };
 
-#define ESD_MMDC_CTL_GET_ROW(mdctl)	((ctl >> 24) & 7)
-#define ESD_MMDC_CTL_GET_COLUMN(mdctl)	((ctl >> 20) & 7)
-#define ESD_MMDC_CTL_GET_WIDTH(mdctl)	((ctl >> 16) & 3)
-#define ESD_MMDC_CTL_GET_CS1(mdctl)	((ctl >> 30) & 1)
-#define ESD_MMDC_MISC_GET_BANK(mdmisc)	((misc >> 5) & 1)
+#define ESD_MMDC_CTL_GET_ROW(mdctl)		((ctl >> 24) & 7)
+#define ESD_MMDC_CTL_GET_COLUMN(mdctl)		((ctl >> 20) & 7)
+#define ESD_MMDC_CTL_GET_WIDTH(mdctl)		((ctl >> 16) & 3)
+#define ESD_MMDC_CTL_GET_CS1(mdctl)		((ctl >> 30) & 1)
+#define ESD_MMDC_MISC_GET_BANK(mdmisc)		((misc >> 5) & 1)
+#define ESD_MMDC_MISC_GET_CHANNEL(mdmisc)	((misc >> 2) & 1)
 
 /*
  * imx_ddr_size - return size in bytes of DRAM according MMDC config
@@ -93,6 +94,7 @@ unsigned imx_ddr_size(void)
 	bits += bank_lookup[ESD_MMDC_MISC_GET_BANK(misc)];
 	bits += ESD_MMDC_CTL_GET_WIDTH(ctl);
 	bits += ESD_MMDC_CTL_GET_CS1(ctl);
+	bits += ESD_MMDC_MISC_GET_CHANNEL(mdmisc);
 
 	/* The MX6 can do only 3840 MiB of DRAM */
 	if (bits == 32)
