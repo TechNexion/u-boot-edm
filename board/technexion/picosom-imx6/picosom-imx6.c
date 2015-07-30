@@ -28,6 +28,8 @@
 #include <phy.h>
 #include <input.h>
 #include <i2c.h>
+#include <power/pmic.h>
+#include <power/pfuze100_pmic.h>
 
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -48,7 +50,7 @@ DECLARE_GLOBAL_DATA_PTR;
 
 #define USDHC1_CD_GPIO		IMX_GPIO_NR(3, 9)
 #define USDHC3_CD_GPIO		IMX_GPIO_NR(1, 2)
-#define ETH_PHY_RESET		IMX_GPIO_NR(3, 29)
+#define ETH_PHY_RESET		IMX_GPIO_NR(1, 26)
 #define WL_REG_ON		IMX_GPIO_NR(1, 7)
 #define BT_NRST			IMX_GPIO_NR(7, 12)
 
@@ -144,10 +146,9 @@ static iomux_v3_cfg_t const enet_pads[] = {
 	IOMUX_PADS(PAD_RGMII_RD1__RGMII_RD1  | MUX_PAD_CTRL(ENET_PAD_CTRL)),
 	IOMUX_PADS(PAD_RGMII_RD2__RGMII_RD2  | MUX_PAD_CTRL(ENET_PAD_CTRL)),
 	IOMUX_PADS(PAD_RGMII_RD3__RGMII_RD3  | MUX_PAD_CTRL(ENET_PAD_CTRL)),
-	IOMUX_PADS(PAD_RGMII_RX_CTL__RGMII_RX_CTL |
-		   MUX_PAD_CTRL(ENET_PAD_CTRL)),
-	/* AR8031 PHY Reset */
-	IOMUX_PADS(PAD_EIM_D29__GPIO3_IO29    | MUX_PAD_CTRL(NO_PAD_CTRL)),
+	IOMUX_PADS(PAD_RGMII_RX_CTL__RGMII_RX_CTL | MUX_PAD_CTRL(ENET_PAD_CTRL)),
+	/* AR8035 PHY Reset */
+        IOMUX_PADS(PAD_ENET_RXD1__GPIO1_IO26 | MUX_PAD_CTRL(NO_PAD_CTRL)),
 };
 
 static iomux_v3_cfg_t const som_detection_pads[] = {
@@ -279,13 +280,13 @@ static int mx6_rgmii_rework(struct phy_device *phydev)
 {
 	unsigned short val;
 
-	/* To enable AR8031 ouput a 125MHz clk from CLK_25M */
+	/* To enable AR8035 ouput a 125MHz clk from CLK_25M */
 	phy_write(phydev, MDIO_DEVAD_NONE, 0xd, 0x7);
 	phy_write(phydev, MDIO_DEVAD_NONE, 0xe, 0x8016);
 	phy_write(phydev, MDIO_DEVAD_NONE, 0xd, 0x4007);
 
 	val = phy_read(phydev, MDIO_DEVAD_NONE, 0xe);
-	val &= 0xffe3;
+	val &= 0xffe7;
 	val |= 0x18;
 	phy_write(phydev, MDIO_DEVAD_NONE, 0xe, val);
 
@@ -549,12 +550,44 @@ static const struct boot_mode board_boot_modes[] = {
 };
 #endif
 
+int board_init_pmic(void) {
+	struct pmic *p;
+	unsigned int reg;
+	int ret = power_pfuze100_init(1);
+
+	if (ret)
+		return ret;
+
+	p = pmic_get("PFUZE100");
+
+        ret = pmic_probe(p);
+	if (ret)
+		return ret;
+
+	pmic_reg_read(p, PFUZE100_DEVICEID, &reg);
+	printf("PMIC:  PFUZE100 ID=0x%02x\n", reg);
+
+	/* Increase VGEN2 to 1.5V to enable ethernet */
+	pmic_reg_read(p, PFUZE100_VGEN2VOL, &reg);
+	reg &= ~0xf;
+	reg |= 0xe;
+	pmic_reg_write(p, PFUZE100_VGEN2VOL, reg);
+
+	return 0;
+}
+
 int board_late_init(void)
 {
+	if (is_cpu_type(MXC_CPU_MX6Q) || is_cpu_type(MXC_CPU_MX6D)) {
+		setup_i2c(1, CONFIG_SYS_I2C_SPEED, 0x7f, &mx6q_i2c2_pad_info);
+
+		if (board_init_pmic())
+			printf("Failed to init PMIC\n");
+	}
+
 #ifdef CONFIG_CMD_BMODE
 	add_board_boot_modes(board_boot_modes);
 #endif
-
 	return 0;
 }
 
@@ -574,10 +607,14 @@ int misc_init_r(void)
 	mdelay(10);
 	gpio_set_value(BT_NRST, 1);
 
-	if (is_cpu_type(MXC_CPU_MX6Q) || is_cpu_type(MXC_CPU_MX6D))
-		printf("PicoSom doesn't support i.mx6Q/DL\r\n");
-	else
-		setenv("fdt_file", "boot/imx6dl-picosom.dtb");
+	if ((s = getenv ("fdt_file_autodetect")) != NULL) {
+		if (strncmp (s, "off", 3) != 0) {
+			if (is_cpu_type(MXC_CPU_MX6Q) || is_cpu_type(MXC_CPU_MX6D))
+				setenv("fdt_file", "boot/imx6q-picosom.dtb");
+			else
+				setenv("fdt_file", "boot/imx6dl-picosom.dtb");
+		}
+	}
 
 	if ((s = getenv ("bootdev_autodetect")) != NULL) {
 		if (strncmp (s, "off", 3) != 0) {

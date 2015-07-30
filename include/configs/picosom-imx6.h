@@ -47,6 +47,12 @@
 #define CONFIG_CONS_INDEX		1
 #define CONFIG_BAUDRATE			115200
 
+/* PMIC */
+#define CONFIG_POWER
+#define CONFIG_POWER_I2C
+#define CONFIG_POWER_PFUZE100
+#define CONFIG_POWER_PFUZE100_I2C_ADDR	0x08
+
 /* Command definition */
 #include <config_cmd_default.h>
 
