@@ -54,6 +54,12 @@ int board_video_skip(void)
 #ifdef CONFIG_IMX_HDMI
 #include <asm/arch/mxc_hdmi.h>
 #include <asm/io.h>
+
+int detect_lvds(struct display_info_t const *dev)
+{
+	return !detect_hdmi(dev);
+}
+
 int detect_hdmi(struct display_info_t const *dev)
 {
 	struct hdmi_regs *hdmi	= (struct hdmi_regs *)HDMI_ARB_BASE_ADDR;

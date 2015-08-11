@@ -18,6 +18,7 @@ struct display_info_t {
 };
 
 #ifdef CONFIG_IMX_HDMI
+extern int detect_lvds(struct display_info_t const *dev);
 extern int detect_hdmi(struct display_info_t const *dev);
 #endif
 
