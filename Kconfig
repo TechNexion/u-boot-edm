@@ -100,13 +100,6 @@ config SYS_EXTRA_OPTIONS
 	  configuration to Kconfig. Since this option will be removed sometime,
 	  new boards should not use this option.
 
-config DEBUG_CONSOLE
-    bool
-	prompt "IMX Debug Console Option" if !SPL_BUILD
-	default y
-	help
-	  If you want to enable debug console for IMX board, say Y.
-
 endmenu		# Boot images
 
 source "arch/Kconfig"
