@@ -1,0 +1,15 @@
+= Technexion u-boot
+
+There are several branches of u-boot for Technexion product: 
+
+* *tn-mx6-2013.10_3.0.35_4.1.0*
+
+ u-boot_2013.10(SPL) for i.mx6Solo/DL/Dual/Quad with linux 3.0.35. Fork from mainline u-boot.
+
+* *tn-mx6-patches-2014.10_3.10.53_1.1.0_ga*
+
+ u-boot_2014.10(SPL) for i.mx6Solo/DL/Dual/Quad with linux 3.10.53. Fork from u-boot-fslc.
+
+* *tn-mx6SX-2014.04_3.10.53_1.1.0_ga*
+
+ u-boot_2014.04 for i.mx6SoloX with linux 3.10.53. Fork from u-boot-imx.
