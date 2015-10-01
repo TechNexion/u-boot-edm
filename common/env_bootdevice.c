@@ -491,11 +491,6 @@ void env_relocate_spec(void)
 		sata_env_relocate_spec();
 		setenv("bootmode", "SATA");
 		break;
-	case MX6_NAND_BOOT:
-		printf( "Environment is in NAND.... \r\n");
-		nand_env_relocate_spec();
-		setenv("bootmode", "NAND");
-		break;
 	default:
 		break;
 	}	
@@ -515,11 +510,6 @@ int saveenv(void)
 		printf( "Save environment to SATA.... \r\n");
 		sata_saveenv();
 		return 0;
-		break;
-	case MX6_NAND_BOOT:
-		printf( "Save environment to NAND.... \r\n");
-		nand_saveenv();
-		setenv("bootmode", "NAND");
 		break;
 	default:
 		return 0;

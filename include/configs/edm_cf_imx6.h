@@ -70,7 +70,6 @@
 
 #define CONFIG_SPL_DMA_SUPPORT
 
-#define CONFIG_SPL_NAND_SUPPORT
 #ifdef CONFIG_SPL_NAND_SUPPORT
 #define CONFIG_SYS_NAND_U_BOOT_OFFS 0x200000 /* offset 2MB */
 /*  offset 64KB */ 
@@ -218,7 +217,6 @@
 #define CONFIG_SYS_NO_FLASH
 
 /* Enable NAND support */
-#define CONFIG_CMD_NAND
 #define CONFIG_CMD_NAND_TRIMFFS
 #define CONFIG_CMD_TIME
 

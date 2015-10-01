@@ -537,22 +537,6 @@ int splash_screen_prepare(void)
 						printf("splash:loading %s from SATA FAT...\n", s);	
 				}	
 				break;
-                        case MX6_NAND_BOOT:
-				if((s = getenv("splashimage_nand_offset")) != NULL)
-                                	offset = simple_strtoul (s, NULL, 16);
-				if (!offset){
-                                        printf ("splashimage_nand_offset is illegal! \n");
-                                }
-				if((s = getenv("splashimage_nand_size")) != NULL)
-                                	size = simple_strtoul (s, NULL, 16);
-				if (!size){
-                                        printf ("splashimage_nand_size is illegal! \n");
-                                }
-				nand_read_skip_bad(&nand_info[nand_curr_device],
-				offset, &size,
-				NULL, nand_info[nand_curr_device].size,
-				(u_char *)addr);
-				break;
 			default:
                         	break;
                 }
