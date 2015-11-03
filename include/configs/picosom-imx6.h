@@ -250,10 +250,22 @@
 			"fi; " \
 		"else " \
 			"bootz; " \
-		"fi;\0"
+		"fi;\0" \
+	"bootenv=/boot/uEnv.txt\0" \
+	"loadbootenv=fatload mmc ${mmcdev} ${loadaddr} ${bootenv}\0" \
+	"importbootenv=echo Importing environment from mmc ...; " \
+		"env import -t -r $loadaddr $filesize\0" \
 
 #define CONFIG_BOOTCOMMAND \
 	   "mmc dev ${mmcdev}; if mmc rescan; then " \
+		   "if run loadbootenv; then " \
+			   "echo Loaded environment from ${bootenv};" \
+			   "run importbootenv;" \
+		   "fi;" \
+		   "if test -n $uenvcmd; then " \
+			   "echo Running uenvcmd ...;" \
+			   "run uenvcmd;" \
+		   "fi;" \
 		   "if run loadbootscript; then " \
 			   "run bootscript; " \
 		   "else " \
