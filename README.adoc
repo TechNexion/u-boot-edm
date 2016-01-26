@@ -2,14 +2,18 @@
 
 There are several branches of u-boot for Technexion product: 
 
-* *tn-mx6-2013.10_3.0.35_4.1.0*
+* *tn-mx6-2013.10_3.0.35_4.1.0 (used for linux 3.0.35 kernel)*
 
- u-boot_2013.10(SPL) for i.mx6Solo/DL/Dual/Quad with linux 3.0.35. Fork from mainline u-boot.
+ u-boot_2013.10(SPL) for i.mx6Solo/DL/Dual/Quad. Fork from mainline u-boot.
 
-* *tn-mx6-patches-2014.10_3.10.53_1.1.0_ga*
+* *tn-mx6-patches-2014.10_3.10.53_1.1.0_ga (used for linux 3.10.53 kernel)*
 
- u-boot_2014.10(SPL) for i.mx6Solo/DL/Dual/Quad with linux 3.10.53. Fork from u-boot-fslc.
+ u-boot_2014.10(SPL) for i.mx6Solo/DL/Dual/Quad. Fork from u-boot-fslc.
 
-* *tn-mx6SX-2014.04_3.10.53_1.1.0_ga*
+* *tn-mx6SX-2014.04_3.10.53_1.1.0_ga (used for linux 3.10.53 kernel)*
 
- u-boot_2014.04 for i.mx6SoloX with linux 3.10.53. Fork from u-boot-imx.
+ u-boot_2014.04 for i.mx6SoloX. Fork from Freescale u-boot-imx.
+
+* *tn-imx-v2015.04_3.14.52_1.1.0_ga (used for linux 3.14.52 kernel)*
+
+ u-boot_2015.04(SPL) for i.mx6 Solo/DL/Dual/Quad/SoloX/UL and i.mx7. Fork from Freescale u-boot-imx.
