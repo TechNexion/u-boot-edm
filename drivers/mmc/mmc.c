@@ -406,14 +406,23 @@ int mmc_complete_op_cond(struct mmc *mmc)
 
 	mmc->op_cond_pending = 0;
 	start = get_timer(0);
-	do {
+	/*
+	 * If in mmc_send_op_cond, OCR_BUSY is set in CMD1's response, then
+	 * state is transfered to Ready state, and there is no need to
+	 * send CMD1 again. Otherwise following CMD1 will recieve no response,
+	 * or timeour error from driver such as fsl_esdhc.c.
+	 *
+	 * If not into Ready state in previous CMD1, then continue CMD1
+	 * command.
+	 */
+	while (!(mmc->op_cond_response & OCR_BUSY)) {
 		err = mmc_send_op_cond_iter(mmc, &cmd, 1);
 		if (err)
 			return err;
 		if (get_timer(start) > timeout)
 			return UNUSABLE_ERR;
 		udelay(100);
-	} while (!(mmc->op_cond_response & OCR_BUSY));
+	}
 
 	if (mmc_host_is_spi(mmc)) { /* read OCR for spi */
 		cmd.cmdidx = MMC_CMD_SPI_READ_OCR;
@@ -427,10 +436,13 @@ int mmc_complete_op_cond(struct mmc *mmc)
 	}
 
 	mmc->version = MMC_VERSION_UNKNOWN;
-	mmc->ocr = cmd.response[0];
+	if (mmc_host_is_spi(mmc))
+		mmc->ocr = cmd.response[0];
+	else
+		mmc->ocr = mmc->op_cond_response;
 
 	mmc->high_capacity = ((mmc->ocr & OCR_HCS) == OCR_HCS);
-	mmc->rca = 0;
+	mmc->rca = 1;
 
 	return 0;
 }
@@ -495,6 +507,8 @@ static int mmc_change_freq(struct mmc *mmc)
 	if (mmc->version < MMC_VERSION_4)
 		return 0;
 
+	mmc->card_caps |= MMC_MODE_4BIT | MMC_MODE_8BIT;
+
 	err = mmc_send_ext_csd(mmc, ext_csd);
 
 	if (err)
@@ -553,6 +567,32 @@ static int mmc_set_capacity(struct mmc *mmc, int part_num)
 
 	return 0;
 }
+
+int mmc_select_hwpart(int dev_num, int hwpart)
+{
+	struct mmc *mmc = find_mmc_device(dev_num);
+	int ret;
+
+	if (!mmc)
+		return -1;
+
+	if (mmc->part_num == hwpart)
+		return 0;
+
+	if (mmc->part_config == MMCPART_NOAVAILABLE) {
+		printf("Card doesn't support part_switch\n");
+		return -1;
+	}
+
+	ret = mmc_switch_part(dev_num, hwpart);
+	if (ret)
+		return ret;
+
+	mmc->part_num = hwpart;
+
+	return 0;
+}
+
 
 int mmc_switch_part(int dev_num, unsigned int part_num)
 {
@@ -956,6 +996,13 @@ static int mmc_startup(struct mmc *mmc)
 			break;
 		case 6:
 			mmc->version = MMC_VERSION_4_5;
+			break;
+		case 7:
+			mmc->version = MMC_VERSION_5_0;
+			break;
+		case 8:
+		default:
+			mmc->version = MMC_VERSION_5_1;
 			break;
 		}
 
