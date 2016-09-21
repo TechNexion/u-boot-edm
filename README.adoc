@@ -17,3 +17,7 @@ There are several branches of u-boot for Technexion product:
 * *tn-imx-v2015.04_3.14.52_1.1.0_ga (used for linux 3.14.52 kernel)*
 
  u-boot_2015.04(SPL) for i.mx6 Solo/DL/Dual/Quad/SoloX/UL and i.mx7. Fork from Freescale u-boot-imx.
+
+* *tn-imx-v2015.04_4.1.15_1.0.0_ga (used for linux 4.1.15 kernel)*
+
+ u-boot_2015.04(SPL) for i.mx6 Solo/DL/Dual/Quad/SoloX/UL and i.mx7. Fork from Freescale u-boot-imx.
