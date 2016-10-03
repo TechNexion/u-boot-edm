@@ -46,7 +46,7 @@
 #define CONFIG_MXC_GPIO
 
 #define CONFIG_MXC_UART
-#define CONFIG_MXC_UART_BASE		UART1_IPS_BASE_ADDR
+#define CONFIG_MXC_UART_BASE		UART5_IPS_BASE_ADDR
 
 /* allow to overwrite serial and ethaddr */
 #define CONFIG_ENV_OVERWRITE
@@ -80,14 +80,15 @@
 #define CONFIG_MII
 #define CONFIG_FEC_XCV_TYPE             RGMII
 #define CONFIG_ETHPRIME                 "FEC"
-#define CONFIG_FEC_MXC_PHYADDR          0
+#define CONFIG_FEC_MXC_PHYADDR          1
 
 #define CONFIG_PHYLIB
 #define CONFIG_PHY_BROADCOM
 #define CONFIG_FEC_DMA_MINALIGN		64
 
-/* ENET1 */
+/* ENET1 + MDIO2 */
 #define IMX_FEC_BASE			ENET_IPS_BASE_ADDR
+#define CONFIG_FEC_MXC_MDIO_BASE 	ENET2_IPS_BASE_ADDR
 
 /* PMIC */
 #define CONFIG_POWER
@@ -174,8 +175,8 @@
 	CONFIG_VIDEO_MODE \
 	"fdt_addr=0x83000000\0" \
 	"fdt_high=0xffffffff\0"	  \
-	"console=ttymxc0\0" \
-	"bootargs=console=ttymxc0,115200 ubi.mtd=3 "  \
+	"console=ttymxc4\0" \
+	"bootargs=console=ttymxc4,115200 ubi.mtd=3 "  \
 		"root=ubi0:rootfs rootfstype=ubifs "		     \
 		"mtdparts=gpmi-nand:64m(boot),16m(kernel),16m(dtb),-(rootfs)\0"\
 	"bootcmd=nand read ${loadaddr} 0x4000000 0x800000;"\
@@ -189,11 +190,11 @@
 	CONFIG_VIDEO_MODE \
 	"script=boot.scr\0" \
 	"image=zImage\0" \
-	"console=ttymxc0\0" \
+	"console=ttymxc4\0" \
 	"splashpos=m,m\0" \
 	"fdt_high=0xffffffff\0" \
 	"initrd_high=0xffffffff\0" \
-	"fdt_file=imx7d-pico.dtb\0" \
+	"fdt_file=imx7d-pico_dwarf.dtb\0" \
 	"fdt_addr=0x83000000\0" \
 	"boot_fdt=try\0" \
 	"ip_dyn=yes\0" \
@@ -202,7 +203,7 @@
 	"mmcroot=" CONFIG_MMCROOT " rootwait rw\0" \
 	"mmcautodetect=yes\0" \
 	"mmcargs=setenv bootargs console=${console},${baudrate} " \
-		"root=${mmcroot}\0" \
+		"root=${mmcroot} 2\0" \
 	"loadbootscript=" \
 		"fatload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${script};\0" \
 	"bootscript=echo Running bootscript from mmc ...; " \
@@ -356,7 +357,7 @@
 #define CONFIG_ENV_SPI_MAX_HZ		CONFIG_SF_DEFAULT_SPEED
 #elif defined(CONFIG_ENV_IS_IN_NAND)
 #undef CONFIG_ENV_SIZE
-#define CONFIG_ENV_OFFSET		(37 << 20)
+#define CONFIG_ENV_OFFSET		(3 << 18)
 #define CONFIG_ENV_SECT_SIZE		(128 << 10)
 #define CONFIG_ENV_SIZE			CONFIG_ENV_SECT_SIZE
 #endif
