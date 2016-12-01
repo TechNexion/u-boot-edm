@@ -127,7 +127,7 @@
 #endif
 
 
-#define CONFIG_DEFAULT_FDT_FILE "imx6ul-pico-hobbit.dtb"
+#define CONFIG_DEFAULT_FDT_FILE "imx6ul-pico_hobbit.dtb"
 #define CONFIG_BOOTARGS_CMA_SIZE   "cma=96M "
 
 /* PMIC */
