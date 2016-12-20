@@ -70,8 +70,6 @@
 #define CONFIG_DOS_PARTITION
 #define CONFIG_SUPPORT_EMMC_BOOT /* eMMC specific */
 
-#define PHYS_SDRAM_SIZE			SZ_1G
-
 #define CONFIG_CMD_PING
 #define CONFIG_CMD_DHCP
 #define CONFIG_CMD_MII
