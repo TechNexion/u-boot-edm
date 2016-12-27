@@ -147,7 +147,7 @@
 
 #ifdef CONFIG_VIDEO
 #define CONFIG_VIDEO_MODE \
-	"panel=TFT43AB\0"
+	"panel=ADV7125-VGA\0"
 #else
 #define CONFIG_VIDEO_MODE ""
 #endif
@@ -189,6 +189,7 @@
 	"script=boot.scr\0" \
 	"image=zImage\0" \
 	"console=ttymxc0\0" \
+	"splashpos=m,m\0" \
 	"fdt_high=0xffffffff\0" \
 	"initrd_high=0xffffffff\0" \
 	"fdt_file=" CONFIG_DEFAULT_FDT_FILE "\0" \
@@ -378,7 +379,6 @@
 #define	CONFIG_CFB_CONSOLE
 #define	CONFIG_VIDEO_MXS
 #define	CONFIG_VIDEO_LOGO
-#define	CONFIG_VIDEO_SW_CURSOR
 #define	CONFIG_VGA_AS_SINGLE_DEVICE
 #define	CONFIG_SYS_CONSOLE_IS_IN_ENV
 #define	CONFIG_SPLASH_SCREEN
