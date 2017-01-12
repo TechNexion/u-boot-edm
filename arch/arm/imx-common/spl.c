@@ -73,6 +73,51 @@ u32 spl_boot_device(void)
 	}
 	return BOOT_DEVICE_NONE;
 }
+#elif defined(CONFIG_MX7)
+u32 spl_boot_device(void)
+{
+	struct src *psrc = (struct src *)SRC_BASE_ADDR;
+	unsigned int gpr10_boot = readl(&psrc->gpr10) & (1 << 28);
+	unsigned reg = gpr10_boot ? readl(&psrc->gpr9) : readl(&psrc->sbmr1);
+
+	printf("Boot Device: ");
+
+	/* BOOT_CFG1[15:12] - see IMX7DRM Table 6-33 */
+	switch ((reg & 0x0000F000) >> 12) {
+	/* SD/eSD: 6.6.5.3, Table 6-41  */
+	case 0x1:
+	case 0x3:
+		if ((reg & 0x00000800) >> 11)
+			printf("SD0\n");
+		else
+			printf("SD1\n");
+
+		return BOOT_DEVICE_MMC1;
+	/* MMC/eMMC: 8.5.3 */
+	case 0x2:
+		printf("MMC\n");
+		return BOOT_DEVICE_MMC1;
+/*
+	case 0x3:
+		printf("NAND\n");
+		return BOOT_DEVICE_NAND;
+*/
+	case 0x5:
+		/* BOOT_CFG1[11]: NOR/OneNAND Selection */
+		if ((reg & 0x00000080) >> 11) {
+			printf("ONENAND\n");
+			return BOOT_DEVICE_ONENAND;
+		} else {
+			printf("NOR\n");
+			return BOOT_DEVICE_NOR;
+		}
+	/* Serial ROM: See 6.6.5.4.1, Table 6-46 */
+	case 0x6:
+		printf("SPI\n");
+		return BOOT_DEVICE_SPI;
+	}
+	return BOOT_DEVICE_NONE;
+}
 #endif
 
 #if defined(CONFIG_SPL_MMC_SUPPORT)
