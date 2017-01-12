@@ -1,5 +1,8 @@
 /*
- * Copyright (C) 2015 Freescale Semiconductor, Inc.
+ * Copyright (C) 2017 Technexion Ltd.
+ *
+ * Author: Tapani Utriainen <tapani@technexion.com>
+ *         Richard Hu <richard.hu@technexion.com>
  *
  * SPDX-License-Identifier:	GPL-2.0+
  */
@@ -69,6 +72,8 @@ DECLARE_GLOBAL_DATA_PTR;
 
 #define EPDC_PAD_CTRL	0x0
 
+#define DDR_TYPE_DET	IMX_GPIO_NR(1, 12)
+
 #ifdef CONFIG_SYS_I2C_MXC
 #define PC MUX_PAD_CTRL(I2C_PAD_CTRL)
 /* I2C1*/
@@ -114,9 +119,31 @@ struct i2c_pads_info i2c_pad_info4 = {
 };
 #endif
 
+static iomux_v3_cfg_t const ddr_type_detection_pads[] = {
+	/* ddr type detection */
+	MX7D_PAD_GPIO1_IO12__GPIO1_IO12 | MUX_PAD_CTRL(NO_PAD_CTRL),
+};
+
+static void setup_iomux_ddr_type_detection(void)
+{
+	imx_iomux_v3_setup_multiple_pads(ddr_type_detection_pads, ARRAY_SIZE(ddr_type_detection_pads));
+}
+
 int dram_init(void)
 {
-	gd->ram_size = ((ulong)CONFIG_DDR_MB * 1024 * 1024);
+
+	unsigned int ddr_size;
+
+	setup_iomux_ddr_type_detection();
+	gpio_direction_input(DDR_TYPE_DET);
+
+	if (gpio_get_value(DDR_TYPE_DET)) {
+		ddr_size = 512;
+	} else {
+		ddr_size = 1024;
+	}
+
+	gd->ram_size = ((ulong)ddr_size * 1024 * 1024);
 
 	return 0;
 }
@@ -140,20 +167,7 @@ static iomux_v3_cfg_t const usdhc1_pads[] = {
 	MX7D_PAD_SD1_CD_B__GPIO5_IO0  | MUX_PAD_CTRL(USDHC_PAD_CTRL),
 };
 
-/* SD */
-#ifdef PICO_SD
-#define USDHC3_CD_GPIO IMX_GPIO_NR(6, 9)
-static iomux_v3_cfg_t const usdhc3_emmc_pads[] = {
-	MX7D_PAD_SD3_CLK__SD3_CLK | MUX_PAD_CTRL(USDHC_PAD_CTRL),
-	MX7D_PAD_SD3_CMD__SD3_CMD | MUX_PAD_CTRL(USDHC_PAD_CTRL),
-	MX7D_PAD_SD3_DATA0__SD3_DATA0 | MUX_PAD_CTRL(USDHC_PAD_CTRL),
-	MX7D_PAD_SD3_DATA1__SD3_DATA1 | MUX_PAD_CTRL(USDHC_PAD_CTRL),
-	MX7D_PAD_SD3_DATA2__SD3_DATA2 | MUX_PAD_CTRL(USDHC_PAD_CTRL),
-	MX7D_PAD_SD3_DATA3__SD3_DATA3 | MUX_PAD_CTRL(USDHC_PAD_CTRL),
-	MX7D_PAD_SD3_DATA7__GPIO6_IO9 | MUX_PAD_CTRL(USDHC_PAD_CTRL),
-};
-#else
-/* EMMC */
+/* EMMC/SD */
 #define USDHC3_CD_GPIO IMX_GPIO_NR(1, 14)
 static iomux_v3_cfg_t const usdhc3_emmc_pads[] = {
 	MX7D_PAD_SD3_CLK__SD3_CLK | MUX_PAD_CTRL(USDHC_PAD_CTRL),
@@ -168,7 +182,6 @@ static iomux_v3_cfg_t const usdhc3_emmc_pads[] = {
 	MX7D_PAD_SD3_DATA7__SD3_DATA7 | MUX_PAD_CTRL(USDHC_PAD_CTRL),
 	MX7D_PAD_GPIO1_IO14__GPIO1_IO14 | MUX_PAD_CTRL(USDHC_PAD_CTRL),
 };
-#endif
 
 #ifdef CONFIG_SYS_USE_NAND
 static iomux_v3_cfg_t const gpmi_pads[] = {
@@ -373,36 +386,10 @@ static void setup_iomux_uart(void)
 
 #define USDHC1_CD_GPIO	IMX_GPIO_NR(5, 0)
 
-static struct fsl_esdhc_cfg usdhc_cfg[3] = {
-	{USDHC1_BASE_ADDR, 0, 4},
+static struct fsl_esdhc_cfg usdhc_cfg[2] = {
 	{USDHC3_BASE_ADDR},
+	{USDHC1_BASE_ADDR},
 };
-
-int mmc_get_env_devno(void)
-{
-	struct bootrom_sw_info **p =
-		(struct bootrom_sw_info **)ROM_SW_INFO_ADDR;
-
-	u8 boot_type = (*p)->boot_dev_type;
-	u8 dev_no = (*p)->boot_dev_instance;
-
-	/* If not boot from sd/mmc, use default value */
-	if ((boot_type != BOOT_TYPE_SD) && (boot_type != BOOT_TYPE_MMC))
-		return CONFIG_SYS_MMC_ENV_DEV;
-
-	if (2 == dev_no)
-		dev_no--;
-
-	return dev_no;
-}
-
-int mmc_map_to_kernel_blk(int dev_no)
-{
-	if (1 == dev_no)
-		dev_no++;
-
-	return dev_no;
-}
 
 int board_mmc_getcd(struct mmc *mmc)
 {
@@ -423,36 +410,57 @@ int board_mmc_getcd(struct mmc *mmc)
 
 int board_mmc_init(bd_t *bis)
 {
-	int i, ret;
-	/*
-	 * According to the board_mmc_init() the following map is done:
-	 * (U-boot device node)    (Physical Port)
-	 * mmc0                    USDHC1
-	 * mmc2                    USDHC3 (eMMC)
-	 */
-	for (i = 0; i < CONFIG_SYS_FSL_USDHC_NUM; i++) {
-		switch (i) {
-		case 0:
-			imx_iomux_v3_setup_multiple_pads(
-				usdhc1_pads, ARRAY_SIZE(usdhc1_pads));
-			usdhc_cfg[0].sdhc_clk = mxc_get_clock(MXC_ESDHC_CLK);
-			break;
-		case 1:
-			imx_iomux_v3_setup_multiple_pads(
-				usdhc3_emmc_pads, ARRAY_SIZE(usdhc3_emmc_pads));
-			gpio_request(USDHC3_CD_GPIO, "usdhc3_cd");
-			gpio_direction_input(USDHC3_CD_GPIO);
-			usdhc_cfg[1].sdhc_clk = mxc_get_clock(MXC_ESDHC3_CLK);
-			break;
-		default:
-			printf("Warning: you configured more USDHC controllers"
-				"(%d) than supported by the board\n", i + 1);
-			return 0;
-			}
+int ret;
+	u32 index = 0;
 
-			ret = fsl_esdhc_initialize(bis, &usdhc_cfg[i]);
-			if (ret)
-				return ret;
+	/*
+	 * Following map is done:
+	 * (USDHC)	(Physical Port)
+	 * usdhc3	SOM MicroSD/MMC
+	 * usdhc1	Carrier board MicroSD
+	 * Always set boot USDHC as mmc0
+	 */
+
+	imx_iomux_v3_setup_multiple_pads(
+				usdhc3_emmc_pads, ARRAY_SIZE(usdhc3_emmc_pads));
+	gpio_direction_input(USDHC3_CD_GPIO);
+
+	imx_iomux_v3_setup_multiple_pads(
+				usdhc1_pads, ARRAY_SIZE(usdhc1_pads));
+	gpio_direction_input(USDHC1_CD_GPIO);
+
+	switch (get_boot_device()) {
+		case SD1_BOOT:
+			usdhc_cfg[0].esdhc_base = USDHC1_BASE_ADDR;
+			usdhc_cfg[0].sdhc_clk = mxc_get_clock(MXC_ESDHC_CLK);
+			usdhc_cfg[0].max_bus_width = 4;
+			usdhc_cfg[1].esdhc_base = USDHC3_BASE_ADDR;
+			usdhc_cfg[1].sdhc_clk = mxc_get_clock(MXC_ESDHC3_CLK);
+			usdhc_cfg[1].max_bus_width = 4;
+			break;
+		case MMC3_BOOT:
+			usdhc_cfg[0].esdhc_base = USDHC3_BASE_ADDR;
+			usdhc_cfg[0].sdhc_clk = mxc_get_clock(MXC_ESDHC3_CLK);
+			usdhc_cfg[0].max_bus_width = 8;
+			usdhc_cfg[1].esdhc_base = USDHC1_BASE_ADDR;
+			usdhc_cfg[1].sdhc_clk = mxc_get_clock(MXC_ESDHC_CLK);
+			usdhc_cfg[1].max_bus_width = 4;
+			break;
+		case SD3_BOOT:
+		default:
+			usdhc_cfg[0].esdhc_base = USDHC3_BASE_ADDR;
+			usdhc_cfg[0].sdhc_clk = mxc_get_clock(MXC_ESDHC3_CLK);
+			usdhc_cfg[0].max_bus_width = 4;
+			usdhc_cfg[1].esdhc_base = USDHC1_BASE_ADDR;
+			usdhc_cfg[1].sdhc_clk = mxc_get_clock(MXC_ESDHC_CLK);
+			usdhc_cfg[1].max_bus_width = 4;
+			break;
+	}
+
+	for (index = 0; index < CONFIG_SYS_FSL_USDHC_NUM; ++index) {
+		ret = fsl_esdhc_initialize(bis, &usdhc_cfg[index]);
+		if (ret)
+			return ret;
 	}
 
 	return 0;
@@ -472,22 +480,20 @@ int check_mmc_autodetect(void)
 
 void board_late_mmc_init(void)
 {
-	char cmd[32];
-	char mmcblk[32];
-	u32 dev_no = mmc_get_env_devno();
-
 	if (!check_mmc_autodetect())
 		return;
 
-	setenv_ulong("mmcdev", dev_no);
-
-	/* Set mmcblk env */
-	sprintf(mmcblk, "/dev/mmcblk%dp2 rootwait rw",
-		mmc_map_to_kernel_blk(dev_no));
-	setenv("mmcroot", mmcblk);
-
-	sprintf(cmd, "mmc dev %d", dev_no);
-	run_command(cmd, 0);
+	switch (get_boot_device()) {
+		case SD3_BOOT:
+		case MMC3_BOOT:
+			setenv("bootdev", "SD0");
+			break;
+		case SD1_BOOT:
+			setenv("bootdev", "SD1");
+			break;
+		default:
+			printf("Wrong boot device!");
+	}
 }
 
 #endif
@@ -683,7 +689,7 @@ u32 get_board_rev(void)
 
 int checkboard(void)
 {
-	puts("Board: i.MX7D PICOSOM\n");
+	puts("Board: PICO-IMX7D\n");
 
 	return 0;
 }

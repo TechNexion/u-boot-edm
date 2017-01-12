@@ -4,6 +4,7 @@
 #
 
 obj-y  := pico-imx7d.o
+obj-$(CONFIG_SPL_BUILD) += pico-imx7d_spl.o
 
 extra-$(CONFIG_USE_PLUGIN) :=  plugin.bin
 $(obj)/plugin.bin: $(obj)/plugin.o
