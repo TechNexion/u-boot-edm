@@ -691,6 +691,8 @@ int checkboard(void)
 {
 	puts("Board: PICO-IMX7D\n");
 
+	printf("Compatible baseboard: dwarf, hobbit, nymph, pi\n");
+
 	return 0;
 }
 

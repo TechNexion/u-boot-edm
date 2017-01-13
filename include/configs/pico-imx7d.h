@@ -106,9 +106,6 @@
 #undef CONFIG_BOOTM_PLAN9
 #undef CONFIG_BOOTM_RTEMS
 
-#undef CONFIG_CMD_EXPORTENV
-#undef CONFIG_CMD_IMPORTENV
-
 /* I2C configs */
 #define CONFIG_CMD_I2C
 #define CONFIG_SYS_I2C
@@ -198,9 +195,11 @@
 	"image=zImage\0" \
 	"console=ttymxc4\0" \
 	"splashpos=m,m\0" \
+	"som=imx7d-pico\0" \
+	"baseboard=hobbit\0" \
+	"default_baseboard=hobbit\0" \
 	"fdt_high=0xffffffff\0" \
 	"initrd_high=0xffffffff\0" \
-	"fdt_file=imx7d-pico_dwarf.dtb\0" \
 	"fdt_addr=0x83000000\0" \
 	"boot_fdt=try\0" \
 	"ip_dyn=yes\0" \
@@ -214,22 +213,30 @@
 		"fi\0" \
 	"mmcautodetect=yes\0" \
 	"mmcargs=setenv bootargs console=${console},${baudrate} " \
-		"root=${mmcroot} 2\0" \
+		"root=${mmcroot} \0" \
 	"loadbootscript=" \
 		"fatload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${script};\0" \
 	"bootscript=echo Running bootscript from mmc ...; " \
 		"source\0" \
 	"loadimage=fatload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${image}\0" \
+	"setfdt=setenv fdt_file ${som}_${baseboard}.dtb\0" \
 	"loadfdt=fatload mmc ${mmcdev}:${mmcpart} ${fdt_addr} ${fdt_file}\0" \
 	"mmcboot=echo Booting from mmc ...; " \
 		"run searchbootdev; " \
 		"run mmcargs; " \
+		"echo baseboard is ${baseboard}; " \
+		"run setfdt; " \
 		"if test ${boot_fdt} = yes || test ${boot_fdt} = try; then " \
 			"if run loadfdt; then " \
 				"bootz ${loadaddr} - ${fdt_addr}; " \
 			"else " \
 				"if test ${boot_fdt} = try; then " \
-					"bootz; " \
+					"echo WARN: Cannot load the DT; " \
+					"echo fall back to load the default DT; " \
+					"setenv baseboard ${default_baseboard}; " \
+					"run setfdt; " \
+					"run loadfdt; " \
+					"bootz ${loadaddr} - ${fdt_addr}; " \
 				"else " \
 					"echo WARN: Cannot load the DT; " \
 				"fi; " \
@@ -237,6 +244,10 @@
 		"else " \
 			"bootz; " \
 		"fi;\0" \
+	"bootenv=uEnv.txt\0" \
+	"loadbootenv=fatload mmc ${mmcdev} ${loadaddr} ${bootenv}\0" \
+	"importbootenv=echo Importing environment from mmc ...; " \
+		"env import -t -r $loadaddr $filesize\0" \
 	"netargs=setenv bootargs console=${console},${baudrate} " \
 		"root=/dev/nfs " \
 	"ip=dhcp nfsroot=${serverip}:${nfsroot},v3,tcp\0" \
@@ -263,8 +274,15 @@
 		"fi;\0"
 
 #define CONFIG_BOOTCOMMAND \
-	   "mmc dev ${mmcdev};" \
 	   "mmc dev ${mmcdev}; if mmc rescan; then " \
+		   "if run loadbootenv; then " \
+			   "echo Loaded environment from ${bootenv};" \
+			   "run importbootenv;" \
+		   "fi;" \
+		   "if test -n $uenvcmd; then " \
+			   "echo Running uenvcmd ...;" \
+			   "run uenvcmd;" \
+		   "fi;" \
 		   "if run loadbootscript; then " \
 			   "run bootscript; " \
 		   "else " \
