@@ -57,7 +57,7 @@
 #define CONFIG_CMD_BMODE
 #define CONFIG_CMD_SETEXPR
 
-#define CONFIG_BOOTDELAY		5
+#define CONFIG_BOOTDELAY		1
 
 #define CONFIG_SYS_MEMTEST_START	0x10000000
 #define CONFIG_SYS_MEMTEST_END		(CONFIG_SYS_MEMTEST_START + 500 * SZ_1M)
@@ -69,6 +69,13 @@
 #define CONFIG_SYS_I2C
 #define CONFIG_SYS_I2C_MXC
 #define CONFIG_SYS_I2C_SPEED		100000
+#define CONFIG_I2C_PMIC			2
+
+/* PMIC */
+#define CONFIG_POWER
+#define CONFIG_POWER_I2C
+#define CONFIG_POWER_PFUZE100
+#define CONFIG_POWER_PFUZE100_I2C_ADDR	0x08
 
 /* MMC Configuration */
 #define CONFIG_FSL_ESDHC
@@ -252,6 +259,10 @@
 			"bootz; " \
 		"fi;\0" \
 	"findfdt="\
+		"if test $board_name = D1 && test $board_rev = MX6Q ; then " \
+			"setenv fdtfile imx6q-wandboard-revd1.dtb; fi; " \
+		"if test $board_name = D1 && test $board_rev = MX6DL ; then " \
+			"setenv fdtfile imx6dl-wandboard-revd1.dtb; fi; " \
 		"if test $board_name = C1 && test $board_rev = MX6Q ; then " \
 			"setenv fdtfile imx6q-wandboard-revc1.dtb; fi; " \
 		"if test $board_name = C1 && test $board_rev = MX6DL ; then " \
