@@ -84,6 +84,18 @@
 #define CONFIG_CMD_FAT
 #define CONFIG_DOS_PARTITION
 
+/* SATA Configs */
+
+#define CONFIG_CMD_SATA
+#ifdef CONFIG_CMD_SATA
+#define CONFIG_DWC_AHSATA
+#define CONFIG_SYS_SATA_MAX_DEVICE	1
+#define CONFIG_DWC_AHSATA_PORT_ID	0
+#define CONFIG_DWC_AHSATA_BASE_ADDR	SATA_ARB_BASE_ADDR
+#define CONFIG_LBA48
+#define CONFIG_LIBATA
+#endif
+
 /* USB Configs */
 #define CONFIG_CMD_USB
 #define CONFIG_USB_EHCI
@@ -240,13 +252,13 @@
 			"bootz; " \
 		"fi;\0" \
 	"findfdt="\
-		"if test $board_rev = MX6Q-REVC1; then " \
+		"if test $board_name = C1 && test $board_rev = MX6Q ; then " \
 			"setenv fdtfile imx6q-wandboard-revc1.dtb; fi; " \
-		"if test $board_rev = MX6Q-REVB1; then " \
-			"setenv fdtfile imx6q-wandboard-revb1.dtb; fi; " \
-		"if test $board_rev = MX6DL-REVC1; then " \
+		"if test $board_name = C1 && test $board_rev = MX6DL ; then " \
 			"setenv fdtfile imx6dl-wandboard-revc1.dtb; fi; " \
-		"if test $board_rev = MX6DL-REVB1; then " \
+		"if test $board_name = B1 && test $board_rev = MX6Q ; then " \
+			"setenv fdtfile imx6q-wandboard-revb1.dtb; fi; " \
+		"if test $board_name = B1 && test $board_rev = MX6DL ; then " \
 			"setenv fdtfile imx6dl-wandboard-revb1.dtb; fi; " \
 		"if test $fdtfile = undefined; then " \
 			"echo WARNING: Could not determine dtb to use; fi; \0" \

@@ -19,6 +19,7 @@
 #include <asm/imx-common/mxc_i2c.h>
 #include <asm/imx-common/boot_mode.h>
 #include <asm/imx-common/video.h>
+#include <asm/imx-common/sata.h>
 #include <asm/io.h>
 #include <linux/sizes.h>
 #include <common.h>
@@ -50,7 +51,7 @@ DECLARE_GLOBAL_DATA_PTR;
 #define USDHC1_CD_GPIO		IMX_GPIO_NR(1, 2)
 #define USDHC3_CD_GPIO		IMX_GPIO_NR(3, 9)
 #define ETH_PHY_RESET		IMX_GPIO_NR(3, 29)
-#define WAND_REV_CHECK	IMX_GPIO_NR(2, 28)
+#define REV_DETECTION		IMX_GPIO_NR(2, 28)
 
 int dram_init(void)
 {
@@ -108,7 +109,7 @@ static iomux_v3_cfg_t const enet_pads[] = {
 	IOMUX_PADS(PAD_KEY_COL4__GPIO4_IO14   | MUX_PAD_CTRL(NO_PAD_CTRL)),
 };
 
-static iomux_v3_cfg_t const wandboard_rev_check_pads[] = {
+static iomux_v3_cfg_t const rev_detection_pad[] = {
 	IOMUX_PADS(PAD_EIM_EB0__GPIO2_IO28  | MUX_PAD_CTRL(NO_PAD_CTRL)),
 };
 
@@ -123,8 +124,9 @@ static void setup_iomux_enet(void)
 
 	/* Reset AR8031 PHY */
 	gpio_direction_output(ETH_PHY_RESET, 0);
-	udelay(500);
+	mdelay(10);
 	gpio_set_value(ETH_PHY_RESET, 1);
+	udelay(100);
 }
 
 static struct fsl_esdhc_cfg usdhc_cfg[2] = {
@@ -156,7 +158,7 @@ int board_mmc_init(bd_t *bis)
 
 	/*
 	 * Following map is done:
-	 * (U-boot device node)    (Physical Port)
+	 * (U-Boot device node)    (Physical Port)
 	 * mmc0                    SOM MicroSD
 	 * mmc1                    Carrier board MicroSD
 	 */
@@ -189,7 +191,7 @@ int board_mmc_init(bd_t *bis)
 	return 0;
 }
 
-static int mx6_rgmii_rework(struct phy_device *phydev)
+static int ar8031_phy_fixup(struct phy_device *phydev)
 {
 	unsigned short val;
 
@@ -214,7 +216,7 @@ static int mx6_rgmii_rework(struct phy_device *phydev)
 
 int board_phy_config(struct phy_device *phydev)
 {
-	mx6_rgmii_rework(phydev);
+	ar8031_phy_fixup(phydev);
 
 	if (phydev->drv->config)
 		phydev->drv->config(phydev);
@@ -452,6 +454,12 @@ int board_early_init_f(void)
 #if defined(CONFIG_VIDEO_IPUV3)
 	setup_display();
 #endif
+#ifdef CONFIG_CMD_SATA
+	/* Only mx6q wandboard has SATA */
+	if (is_cpu_type(MXC_CPU_MX6Q))
+		setup_sata();
+#endif
+
 	return 0;
 }
 
@@ -464,6 +472,9 @@ int overwrite_console(void)
 	return 1;
 }
 
+
+
+
 #ifdef CONFIG_CMD_BMODE
 static const struct boot_mode board_boot_modes[] = {
 	/* 4 bit bus width */
@@ -473,6 +484,17 @@ static const struct boot_mode board_boot_modes[] = {
 };
 #endif
 
+static bool is_revc1(void)
+{
+	SETUP_IOMUX_PADS(rev_detection_pad);
+	gpio_direction_input(REV_DETECTION);
+
+	if (gpio_get_value(REV_DETECTION))
+		return true;
+	else
+		return false;
+}
+
 int board_late_init(void)
 {
 #ifdef CONFIG_CMD_BMODE
@@ -480,20 +502,15 @@ int board_late_init(void)
 #endif
 
 #ifdef CONFIG_ENV_VARS_UBOOT_RUNTIME_CONFIG
-	SETUP_IOMUX_PADS(wandboard_rev_check_pads);
-	mdelay(10);
+	if (is_cpu_type(MXC_CPU_MX6Q) || is_cpu_type(MXC_CPU_MX6D))
+		setenv("board_rev", "MX6Q");
+	else
+		setenv("board_rev", "MX6DL");
 
-	if (is_cpu_type(MXC_CPU_MX6Q) || is_cpu_type(MXC_CPU_MX6D)) {
-		if(gpio_get_value(WAND_REV_CHECK))
-			setenv("board_rev", "MX6Q-REVC1");
-		else
-			setenv("board_rev", "MX6Q-REVB1");
-	}else {
-		if(gpio_get_value(WAND_REV_CHECK))
-			setenv("board_rev", "MX6DL-REVC1");
-		else
-			setenv("board_rev", "MX6DL-REVB1");
-	}
+	if (is_revc1())
+		setenv("board_name", "C1");
+	else
+		setenv("board_name", "B1");
 #endif
 	return 0;
 }
@@ -514,7 +531,10 @@ int board_init(void)
 
 int checkboard(void)
 {
-	puts("Board: Wandboard\n");
+	if (is_revc1())
+		puts("Board: Wandboard rev C1\n");
+	else
+		puts("Board: Wandboard rev B1\n");
 
 	return 0;
 }
