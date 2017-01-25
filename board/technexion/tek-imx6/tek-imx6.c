@@ -143,11 +143,13 @@ static void setup_iomux_enet(void)
 
 	/* enable AR8035 POWER */
 	gpio_direction_output(ETH_PHY_POWER, 0);
-
-	/* Reset AR8035 PHY */
+	/* wait until 3.3V of PHY and clock become stable */
+	mdelay(10);
+	/* Reset AR8031/AR8035 PHY */
 	gpio_direction_output(ETH_PHY_RESET, 0);
-	udelay(500);
+	mdelay(10);
 	gpio_set_value(ETH_PHY_RESET, 1);
+	udelay(100);
 }
 
 static void setup_iomux_version_detection(void)
