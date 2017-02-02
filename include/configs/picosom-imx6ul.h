@@ -170,6 +170,8 @@
 	"initrd_high=0xffffffff\0" \
 	"fdt_addr=0x83000000\0" \
 	"boot_fdt=try\0" \
+	"mmcdev=" __stringify(CONFIG_SYS_MMC_ENV_DEV) "\0" \
+	"mmcpart=1\0" \
 	"detectmem=" \
 		"if test ${memdet} = 512MB; then " \
 			"setenv memsize cma=128M; " \
@@ -191,7 +193,6 @@
 	"setfdt=setenv fdtfile ${som}_${baseboard}.dtb\0" \
 	"loadfdt=fatload mmc ${mmcdev}:${mmcpart} ${fdt_addr} ${fdtfile}\0" \
 	"mmcboot=echo Booting from mmc ...; " \
-		"run searchbootdev; " \
 		"run detectmem; " \
 		"run mmcargs; " \
 		"echo baseboard is ${baseboard}; " \
