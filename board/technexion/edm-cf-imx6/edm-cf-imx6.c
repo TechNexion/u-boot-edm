@@ -60,8 +60,6 @@ DECLARE_GLOBAL_DATA_PTR;
 #define ETH_PHY_RESET		IMX_GPIO_NR(3, 29)
 #define ETH_PHY_AR8035_POWER	IMX_GPIO_NR(7, 13)
 #define EDM_SOM_DET_R149	IMX_GPIO_NR(2, 28)
-#define EDM_SOM_DET_R170	IMX_GPIO_NR(3, 12)
-#define EDM_SOM_DET_R173	IMX_GPIO_NR(3, 5)
 
 #define PMIC_I2C_ADDR 0x08
 
@@ -148,10 +146,6 @@ static iomux_v3_cfg_t const enet_ar8035_power_pads[] = {
 static iomux_v3_cfg_t const som_detection_pads[] = {
 	/* R149 */
 	IOMUX_PADS(PAD_EIM_EB0__GPIO2_IO28  | MUX_PAD_CTRL(NO_PAD_CTRL)),
-	/* R170 */
-	IOMUX_PADS(PAD_EIM_DA12__GPIO3_IO12  | MUX_PAD_CTRL(NO_PAD_CTRL)),
-	/* R173 */
-	IOMUX_PADS(PAD_EIM_DA5__GPIO3_IO05  | MUX_PAD_CTRL(NO_PAD_CTRL)),
 };
 
 static void setup_iomux_uart(void)
@@ -452,32 +446,21 @@ static void setup_iomux_i2c(void)
 static const char* som_type(void)
 {
 	/*
-	 * Wandboard boots from SD3
 	 * EDM boots from i-NAND or SD1
 	 */
 	gpio_direction_input(EDM_SOM_DET_R149);
-	gpio_direction_input(EDM_SOM_DET_R170);
-	gpio_direction_input(EDM_SOM_DET_R173);
 
-	if (!gpio_get_value(EDM_SOM_DET_R173) && gpio_get_value(EDM_SOM_DET_R170)) {
-		if (!gpio_get_value(EDM_SOM_DET_R149)) {
-			RETURN_SOM_TYPE(wandboard-revb1)
-		}else {
-			RETURN_SOM_TYPE(wandboard-revc1)
+	if (!gpio_get_value(EDM_SOM_DET_R149)) {
+		if (with_pmic) {
+			RETURN_SOM_TYPE(edm1-cf-pmic)
+		} else {
+			RETURN_SOM_TYPE(edm1-cf)
 		}
 	} else {
-		if (!gpio_get_value(EDM_SOM_DET_R149)) {
-			if (with_pmic) {
-				RETURN_SOM_TYPE(edm1-cf-pmic)
-			} else {
-				RETURN_SOM_TYPE(edm1-cf)
-			}
+		if (with_pmic) {
+			RETURN_SOM_TYPE(edm2-cf-pmic)
 		} else {
-			if (with_pmic) {
-				RETURN_SOM_TYPE(edm2-cf-pmic)
-			} else {
-				RETURN_SOM_TYPE(edm2-cf)
-			}
+			RETURN_SOM_TYPE(edm2-cf)
 		}
 	}
 }
