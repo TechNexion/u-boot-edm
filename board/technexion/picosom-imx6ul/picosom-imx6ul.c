@@ -116,8 +116,6 @@ struct i2c_pads_info i2c_pad_info1 = {
 };
 #endif
 
-#define STRING(s) #s
-
 int dram_init(void)
 {
 	gd->ram_size = imx_ddr_size();
@@ -766,7 +764,7 @@ int checkboard(void)
         } else if (is_cpu_type(MXC_CPU_MX6ULL)) {
                 puts("Board: PicoSOM i.mx6ULL\n");
         } else {
-                puts("Board: PicoSOM i.mx6\n");
+                puts("Board: Fail to check borad type!! \n");
         }
 	return 0;
 }
