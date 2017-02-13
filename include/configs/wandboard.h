@@ -258,6 +258,10 @@
 		"else " \
 			"bootz; " \
 		"fi;\0" \
+	"bootenv=uEnv.txt\0" \
+	"loadbootenv=fatload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${bootenv}\0" \
+	"importbootenv=echo Importing environment from ${bootmedia} ...; " \
+		"env import -t -r $loadaddr $filesize\0" \
 	"findfdt="\
 		"if test $board_name = D1 && test $board_rev = MX6Q ; then " \
 			"setenv fdtfile imx6q-wandboard-revd1.dtb; fi; " \
@@ -277,6 +281,14 @@
 #define CONFIG_BOOTCOMMAND \
 	   "run findfdt; " \
 	   "mmc dev ${mmcdev}; if mmc rescan; then " \
+		   "if run loadbootenv; then " \
+			   "echo Loaded environment from ${bootenv};" \
+			   "run importbootenv;" \
+		   "fi;" \
+		   "if test -n $uenvcmd; then " \
+			   "echo Running uenvcmd ...;" \
+			   "run uenvcmd;" \
+		   "fi;" \
 		   "if run loadbootscript; then " \
 			   "run bootscript; " \
 		   "else " \
