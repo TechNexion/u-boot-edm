@@ -158,6 +158,11 @@ config TARGET_PICOSOM_IMX6UL
 	select CPU_V7
 	select SUPPORT_SPL
 
+config TARGET_TEP1_IMX6UL
+	bool "Support tep1-imx6ul"
+	select CPU_V7
+	select SUPPORT_SPL
+
 config TARGET_NITROGEN6X
 	bool "nitrogen6x"
 
@@ -247,6 +252,7 @@ source "board/solidrun/mx6cuboxi/Kconfig"
 source "board/tbs/tbs2910/Kconfig"
 source "board/technexion/pico-imx6ul-nand/Kconfig"
 source "board/technexion/picosom-imx6ul/Kconfig"
+source "board/technexion/tep1-imx6ul/Kconfig"
 source "board/tqc/tqma6/Kconfig"
 source "board/udoo/Kconfig"
 source "board/wandboard/Kconfig"
