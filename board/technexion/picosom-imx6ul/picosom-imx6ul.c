@@ -712,7 +712,7 @@ int board_late_init(void)
 	setup_iomux_ddr_type_detection();
 	gpio_direction_input(DDR_TYPE_DET);
 
-	if (gpio_get_value(DDR_TYPE_DET))
+	if (!gpio_get_value(DDR_TYPE_DET))
 		setenv("memdet", "512MB");
 	else
 		setenv("memdet", "256MB");
@@ -731,8 +731,7 @@ void ddr_type_detection(void)
 	setup_iomux_ddr_type_detection();
 	gpio_direction_input(DDR_TYPE_DET);
 
-
-	if (gpio_get_value(DDR_TYPE_DET)) {
+	if (!gpio_get_value(DDR_TYPE_DET)) {
 		printf("DRAM size is 512MB \r\n");
 	}else {
 		printf("DRAM size is 256MB \r\n");
@@ -847,7 +846,7 @@ static void spl_dram_init(void)
 	setup_iomux_ddr_type_detection();
 	gpio_direction_input(DDR_TYPE_DET);
 
-	if (gpio_get_value(DDR_TYPE_DET)) {
+	if (!gpio_get_value(DDR_TYPE_DET)) {
 		mx6ul_dram_iocfg(ddr_4gb_800mhz.width, &mx6_ddr_ioregs, &mx6_grp_ioregs);
 		mx6_dram_cfg(&ddr_sysinfo, &mx6_mmcd_calib, &ddr_4gb_800mhz);
 	}else {
