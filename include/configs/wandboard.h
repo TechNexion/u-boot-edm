@@ -263,6 +263,8 @@
 	"importbootenv=echo Importing environment from ${bootmedia} ...; " \
 		"env import -t -r $loadaddr $filesize\0" \
 	"findfdt="\
+		"if test $board_name = D1 && test $board_rev = MX6QP ; then " \
+			"setenv fdtfile imx6qp-wandboard-revd1.dtb; fi; " \
 		"if test $board_name = D1 && test $board_rev = MX6Q ; then " \
 			"setenv fdtfile imx6q-wandboard-revd1.dtb; fi; " \
 		"if test $board_name = D1 && test $board_rev = MX6DL ; then " \
