@@ -51,6 +51,7 @@
 #define CONFIG_MXC_GPIO
 
 #define CONFIG_MXC_UART
+#define CONFIG_MXC_UART_BASE		UART5_IPS_BASE_ADDR
 
 /* allow to overwrite serial and ethaddr */
 #define CONFIG_ENV_OVERWRITE

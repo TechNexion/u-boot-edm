@@ -80,8 +80,9 @@
 
 /* UART */
 #define CONFIG_MXC_UART
+#ifndef CONFIG_MXC_UART_BASE
 #define CONFIG_MXC_UART_BASE            UART1_IPS_BASE_ADDR
-
+#endif
 /* MMC */
 #define CONFIG_MMC
 #define CONFIG_CMD_MMC
