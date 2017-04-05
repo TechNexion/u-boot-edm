@@ -101,6 +101,7 @@ DECLARE_GLOBAL_DATA_PTR;
 
 #ifdef CONFIG_SYS_I2C_MXC
 #define PC MUX_PAD_CTRL(I2C_PAD_CTRL)
+#define STRING(s) #s
 /* I2C2 for PMIC */
 struct i2c_pads_info i2c_pad_info1 = {
 	.scl = {
