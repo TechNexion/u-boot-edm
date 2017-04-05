@@ -119,8 +119,6 @@
 #define CONFIG_SYS_I2C_SPEED            100000
 #endif
 
-#define STRING(s) #s
-
 #define MX6UL_PICO_SOM
 #define MX6UL_PICO_SOM
 
