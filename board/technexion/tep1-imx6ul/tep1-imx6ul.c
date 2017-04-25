@@ -460,9 +460,10 @@ int board_eth_init(bd_t *bis)
 
 	gpio_direction_output(RMII_PHY1_RESET, 0);
 	gpio_direction_output(RMII_PHY2_RESET, 0);
-	udelay(5000);
+	udelay(5000); /* 5ms reset time - micrel phy needs 500 us */
 	gpio_direction_output(RMII_PHY1_RESET, 1);
 	gpio_direction_output(RMII_PHY2_RESET, 1);
+        udelay(100); /* 100us deassertion time for micrel phy */
 
 	ret = fecmxc_initialize_multi(bis, CONFIG_FEC_ENET_DEV,
 		CONFIG_FEC_MXC_PHYADDR, IMX_FEC_BASE);
