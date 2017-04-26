@@ -154,9 +154,12 @@ static iomux_v3_cfg_t const ddr_type_detection_pads[] = {
  * pin conflicts for fec1 and fec2, GPIO1_IO06 and GPIO1_IO07 can only
  * be used for ENET1 or ENET2, cannot be used for both.
  */
-static iomux_v3_cfg_t const fec1_pads[] = {
+static iomux_v3_cfg_t const fec1_mdio_pads[] = {
 	MX6_PAD_GPIO1_IO06__ENET1_MDIO | MUX_PAD_CTRL(MDIO_PAD_CTRL),
 	MX6_PAD_GPIO1_IO07__ENET1_MDC | MUX_PAD_CTRL(ENET_PAD_CTRL),
+};
+
+static iomux_v3_cfg_t const fec1_pads[] = {
 	MX6_PAD_ENET1_TX_DATA0__ENET1_TDATA00 | MUX_PAD_CTRL(ENET_PAD_CTRL),
 	MX6_PAD_ENET1_TX_DATA1__ENET1_TDATA01 | MUX_PAD_CTRL(ENET_PAD_CTRL),
 	MX6_PAD_ENET1_TX_EN__ENET1_TX_EN | MUX_PAD_CTRL(ENET_PAD_CTRL),
@@ -167,15 +170,16 @@ static iomux_v3_cfg_t const fec1_pads[] = {
 	MX6_PAD_ENET1_RX_EN__ENET1_RX_EN | MUX_PAD_CTRL(ENET_PAD_CTRL),
 };
 
-static iomux_v3_cfg_t const fec2_pads[] = {
+static iomux_v3_cfg_t const fec2_mdio_pads[] = {
 	MX6_PAD_GPIO1_IO06__ENET2_MDIO | MUX_PAD_CTRL(MDIO_PAD_CTRL),
 	MX6_PAD_GPIO1_IO07__ENET2_MDC | MUX_PAD_CTRL(ENET_PAD_CTRL),
+};
 
+static iomux_v3_cfg_t const fec2_pads[] = {
 	MX6_PAD_ENET2_TX_DATA0__ENET2_TDATA00 | MUX_PAD_CTRL(ENET_PAD_CTRL),
 	MX6_PAD_ENET2_TX_DATA1__ENET2_TDATA01 | MUX_PAD_CTRL(ENET_PAD_CTRL),
 	MX6_PAD_ENET2_TX_CLK__ENET2_REF_CLK2 | MUX_PAD_CTRL(ENET_CLK_PAD_CTRL),
 	MX6_PAD_ENET2_TX_EN__ENET2_TX_EN | MUX_PAD_CTRL(ENET_PAD_CTRL),
-
 	MX6_PAD_ENET2_RX_DATA0__ENET2_RDATA00 | MUX_PAD_CTRL(ENET_PAD_CTRL),
 	MX6_PAD_ENET2_RX_DATA1__ENET2_RDATA01 | MUX_PAD_CTRL(ENET_PAD_CTRL),
 	MX6_PAD_ENET2_RX_EN__ENET2_RX_EN | MUX_PAD_CTRL(ENET_PAD_CTRL),
@@ -193,9 +197,12 @@ static iomux_v3_cfg_t const fec_reset_pads[] = {
 static void setup_iomux_fec(int fec_id)
 {
 	if (fec_id == 0)
-		imx_iomux_v3_setup_multiple_pads(fec1_pads, ARRAY_SIZE(fec1_pads));
+		imx_iomux_v3_setup_multiple_pads(fec1_mdio_pads, ARRAY_SIZE(fec1_mdio_pads));
 	else
-		imx_iomux_v3_setup_multiple_pads(fec2_pads, ARRAY_SIZE(fec2_pads));
+		imx_iomux_v3_setup_multiple_pads(fec2_mdio_pads, ARRAY_SIZE(fec2_mdio_pads));
+
+	imx_iomux_v3_setup_multiple_pads(fec1_pads, ARRAY_SIZE(fec1_pads));
+	imx_iomux_v3_setup_multiple_pads(fec2_pads, ARRAY_SIZE(fec2_pads));
 }
 
 static void setup_iomux_fec_reset(void)
