@@ -29,6 +29,7 @@
 #include <netdev.h>
 #include <usb.h>
 #include <usb/ehci-fsl.h>
+#include <pca953x.h>
 
 #ifdef CONFIG_POWER
 #include <power/pmic.h>
@@ -87,7 +88,7 @@ DECLARE_GLOBAL_DATA_PTR;
 
 #ifdef CONFIG_SYS_I2C_MXC
 #define PC MUX_PAD_CTRL(I2C_PAD_CTRL)
-/* I2C2 for PMIC */
+/* I2C1 for PMIC */
 struct i2c_pads_info i2c_pad_info1 = {
 	.scl = {
 		.i2c_mode =  MX6_PAD_GPIO1_IO02__I2C1_SCL | PC,
@@ -98,6 +99,20 @@ struct i2c_pads_info i2c_pad_info1 = {
 		.i2c_mode = MX6_PAD_GPIO1_IO03__I2C1_SDA | PC,
 		.gpio_mode = MX6_PAD_GPIO1_IO03__GPIO1_IO03 | PC,
 		.gp = IMX_GPIO_NR(1, 3),
+	},
+};
+
+/* I2C2 for IO expander PCA9555 */
+struct i2c_pads_info i2c_pad_info2 = {
+	.scl = {
+		.i2c_mode =  MX6_PAD_UART5_TX_DATA__I2C2_SCL | PC,
+		.gpio_mode = MX6_PAD_UART5_TX_DATA__GPIO1_IO30 | PC,
+		.gp = IMX_GPIO_NR(1, 30),
+	},
+	.sda = {
+		.i2c_mode = MX6_PAD_UART5_RX_DATA__I2C2_SDA | PC,
+		.gpio_mode = MX6_PAD_UART5_RX_DATA__GPIO1_IO31 | PC,
+		.gp = IMX_GPIO_NR(1, 31),
 	},
 };
 #endif
@@ -345,6 +360,44 @@ void board_late_mmc_init(void)
 }
 #endif
 
+/*Define for building port exp gpio, pin starts from 0*/
+#define PORTEXP_IO_NR(chip, pin) \
+	((chip << 5) + pin)
+
+/*Get the chip addr from a ioexp gpio*/
+#define PORTEXP_IO_TO_CHIP(gpio_nr) \
+	(gpio_nr >> 5)
+
+/*Get the pin number from a ioexp gpio*/
+#define PORTEXP_IO_TO_PIN(gpio_nr) \
+	(gpio_nr & 0x1f)
+
+static int port_exp_direction_output(unsigned gpio, int value)
+{
+	int ret;
+
+	i2c_set_bus_num(1);
+	ret = i2c_probe(PORTEXP_IO_TO_CHIP(gpio));
+	if (ret)
+		return ret;
+
+	ret = pca953x_set_dir(PORTEXP_IO_TO_CHIP(gpio),
+		(1 << PORTEXP_IO_TO_PIN(gpio)),
+		(PCA953X_DIR_OUT << PORTEXP_IO_TO_PIN(gpio)));
+
+	if (ret)
+		return ret;
+
+	ret = pca953x_set_val(PORTEXP_IO_TO_CHIP(gpio),
+		(1 << PORTEXP_IO_TO_PIN(gpio)),
+		(value << PORTEXP_IO_TO_PIN(gpio)));
+
+	if (ret)
+		return ret;
+
+	return 0;
+}
+
 #ifdef CONFIG_VIDEO_MXS
 static iomux_v3_cfg_t const lcd_pads[] = {
 	MX6_PAD_LCD_CLK__LCDIF_CLK | MUX_PAD_CTRL(LCD_PAD_CTRL),
@@ -390,6 +443,8 @@ struct lcd_panel_info_t {
 	struct fb_videomode mode;
 };
 
+#define LCD_5V_PWR     PORTEXP_IO_NR(0x23, 10)
+
 void do_enable_parallel_lcd(struct lcd_panel_info_t const *dev)
 {
 	enable_lcdif_clock(dev->lcdif_base_addr);
@@ -398,6 +453,8 @@ void do_enable_parallel_lcd(struct lcd_panel_info_t const *dev)
 
 	/* Set Brightness to high */
 	gpio_direction_output(IMX_GPIO_NR(4, 16) , 1);
+	/* Enable TTL LCD 5V power */
+	port_exp_direction_output(LCD_5V_PWR, 1);
 }
 
 static struct lcd_panel_info_t const displays[] = {{
@@ -655,6 +712,7 @@ int board_init(void)
 
 #ifdef CONFIG_SYS_I2C_MXC
 	setup_i2c(0, CONFIG_SYS_I2C_SPEED, 0x7f, &i2c_pad_info1);
+	setup_i2c(1, CONFIG_SYS_I2C_SPEED, 0x7f, &i2c_pad_info2);
 #endif
 
 #ifdef	CONFIG_FEC_MXC
