@@ -494,6 +494,7 @@ int board_eth_init(bd_t *bis)
 	gpio_direction_output(RMII_PHY_RESET, 0);
 	udelay(500);
 	gpio_direction_output(RMII_PHY_RESET, 1);
+	udelay(100);
 
 	ret = fecmxc_initialize_multi(bis, CONFIG_FEC_ENET_DEV,
 		CONFIG_FEC_MXC_PHYADDR, IMX_FEC_BASE);
