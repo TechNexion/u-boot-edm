@@ -109,9 +109,9 @@ int dram_init(void)
 	return 0;
 }
 
-static iomux_v3_cfg_t const uart1_pads[] = {
-	MX6_PAD_UART1_TX_DATA__UART1_DCE_TX | MUX_PAD_CTRL(UART_PAD_CTRL),
-	MX6_PAD_UART1_RX_DATA__UART1_DCE_RX | MUX_PAD_CTRL(UART_PAD_CTRL),
+static iomux_v3_cfg_t const uart5_pads[] = {
+       MX6_PAD_CSI_DATA00__UART5_DCE_TX | MUX_PAD_CTRL(UART_PAD_CTRL),
+       MX6_PAD_CSI_DATA01__UART5_DCE_RX | MUX_PAD_CTRL(UART_PAD_CTRL),
 };
 
 static iomux_v3_cfg_t const usdhc1_pads[] = {
@@ -219,7 +219,7 @@ static void setup_iomux_ddr_type_detection(void)
 
 static void setup_iomux_uart(void)
 {
-	imx_iomux_v3_setup_multiple_pads(uart1_pads, ARRAY_SIZE(uart1_pads));
+	imx_iomux_v3_setup_multiple_pads(uart5_pads, ARRAY_SIZE(uart5_pads));
 }
 
 #ifdef CONFIG_FSL_ESDHC
