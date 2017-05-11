@@ -154,6 +154,11 @@ config TARGET_MX6SX_19X19_ARM2
 	select DM
 	select DM_THERMAL
 
+config TARGET_EDM_CF_IMX6
+	bool "Support edm-cf-imx6"
+	select CPU_V7
+	select SUPPORT_SPL
+
 config TARGET_PICO_IMX6UL_NAND
 	bool "Support pico-imx6ul-nand"
 	select CPU_V7
@@ -260,6 +265,7 @@ source "board/kosagi/novena/Kconfig"
 source "board/seco/Kconfig"
 source "board/solidrun/mx6cuboxi/Kconfig"
 source "board/tbs/tbs2910/Kconfig"
+source "board/technexion/edm-cf-imx6/Kconfig"
 source "board/technexion/edm1-imx6ul-nand/Kconfig"
 source "board/technexion/pico-imx6ul-nand/Kconfig"
 source "board/technexion/picosom-imx6ul/Kconfig"
