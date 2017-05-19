@@ -432,7 +432,8 @@ static iomux_v3_cfg_t const ft5x06_wvga_pads[] = {
 
 static void setup_iomux_i2c(void)
 {
-	if (is_cpu_type(MXC_CPU_MX6Q) || is_cpu_type(MXC_CPU_MX6D)) {
+	if (is_cpu_type(MXC_CPU_MX6Q) || is_cpu_type(MXC_CPU_MX6D) ||
+		is_cpu_type(MXC_CPU_MX6QP) || is_cpu_type(MXC_CPU_MX6DP)) {
 		//setup_i2c(0, CONFIG_SYS_I2C_SPEED, 0x7f, &mx6q_i2c1_pad_info);
 		setup_i2c(1, CONFIG_SYS_I2C_SPEED, 0x7f, &mx6q_i2c2_pad_info);
 		setup_i2c(2, CONFIG_SYS_I2C_SPEED, 0x7f, &mx6q_i2c3_pad_info);
