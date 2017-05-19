@@ -22,6 +22,8 @@ u32 spl_boot_device(void)
 	unsigned reg = gpr10_boot ? readl(&psrc->gpr9) : readl(&psrc->sbmr1);
 	unsigned int bmode = readl(&psrc->sbmr2);
 
+	printf("Boot Device: ");
+
 	/*
 	 * Check for BMODE if serial downloader is enabled
 	 * BOOT_MODE - see IMX6DQRM Table 8-1
@@ -34,34 +36,47 @@ u32 spl_boot_device(void)
 	 /* EIM: See 8.5.1, Table 8-9 */
 	case 0x0:
 		/* BOOT_CFG1[3]: NOR/OneNAND Selection */
-		if ((reg & 0x00000008) >> 3)
+		if ((reg & 0x00000008) >> 3) {
+			printf("ONENAND\n");
 			return BOOT_DEVICE_ONENAND;
-		else
+		} else {
+			printf("NOR\n");
 			return BOOT_DEVICE_NOR;
+		}
 		break;
 	/* SATA: See 8.5.4, Table 8-20 */
 	case 0x2:
+		printf("SATA\n");
 		return BOOT_DEVICE_SATA;
 	/* Serial ROM: See 8.5.5.1, Table 8-22 */
 	case 0x3:
 		/* BOOT_CFG4[2:0] */
 		switch ((reg & 0x07000000) >> 24) {
 		case 0x0 ... 0x4:
+			printf("SPI\n");
 			return BOOT_DEVICE_SPI;
 		case 0x5 ... 0x7:
+			printf("I2C\n");
 			return BOOT_DEVICE_I2C;
 		}
 		break;
 	/* SD/eSD: 8.5.3, Table 8-15  */
 	case 0x4:
 	case 0x5:
+		if ((reg & 0x00001000) >> 12)
+			printf("SD0\n");
+		else
+			printf("SD1\n");
+
 		return BOOT_DEVICE_MMC1;
 	/* MMC/eMMC: 8.5.3 */
 	case 0x6:
 	case 0x7:
+		printf("MMC\n");
 		return BOOT_DEVICE_MMC1;
 	/* NAND Flash: 8.5.2 */
 	case 0x8 ... 0xf:
+		printf("NAND\n");
 		return BOOT_DEVICE_NAND;
 	}
 	return BOOT_DEVICE_NONE;
