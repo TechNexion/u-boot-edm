@@ -24,6 +24,7 @@
 #endif
 
 #define CONFIG_DISPLAY_CPUINFO
+#undef CONFIG_DISPLAY_BOARDINFO
 #define CONFIG_DISPLAY_BOARDINFO_LATE  /* display board info (after reloc) */
 
 #define MACH_TYPE_EDM_CF_IMX6		4257
@@ -136,7 +137,6 @@
 #define CONFIG_FEC_MXC_PHYADDR		1
 #define CONFIG_PHYLIB
 #define CONFIG_PHY_ATHEROS
-#define CONFIG_ENV_SECT_SIZE		(64 * 1024)
 
 /* Framebuffer */
 #define CONFIG_VIDEO
@@ -308,14 +308,9 @@
 
 #define CONFIG_ENV_SIZE			(8 * 1024)
 
-#define CONFIG_ENV_IS_NOWHERE
-#define CONFIG_ENV_IS_IN_BOOT_DEVICE
-#ifdef CONFIG_ENV_IS_IN_BOOT_DEVICE
+#define CONFIG_ENV_IS_IN_MMC
 #define CONFIG_ENV_OFFSET		(6 * 64 * 1024)
 #define CONFIG_SYS_MMC_ENV_DEV		0
-#define CONFIG_SATA_ENV_DEV		0
-#define CONFIG_SYS_DCACHE_OFF // remove when sata driver support cache
-#endif
 
 #define CONFIG_OF_LIBFDT
 #define CONFIG_CMD_BOOTZ
