@@ -16,6 +16,7 @@
 
 #define CONFIG_SPL_LIBCOMMON_SUPPORT
 #define CONFIG_SPL_MMC_SUPPORT
+#define CONFIG_SPL_SATA_SUPPORT
 #define CONFIG_SPL_FAT_SUPPORT
 #include "imx6_spl.h"
 
@@ -308,9 +309,13 @@
 
 #define CONFIG_ENV_SIZE			(8 * 1024)
 
-#define CONFIG_ENV_IS_IN_MMC
+#define CONFIG_ENV_IS_IN_BOOT_DEVICE
+#ifdef CONFIG_ENV_IS_IN_BOOT_DEVICE
 #define CONFIG_ENV_OFFSET		(6 * 64 * 1024)
 #define CONFIG_SYS_MMC_ENV_DEV		0
+#define CONFIG_SATA_ENV_DEV		0
+#define CONFIG_SYS_DCACHE_OFF // remove when sata driver support cache
+#endif
 
 #define CONFIG_OF_LIBFDT
 #define CONFIG_CMD_BOOTZ
