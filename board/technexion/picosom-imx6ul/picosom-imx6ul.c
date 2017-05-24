@@ -767,6 +767,8 @@ int checkboard(void)
         } else {
                 puts("Board: Fail to check borad type!! \n");
         }
+	printf("Compatible baseboard: dwarf, hobbit, nymph, pi\n");
+
 	return 0;
 }
 
