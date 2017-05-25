@@ -156,7 +156,6 @@ config TARGET_MX6SX_19X19_ARM2
 
 config TARGET_EDM_CF_IMX6
 	bool "Support edm-cf-imx6"
-	select CPU_V7
 	select SUPPORT_SPL
 
 config TARGET_EDM1_CF_IMX6SX
@@ -168,31 +167,25 @@ config TARGET_EDM1_CF_IMX6SX
 
 config TARGET_PICO_IMX6
 	bool "Support pico-imx6"
-	select CPU_V7
 	select SUPPORT_SPL
 
 config TARGET_PICO_IMX6UL_NAND
 	bool "Support pico-imx6ul-nand"
-	select CPU_V7
 
 config TARGET_PICOSOM_IMX6UL
 	bool "Support picosom-imx6ul"
-	select CPU_V7
 	select SUPPORT_SPL
 
 config TARGET_TEK_IMX6
 	bool "Support tek-imx6"
-	select CPU_V7
 	select SUPPORT_SPL
 
 config TARGET_TEK3_IMX6UL
 	bool "Support tek3-imx6ul"
-	select CPU_V7
 	select SUPPORT_SPL
 
 config TARGET_TEP1_IMX6UL
 	bool "Support tep1-imx6ul"
-	select CPU_V7
 	select SUPPORT_SPL
 
 config TARGET_NITROGEN6X
