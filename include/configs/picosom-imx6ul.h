@@ -86,9 +86,6 @@
 #undef CONFIG_BOOTM_PLAN9
 #undef CONFIG_BOOTM_RTEMS
 
-#undef CONFIG_CMD_EXPORTENV
-#undef CONFIG_CMD_IMPORTENV
-
 #define CONFIG_CMD_NET
 #ifdef CONFIG_CMD_NET
 #define CONFIG_CMD_PING
@@ -126,8 +123,6 @@
 #define CONFIG_SYS_I2C_SPEED		100000
 #endif
 
-
-#define CONFIG_DEFAULT_FDT_FILE "imx6ul-pico_hobbit.dtb"
 #define CONFIG_BOOTARGS_CMA_SIZE   "cma=96M "
 
 /* PMIC */
@@ -168,12 +163,15 @@
 	CONFIG_MFG_ENV_SETTINGS \
 	CONFIG_VIDEO_MODE \
 	"script=boot.scr\0" \
+	"som=imx6ul-pico\0" \
 	"image=zImage\0" \
 	"console=ttymxc5\0" \
 	"splashpos=m,m\0" \
+	"baseboard=hobbit\0" \
+	"default_baseboard=hobbit\0" \
+	"fdtfile=undefined\0" \
 	"fdt_high=0xffffffff\0" \
 	"initrd_high=0xffffffff\0" \
-	"fdt_file=" CONFIG_DEFAULT_FDT_FILE "\0" \
 	"fdt_addr=0x83000000\0" \
 	"boot_fdt=try\0" \
 	"detectmem=" \
@@ -194,27 +192,46 @@
 	"bootscript=echo Running bootscript from mmc ...; " \
 		"source\0" \
 	"loadimage=fatload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${image}\0" \
-	"loadfdt=fatload mmc ${mmcdev}:${mmcpart} ${fdt_addr} ${fdt_file}\0" \
+	"setfdt=setenv fdtfile ${som}_${baseboard}.dtb\0" \
+	"loadfdt=fatload mmc ${mmcdev}:${mmcpart} ${fdt_addr} ${fdtfile}\0" \
 	"mmcboot=echo Booting from mmc ...; " \
 		"run detectmem; " \
 		"run mmcargs; " \
+		"echo baseboard is ${baseboard}; " \
+		"run setfdt; " \
 		"if test ${boot_fdt} = yes || test ${boot_fdt} = try; then " \
 			"if run loadfdt; then " \
 				"bootz ${loadaddr} - ${fdt_addr}; " \
 			"else " \
 				"if test ${boot_fdt} = try; then " \
-					"bootz; " \
+					"echo WARN: Cannot load the DT; " \
+					"echo fall back to load the default DT; " \
+					"setenv baseboard ${default_baseboard}; " \
+					"run setfdt; " \
+					"run loadfdt; " \
+					"bootz ${loadaddr} - ${fdt_addr}; " \
 				"else " \
 					"echo WARN: Cannot load the DT; " \
 				"fi; " \
 			"fi; " \
 		"else " \
 			"bootz; " \
-		"fi;\0"
+		"fi;\0" \
+	"bootenv=uEnv.txt\0" \
+	"loadbootenv=fatload mmc ${mmcdev} ${loadaddr} ${bootenv}\0" \
+	"importbootenv=echo Importing environment from mmc ...; " \
+		"env import -t -r $loadaddr $filesize\0" \
 
 #define CONFIG_BOOTCOMMAND \
-	   "mmc dev ${mmcdev};" \
 	   "mmc dev ${mmcdev}; if mmc rescan; then " \
+		   "if run loadbootenv; then " \
+			   "echo Loaded environment from ${bootenv};" \
+			   "run importbootenv;" \
+		   "fi;" \
+		   "if test -n $uenvcmd; then " \
+			   "echo Running uenvcmd ...;" \
+			   "run uenvcmd;" \
+		   "fi;" \
 		   "if run loadbootscript; then " \
 			   "run bootscript; " \
 		   "else " \

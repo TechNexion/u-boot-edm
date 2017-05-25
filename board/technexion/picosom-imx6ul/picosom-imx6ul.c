@@ -741,6 +741,7 @@ void ddr_type_detection(void)
 int checkboard(void)
 {
 	puts("Board: PicoSOM i.mx6UL\n");
+	printf("Compatible baseboard: dwarf, hobbit, nymph, pi\n");
 
 	return 0;
 }
