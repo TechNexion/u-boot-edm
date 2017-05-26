@@ -731,9 +731,9 @@ int checkboard(void)
 	if (is_cpu_type(MXC_CPU_MX6UL)) {
 		puts("Board: PICO-IMX6UL\n");
 	} else if (is_cpu_type(MXC_CPU_MX6ULL)) {
-		puts("Board: PicoSOM i.mx6ULL\n");
+		puts("Board: PICO-IMX6ULL\n");
 	} else {
-		puts("Board: PicoSOM i.mx6\n");
+		puts("Board: Fail to check borad type!! \n");
 	}
 	return 0;
 }

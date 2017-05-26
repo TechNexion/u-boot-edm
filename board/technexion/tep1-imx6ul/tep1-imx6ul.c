@@ -785,7 +785,7 @@ void ddr_type_detection(void)
 
 int checkboard(void)
 {
-	puts("Board: PicoSOM i.mx6UL\n");
+	puts("Board: TEP1 IMX6UL\n");
 
 	return 0;
 }
