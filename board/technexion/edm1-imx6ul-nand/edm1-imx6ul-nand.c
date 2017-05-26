@@ -731,9 +731,9 @@ int checkboard(void)
 	if (is_cpu_type(MXC_CPU_MX6UL)) {
 		puts("Board: EDM1-IMX6UL\n");
 	} else if (is_cpu_type(MXC_CPU_MX6ULL)) {
-		puts("Board: Edm1SOM i.mx6ULL\n");
+		puts("Board: EDM1-IMX6ULL\n");
 	} else {
-		puts("Board: edm1SOM i.mx6\n");
+		puts("Board: Fail to check borad type!! \n");
 	}
 	return 0;
 }
