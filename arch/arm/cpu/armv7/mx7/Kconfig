@@ -57,6 +57,10 @@ config TARGET_EDM1_IMX7D
 	bool "Support edm1-imx7d"
 	select CPU_V7
 	select SUPPORT_SPL
+config TARGET_TEP1_IMX7D
+	bool "Support tep1-imx7d"
+	select CPU_V7
+	select SUPPORT_SPL
 endchoice
 
 config SYS_SOC
@@ -69,5 +73,6 @@ source "board/freescale/mx7d_19x19_lpddr3_arm2/Kconfig"
 source "board/freescale/mx7d_19x19_ddr3_arm2/Kconfig"
 source "board/technexion/pico-imx7d/Kconfig"
 source "board/technexion/edm1-imx7d/Kconfig"
+source "board/technexion/tep1-imx7d/Kconfig"
 
 endif
