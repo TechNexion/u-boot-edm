@@ -761,9 +761,9 @@ void ddr_type_detection(void)
 int checkboard(void)
 {
         if (is_cpu_type(MXC_CPU_MX6UL)) {
-                puts("Board: PicoSOM i.mx6UL\n");
+                puts("Board: PICO-IMX6UL\n");
         } else if (is_cpu_type(MXC_CPU_MX6ULL)) {
-                puts("Board: PicoSOM i.mx6ULL\n");
+                puts("Board: PICO-IMX6ULL\n");
         } else {
                 puts("Board: Fail to check borad type!! \n");
         }
