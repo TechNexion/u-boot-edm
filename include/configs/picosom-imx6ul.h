@@ -120,7 +120,6 @@
 #endif
 
 #define MX6UL_PICO_SOM
-#define MX6UL_PICO_SOM
 
 #define PHYS_SDRAM_SIZE                        SZ_256M
 #define CONFIG_BOOTARGS_CMA_SIZE   "cma=96M "
