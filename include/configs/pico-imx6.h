@@ -14,10 +14,12 @@
 #include <asm/imx-common/gpio.h>
 #include <linux/sizes.h>
 
+#ifdef CONFIG_SPL
 #define CONFIG_SPL_LIBCOMMON_SUPPORT
 #define CONFIG_SPL_MMC_SUPPORT
 #define CONFIG_SPL_FAT_SUPPORT
 #include "imx6_spl.h"
+#endif
 
 #define CONFIG_DISPLAY_CPUINFO
 #undef CONFIG_DISPLAY_BOARDINFO
