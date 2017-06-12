@@ -153,10 +153,6 @@ static iomux_v3_cfg_t const usdhc2_emmc_pads[] = {
 	MX6_PAD_NAND_DATA05__USDHC2_DATA5 | MUX_PAD_CTRL(USDHC_PAD_CTRL),
 	MX6_PAD_NAND_DATA06__USDHC2_DATA6 | MUX_PAD_CTRL(USDHC_PAD_CTRL),
 	MX6_PAD_NAND_DATA07__USDHC2_DATA7 | MUX_PAD_CTRL(USDHC_PAD_CTRL),
-	/*
-	 * RST_B
-	 */
-	MX6_PAD_NAND_DQS__GPIO4_IO16 | MUX_PAD_CTRL(NO_PAD_CTRL),
 };
 
 static iomux_v3_cfg_t const ddr_type_detection_pads[] = {
@@ -433,6 +429,10 @@ static iomux_v3_cfg_t const lcd_pads[] = {
 	 * LCD_BLT_CTRL.  GPIO for Brightness adjustment, duty cycle = period.
 	 */
 	MX6_PAD_NAND_DQS__GPIO4_IO16 | MUX_PAD_CTRL(NO_PAD_CTRL),
+	/*
+	 * LCD 5V power control
+	 */
+	MX6_PAD_SNVS_TAMPER0__GPIO5_IO00 | MUX_PAD_CTRL(NO_PAD_CTRL),
 
 };
 
@@ -443,7 +443,8 @@ struct lcd_panel_info_t {
 	struct fb_videomode mode;
 };
 
-#define LCD_5V_PWR     PORTEXP_IO_NR(0x23, 10)
+#define LCD_5V_PWR_REV_03     PORTEXP_IO_NR(0x23, 10)
+#define LCD_5V_PWR_REV_04     IMX_GPIO_NR(5, 0)
 
 void do_enable_parallel_lcd(struct lcd_panel_info_t const *dev)
 {
@@ -452,9 +453,11 @@ void do_enable_parallel_lcd(struct lcd_panel_info_t const *dev)
 	imx_iomux_v3_setup_multiple_pads(lcd_pads, ARRAY_SIZE(lcd_pads));
 
 	/* Set Brightness to high */
-	gpio_direction_output(IMX_GPIO_NR(4, 16) , 1);
+	gpio_direction_output(IMX_GPIO_NR(4, 16), 1);
+
 	/* Enable TTL LCD 5V power */
-	port_exp_direction_output(LCD_5V_PWR, 1);
+	port_exp_direction_output(LCD_5V_PWR_REV_03, 1);    /* LCD 5V power for rev03 */
+	gpio_direction_output(LCD_5V_PWR_REV_04, 1); /* LCD 5V power for rev04 */
 }
 
 static struct lcd_panel_info_t const displays[] = {{
