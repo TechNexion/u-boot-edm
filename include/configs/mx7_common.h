@@ -44,7 +44,7 @@
 #define CONFIG_SYS_TEXT_BASE            0x87800000
 
 #ifndef CONFIG_BOOTDELAY
-#define CONFIG_BOOTDELAY                3
+#define CONFIG_BOOTDELAY                1
 #endif
 
 /* allow to overwrite serial and ethaddr */
