@@ -51,7 +51,7 @@
 #define CONFIG_MXC_GPIO
 
 #define CONFIG_MXC_UART
-#define CONFIG_MXC_UART_BASE            UART1_IPS_BASE_ADDR
+#define CONFIG_MXC_UART_BASE            UART2_IPS_BASE_ADDR
 
 /* allow to overwrite serial and ethaddr */
 #define CONFIG_ENV_OVERWRITE
@@ -185,7 +185,7 @@
 	"fdt_addr=0x83000000\0" \
 	"fdt_high=0xffffffff\0"	  \
 	"console=ttymxc0\0" \
-	"bootargs=console=ttymxc0,115200 ubi.mtd=3 "  \
+	"bootargs=console=ttymxc1,115200 ubi.mtd=3 "  \
 		"root=ubi0:rootfs rootfstype=ubifs "		     \
 		"mtdparts=gpmi-nand:64m(boot),16m(kernel),16m(dtb),-(rootfs)\0"\
 	"bootcmd=nand read ${loadaddr} 0x4000000 0x800000;"\
@@ -199,7 +199,7 @@
 	CONFIG_VIDEO_MODE \
 	"script=boot.scr\0" \
 	"image=zImage\0" \
-	"console=ttymxc0\0" \
+	"console=ttymxc1\0" \
 	"splashpos=m,m\0" \
 	"som=imx7d\0" \
 	"baseboard=tep1\0" \
