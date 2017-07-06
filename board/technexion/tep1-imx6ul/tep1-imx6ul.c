@@ -345,10 +345,10 @@ void board_late_mmc_init(void)
 
         switch (get_boot_device()) {
                 case MMC2_BOOT:
-                        setenv("bootdev", "SD0");
+                        setenv("bootdev", "eMMC");
                         break;
                 case SD1_BOOT:
-                        setenv("bootdev", "SD1");
+                        setenv("bootdev", "SD");
                         break;
                 default:
                         printf("Wrong boot device!");
@@ -748,10 +748,6 @@ int board_late_init(void)
 	add_board_boot_modes(board_boot_modes);
 #endif
 
-#ifdef CONFIG_ENV_VARS_UBOOT_RUNTIME_CONFIG
-	setenv("som", som_type());
-#endif
-
 	board_late_mmc_init();
 
 	set_wdog_reset((struct wdog_regs *)WDOG1_BASE_ADDR);
@@ -788,7 +784,7 @@ void ddr_type_detection(void)
 
 int checkboard(void)
 {
-	puts("Board: TEP1 IMX6UL\n");
+	puts("Board: TEP1-IMX6UL\n");
 
 	return 0;
 }

@@ -119,7 +119,6 @@
 #define CONFIG_SYS_I2C_SPEED		100000
 #endif
 
-#define MX6UL_PICO_SOM
 #define CONFIG_DEFAULT_FDT_FILE "imx6ul-tep1.dtb"
 #define PHYS_SDRAM_SIZE			SZ_256M
 #define CONFIG_BOOTARGS_CMA_SIZE   "cma=96M "
@@ -189,10 +188,7 @@
 	"image=zImage\0" \
 	"console=ttymxc1\0" \
 	"splashpos=m,m\0" \
-	"som=imx6ul\0" \
-	"baseboard=tep1\0" \
-	"default_baseboard=tep1\0" \
-	"fdtfile=undefined\0" \
+	"fdt_file=" CONFIG_DEFAULT_FDT_FILE "\0" \
 	"fdt_high=0xffffffff\0" \
 	"initrd_high=0xffffffff\0" \
 	"fdt_addr=0x83000000\0" \
@@ -200,38 +196,38 @@
 	"ip_dyn=yes\0" \
 	"mmcdev="__stringify(CONFIG_SYS_MMC_ENV_DEV)"\0" \
 	"mmcpart=" __stringify(CONFIG_SYS_MMC_IMG_LOAD_PART) "\0" \
+	"detectmem=" \
+		"if test ${memdet} = 512MB; then " \
+			"setenv memsize cma=128M; " \
+		"else " \
+			"setenv memsize cma=96M; " \
+		"fi\0" \
 	"searchbootdev=" \
-		"if test ${bootdev} = SD0; then " \
+		"if test ${bootdev} = eMMC; then " \
 			"setenv mmcroot /dev/mmcblk1p2 rootwait rw; " \
 		"else " \
 			"setenv mmcroot /dev/mmcblk0p2 rootwait rw; " \
 		"fi\0" \
 	"mmcautodetect=yes\0" \
 	"mmcargs=setenv bootargs console=${console},${baudrate} " \
+		"${memsize} "\
 		"root=${mmcroot} \0" \
 	"loadbootscript=" \
 		"fatload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${script};\0" \
 	"bootscript=echo Running bootscript from mmc ...; " \
 		"source\0" \
 	"loadimage=fatload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${image}\0" \
-	"setfdt=setenv fdtfile ${som}-${baseboard}.dtb\0" \
-	"loadfdt=fatload mmc ${mmcdev}:${mmcpart} ${fdt_addr} ${fdtfile}\0" \
+	"loadfdt=fatload mmc ${mmcdev}:${mmcpart} ${fdt_addr} ${fdt_file}\0" \
 	"mmcboot=echo Booting from mmc ...; " \
+		"run detectmem; " \
 		"run searchbootdev; " \
 		"run mmcargs; " \
-		"echo baseboard is ${baseboard}; " \
-		"run setfdt; " \
 		"if test ${boot_fdt} = yes || test ${boot_fdt} = try; then " \
 			"if run loadfdt; then " \
 				"bootz ${loadaddr} - ${fdt_addr}; " \
 			"else " \
 				"if test ${boot_fdt} = try; then " \
-					"echo WARN: Cannot load the DT; " \
-					"echo fall back to load the default DT; " \
-					"setenv baseboard ${default_baseboard}; " \
-					"run setfdt; " \
-					"run loadfdt; " \
-					"bootz ${loadaddr} - ${fdt_addr}; " \
+					 "bootz; " \
 				"else " \
 					"echo WARN: Cannot load the DT; " \
 				"fi; " \
