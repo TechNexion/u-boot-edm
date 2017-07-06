@@ -334,10 +334,10 @@ void board_late_mmc_init(void)
 
         switch (get_boot_device()) {
                 case MMC2_BOOT:
-                        setenv("bootdev", "SD0");
+                        setenv("bootdev", "eMMC");
                         break;
                 case SD1_BOOT:
-                        setenv("bootdev", "SD1");
+                        setenv("bootdev", "SD");
                         break;
                 default:
                         printf("Wrong boot device!");
@@ -727,7 +727,7 @@ void ddr_type_detection(void)
 
 int checkboard(void)
 {
-	puts("Board: PicoSOM i.mx6UL\n");
+	puts("Board: TEK3-IMX6UL\n");
 
 	return 0;
 }
