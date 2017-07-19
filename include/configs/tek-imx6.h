@@ -50,15 +50,9 @@
 /* allow to overwrite serial and ethaddr */
 #define CONFIG_ENV_OVERWRITE
 
-#ifdef CONFIG_NO_DEBUG_CONSOLE
-#define CONFIG_MXC_UART_BASE		UART5_BASE
-#define CONFIG_CONS_INDEX		5
-#define CONFIG_DEBUG_TTY               ttyUSB0
-#else
 #define CONFIG_MXC_UART_BASE		UART1_BASE
 #define CONFIG_CONS_INDEX		1
 #define CONFIG_DEBUG_TTY               ttymxc0
-#endif
 
 #define CONFIG_BAUDRATE			115200
 
