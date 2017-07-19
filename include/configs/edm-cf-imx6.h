@@ -50,17 +50,19 @@
 /* allow to overwrite serial and ethaddr */
 #define CONFIG_ENV_OVERWRITE
 
-#ifdef CONFIG_NO_DEBUG_CONSOLE
-#define CONFIG_MXC_UART_BASE		UART5_BASE
-#define CONFIG_CONS_INDEX		5
-#define CONFIG_DEBUG_TTY               ttyUSB0
-#else
 #define CONFIG_MXC_UART_BASE		UART1_BASE
 #define CONFIG_CONS_INDEX		1
-#define CONFIG_DEBUG_TTY               ttymxc0
-#endif
 
 #define CONFIG_BAUDRATE			115200
+
+#ifndef CONFIG_SILENT_CONSOLE
+#define CONFIG_SILENT_ENABLE		0
+#define CONFIG_DEBUG_TTY		ttymxc0
+#else
+#define CONFIG_SILENT_ENABLE		1
+#define CONFIG_DEBUG_TTY		null
+#endif
+
 
 /* Command definition */
 
@@ -179,6 +181,7 @@
 	"boot_fdt=try\0" \
 	"mmcdev=" __stringify(CONFIG_SYS_MMC_ENV_DEV) "\0" \
 	"mmcpart=1\0" \
+	"silent=" __stringify(CONFIG_SILENT_ENABLE) "\0" \
 	"searchbootdev=" \
 		"if test ${bootdev} = MMC3; then " \
 			"setenv mmcroot /dev/mmcblk2p2 rootwait rw; " \
