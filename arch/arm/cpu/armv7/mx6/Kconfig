@@ -63,6 +63,7 @@ config TARGET_CM_FX6
 
 config TARGET_EDM1_IMX6UL_NAND
 	bool "Support edm1-imx6ul-nand"
+	select SUPPORT_SPL
 	select DM
 	select DM_THERMAL
 
