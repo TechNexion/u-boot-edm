@@ -49,13 +49,84 @@ static void mxs_nand_command(struct mtd_info *mtd, unsigned int command,
 	}
 }
 
+static int mxs_flash_detect_onfi(struct mtd_info *mtd)
+{
+	register struct nand_chip *chip = mtd->priv;
+	struct nand_onfi_params *p = &chip->onfi_params;
+	int val;
+
+	/* read ONFI */
+	chip->onfi_version = 0;
+	chip->cmdfunc(mtd, NAND_CMD_READID, 0x20, -1);
+	if (chip->read_byte(mtd) != 'O' || chip->read_byte(mtd) != 'N' ||
+	    chip->read_byte(mtd) != 'F' || chip->read_byte(mtd) != 'I') {
+		return -1;
+	}
+
+	/* we have ONFI, probe it */
+	chip->cmdfunc(mtd, NAND_CMD_PARAM, 0, -1);
+	chip->read_buf(mtd, (uint8_t *)p, sizeof(*p));
+
+	/* Check version */
+	val = le16_to_cpu(p->revision);
+	if (val & (1 << 5))
+		chip->onfi_version = 23;
+	else if (val & (1 << 4))
+		chip->onfi_version = 22;
+	else if (val & (1 << 3))
+		chip->onfi_version = 21;
+	else if (val & (1 << 2))
+		chip->onfi_version = 20;
+	else if (val & (1 << 1))
+		chip->onfi_version = 10;
+
+	if (!chip->onfi_version) {
+		printf("unsupported ONFI version: %d\n", val);
+		return -1;
+	}
+
+	debug("onfi_version is %d\n", chip->onfi_version);
+
+	mtd->name = p->model;
+	mtd->writesize = le32_to_cpu(p->byte_per_page);
+	mtd->erasesize = le32_to_cpu(p->pages_per_block) * mtd->writesize;
+	mtd->oobsize = le16_to_cpu(p->spare_bytes_per_page);
+	chip->chipsize = le32_to_cpu(p->blocks_per_lun);
+	chip->chipsize *= (uint64_t)mtd->erasesize * p->lun_count;
+	/* Calculate the address shift from the page size */
+	chip->page_shift = ffs(mtd->writesize) - 1;
+	chip->phys_erase_shift = ffs(mtd->erasesize) - 1;
+	/* Convert chipsize to number of pages per chip -1 */
+	chip->pagemask = (chip->chipsize >> chip->page_shift) - 1;
+	chip->badblockbits = 8;
+
+	debug("erasesize=%d (>>%d)\n", mtd->erasesize, chip->phys_erase_shift);
+	debug("writesize=%d (>>%d)\n", mtd->writesize, chip->page_shift);
+	debug("oobsize=%d\n", mtd->oobsize);
+	debug("chipsize=%lld\n", chip->chipsize);
+
+	debug("ecc_bits=%d\n", p->ecc_bits);
+	if (p->ecc_bits != 0xff) {
+		debug("ecc_bits is valid, so apply it as ecc strength\n");
+		chip->ecc_strength_ds = p->ecc_bits;
+		chip->ecc_step_ds = 512;
+	} else if (chip->onfi_version >= 21 &&
+		(onfi_feature(chip) & ONFI_FEATURE_EXT_PARAM_PAGE)) {
+		debug("onfi_version >= 21, it requires to issue NAND_CMD_PARAM command to retrieve ECC information\n");
+		return -1;
+	} else {
+		printf("Could not retrieve ONFI ECC requirements\n");
+	}
+
+	return 0;
+}
+
 static int mxs_flash_ident(struct mtd_info *mtd)
 {
 	register struct nand_chip *chip = mtd->priv;
 	int i;
 	u8 mfg_id, dev_id;
 	u8 id_data[8];
-	struct nand_onfi_params *p = &chip->onfi_params;
 
 	/* Reset the chip */
 	chip->cmdfunc(mtd, NAND_CMD_RESET, -1, -1);
@@ -77,36 +148,11 @@ static int mxs_flash_ident(struct mtd_info *mtd)
 	}
 	debug("0x%02x:0x%02x ", mfg_id, dev_id);
 
-	/* read ONFI */
-	chip->onfi_version = 0;
-	chip->cmdfunc(mtd, NAND_CMD_READID, 0x20, -1);
-	if (chip->read_byte(mtd) != 'O' || chip->read_byte(mtd) != 'N' ||
-	    chip->read_byte(mtd) != 'F' || chip->read_byte(mtd) != 'I') {
-		return -2;
-	}
+	/* Check if the chip is ONFI compliant */
+	if (!mxs_flash_detect_onfi(mtd))
+		return 0;
 
-	/* we have ONFI, probe it */
-	chip->cmdfunc(mtd, NAND_CMD_PARAM, 0, -1);
-	chip->read_buf(mtd, (uint8_t *)p, sizeof(*p));
-	mtd->name = p->model;
-	mtd->writesize = le32_to_cpu(p->byte_per_page);
-	mtd->erasesize = le32_to_cpu(p->pages_per_block) * mtd->writesize;
-	mtd->oobsize = le16_to_cpu(p->spare_bytes_per_page);
-	chip->chipsize = le32_to_cpu(p->blocks_per_lun);
-	chip->chipsize *= (uint64_t)mtd->erasesize * p->lun_count;
-	/* Calculate the address shift from the page size */
-	chip->page_shift = ffs(mtd->writesize) - 1;
-	chip->phys_erase_shift = ffs(mtd->erasesize) - 1;
-	/* Convert chipsize to number of pages per chip -1 */
-	chip->pagemask = (chip->chipsize >> chip->page_shift) - 1;
-	chip->badblockbits = 8;
-
-	debug("erasesize=%d (>>%d)\n", mtd->erasesize, chip->phys_erase_shift);
-	debug("writesize=%d (>>%d)\n", mtd->writesize, chip->page_shift);
-	debug("oobsize=%d\n", mtd->oobsize);
-	debug("chipsize=%lld\n", chip->chipsize);
-
-	return 0;
+	return -1;
 }
 
 static int mxs_read_page_ecc(struct mtd_info *mtd, void *buf, unsigned int page)
