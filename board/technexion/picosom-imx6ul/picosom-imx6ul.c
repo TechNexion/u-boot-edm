@@ -746,18 +746,6 @@ u32 get_board_rev(void)
 	return get_cpu_rev();
 }
 
-void ddr_type_detection(void)
-{
-	setup_iomux_ddr_type_detection();
-	gpio_direction_input(DDR_TYPE_DET);
-
-	if (!gpio_get_value(DDR_TYPE_DET)) {
-		printf("DRAM size is 512MB \r\n");
-	}else {
-		printf("DRAM size is 256MB \r\n");
-	}
-}
-
 int checkboard(void)
 {
         if (is_cpu_type(MXC_CPU_MX6UL)) {

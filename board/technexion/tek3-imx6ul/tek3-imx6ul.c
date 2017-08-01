@@ -687,10 +687,6 @@ int board_late_init(void)
 	add_board_boot_modes(board_boot_modes);
 #endif
 
-#ifdef CONFIG_ENV_VARS_UBOOT_RUNTIME_CONFIG
-	setenv("som", som_type());
-#endif
-
 	board_late_mmc_init();
 
 	set_wdog_reset((struct wdog_regs *)WDOG1_BASE_ADDR);
@@ -711,18 +707,6 @@ int board_late_init(void)
 u32 get_board_rev(void)
 {
 	return get_cpu_rev();
-}
-
-void ddr_type_detection(void)
-{
-	setup_iomux_ddr_type_detection();
-	gpio_direction_input(DDR_TYPE_DET);
-
-	if (gpio_get_value(DDR_TYPE_DET)) {
-		printf("DRAM size is 512MB \r\n");
-	}else {
-		printf("DRAM size is 256MB \r\n");
-	}
 }
 
 int checkboard(void)
