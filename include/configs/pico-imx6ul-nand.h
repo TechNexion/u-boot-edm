@@ -1,7 +1,8 @@
 /*
- * Copyright (C) 2016 Technexion Ltd.
+ * Copyright (C) 2017 Technexion Ltd.
  *
- * Configuration settings for the Technexion PicoSOM i.mx6UL NAND board.
+ * Author: Richard Hu <richard.hu@technexion.com>
+ *
  *
  * SPDX-License-Identifier:	GPL-2.0+
  */
@@ -28,6 +29,14 @@
 #endif
 #endif
 
+#ifdef CONFIG_SPL
+#define CONFIG_SPL_LIBCOMMON_SUPPORT
+#define CONFIG_SPL_NAND_SUPPORT
+#define CONFIG_SPL_MMC_SUPPORT
+#define CONFIG_SPL_FAT_SUPPORT
+#include "imx6_spl.h"
+#endif
+
 #define CONFIG_CMDLINE_TAG
 #define CONFIG_SETUP_MEMORY_TAGS
 #define CONFIG_INITRD_TAG
@@ -46,6 +55,7 @@
 
 #define CONFIG_MXC_UART
 #define CONFIG_MXC_UART_BASE		UART4_BASE
+#define CONFIG_CONSOLE_DEV		"ttymxc3"
 
 /* allow to overwrite serial and ethaddr */
 #define CONFIG_ENV_OVERWRITE
@@ -93,7 +103,7 @@
 #define CONFIG_FEC_XCV_TYPE             RMII
 #elif (CONFIG_FEC_ENET_DEV == 1)
 #define IMX_FEC_BASE			ENET2_BASE_ADDR
-#define CONFIG_FEC_MXC_PHYADDR          0x1  /* need board rework */
+#define CONFIG_FEC_MXC_PHYADDR          0x1
 #define CONFIG_FEC_XCV_TYPE             RMII
 #endif
 #define CONFIG_ETHPRIME                 "FEC"
@@ -120,7 +130,6 @@
 
 #define CONFIG_DEFAULT_FDT_FILE "imx6ul-pico-nand_hobbit.dtb"
 #define PHYS_SDRAM_SIZE                        SZ_256M
-#define CONFIG_BOOTARGS_CMA_SIZE   "cma=96M "
 
 /* PMIC */
 #define CONFIG_POWER
@@ -137,11 +146,7 @@
 #define CONFIG_SYS_TEXT_BASE		0x87800000
 
 #define CONFIG_SYS_MMC_IMG_LOAD_PART	1
-#ifdef CONFIG_SYS_BOOT_NAND
-#define CONFIG_MFG_NAND_PARTITION "mtdparts=gpmi-nand:64m(boot),16m(kernel),16m(dtb),-(rootfs) "
-#else
-#define CONFIG_MFG_NAND_PARTITION ""
-#endif
+#define MTDPARTS_DEFAULT  "gpmi-nand:4m(spl),4m(uboot),1m(env),16m(kernel),2m(dtb),-(rootfs)"
 
 #ifdef CONFIG_VIDEO
 #define CONFIG_VIDEO_MODE \
@@ -150,42 +155,36 @@
 #define CONFIG_VIDEO_MODE ""
 #endif
 
-#define CONFIG_MFG_ENV_SETTINGS \
-	"bootcmd_mfg=bootz 0x87860000\0" \
-	"bootdelay=1\0" \
-
 #define CONFIG_ENV_VARS_UBOOT_RUNTIME_CONFIG
 
-#if defined(CONFIG_SYS_BOOT_NAND)
 #define CONFIG_EXTRA_ENV_SETTINGS \
-	CONFIG_MFG_ENV_SETTINGS \
 	CONFIG_VIDEO_MODE \
 	"script=boot.scr\0" \
 	"image=zImage\0" \
 	"fdt_addr=0x83000000\0" \
 	"splashpos=m,m\0" \
-	"som=autodetect\0" \
-	"baseboard=dwarf\0" \
-	"default_baseboard=dwarf\0" \
-	"fdtfile=undefined\0" \
 	"fdt_high=0xffffffff\0" \
 	"initrd_high=0xffffffff\0" \
 	"fdt_file=" CONFIG_DEFAULT_FDT_FILE "\0" \
 	"boot_fdt=try\0" \
-	"console=ttymxc3\0" \
 	"splashpos=m,m\0" \
-	"bootargs=console=ttymxc3,115200 ubi.mtd=3 "  \
-		"root=ubi0:rootfs rootfstype=ubifs "		     \
-		CONFIG_BOOTARGS_CMA_SIZE \
-		"mtdparts=gpmi-nand:64m(boot),16m(kernel),16m(dtb),-(rootfs)\0"\
+	"bootargs=console=" CONFIG_CONSOLE_DEV ",115200 " \
+		"mtdparts=" MTDPARTS_DEFAULT "\0"\
 	"mmcdev="__stringify(CONFIG_SYS_MMC_ENV_DEV)"\0" \
 	"mmcpart=" __stringify(CONFIG_SYS_MMC_IMG_LOAD_PART) "\0" \
 	"mmcroot=" CONFIG_MMCROOT " rootwait rw\0" \
 	"mmcautodetect=yes\0" \
-	"mmcargs=setenv bootargs console=${console},${baudrate} " \
-	    CONFIG_BOOTARGS_CMA_SIZE \
-		"root=${mmcroot} " \
-		"mtdparts=gpmi-nand:64m(boot),16m(kernel),16m(dtb),-(rootfs)\0"\
+	"mmcargs=setenv bootargs ${bootargs} " \
+		"${cma_size} "\
+		"root=${mmcroot} \0"\
+	"detectmem=" \
+		"if test ${memdet} = 512MB; then " \
+			"setenv cma_size cma=128M; " \
+		"elif test ${memdet} = 256MB; then " \
+			"setenv cma_size cma=96M; " \
+		"else " \
+			"setenv cma_size cma=32M; " \
+		"fi\0" \
 	"loadbootscript=" \
 		"fatload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${script};\0" \
 	"bootscript=echo Running bootscript from mmc ...; " \
@@ -207,8 +206,11 @@
 		"else " \
 			"bootz; " \
 		"fi;\0" \
-	"nand_bootcmd=nand read ${loadaddr} 0x4000000 0x800000;"\
-		"nand read ${fdt_addr} 0x5000000 0x100000;"\
+	"nand_bootcmd=echo Booting from nand ...; " \
+		"setenv bootargs ${bootargs} ${cma_size} " \
+				"ubi.mtd=5 root=ubi0:rootfs rootfstype=ubifs ;" \
+		"nand read ${loadaddr} 0x900000 0x800000;"\
+		"nand read ${fdt_addr} 0x1900000 0x100000;"\
 		"bootz ${loadaddr} - ${fdt_addr}\0" \
 	"mmc_bootcmd=mmc dev ${mmcdev};"\
 		"mmc dev ${mmcdev}; if mmc rescan; then " \
@@ -222,87 +224,14 @@
 			"fi; " \
 		"else run netboot; fi;\0" \
 	"bootcmd=" \
+		"run detectmem; " \
 		"if test ${bootdev} = SD1; then " \
 			"run mmc_bootcmd; " \
 		"elif test ${bootdev} = NAND; then; " \
 			"run nand_bootcmd; " \
 		"fi\0" \
 	"bootdev_autodetect=on\0"
-#else
-#define CONFIG_EXTRA_ENV_SETTINGS \
-	CONFIG_MFG_ENV_SETTINGS \
-	CONFIG_VIDEO_MODE \
-	"script=boot.scr\0" \
-	"image=zImage\0" \
-	"console=ttymxc3\0" \
-	"splashpos=m,m\0" \
-	"fdt_high=0xffffffff\0" \
-	"initrd_high=0xffffffff\0" \
-	"fdt_file=" CONFIG_DEFAULT_FDT_FILE "\0" \
-	"fdt_addr=0x83000000\0" \
-	"boot_fdt=try\0" \
-	"mmcdev="__stringify(CONFIG_SYS_MMC_ENV_DEV)"\0" \
-	"mmcpart=" __stringify(CONFIG_SYS_MMC_IMG_LOAD_PART) "\0" \
-	"mmcroot=" CONFIG_MMCROOT " rootwait rw\0" \
-	"mmcautodetect=yes\0" \
-	"mmcargs=setenv bootargs console=${console},${baudrate} " \
-	    CONFIG_BOOTARGS_CMA_SIZE \
-		"root=${mmcroot}\0" \
-	"loadbootscript=" \
-		"fatload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${script};\0" \
-	"bootscript=echo Running bootscript from mmc ...; " \
-		"source\0" \
-	"loadimage=fatload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${image}\0" \
-	"setfdt=setenv fdtfile ${som}_${baseboard}.dtb\0" \
-	"loadfdt=fatload mmc ${mmcdev}:${mmcpart} ${fdt_addr} ${fdtfile}\0" \
-	"mmcboot=echo Booting from mmc ...; " \
-		"run searchbootdev; " \
-		"run mmcargs; " \
-		"echo baseboard is ${baseboard}; " \
-		"run setfdt; " \
-		"if test ${boot_fdt} = yes || test ${boot_fdt} = try; then " \
-			"if run loadfdt; then " \
-				"bootz ${loadaddr} - ${fdt_addr}; " \
-			"else " \
-				"if test ${boot_fdt} = try; then " \
-					"echo WARN: Cannot load the DT; " \
-					"echo fall back to load the default DT; " \
-					"setenv baseboard ${default_baseboard}; " \
-					"run setfdt; " \
-					"run loadfdt; " \
-					"bootz ${loadaddr} - ${fdt_addr}; " \
-				"else " \
-					"echo WARN: Cannot load the DT; " \
-				"fi; " \
-			"fi; " \
-		"else " \
-			"bootz; " \
-		"fi;\0" \
-	"bootenv=uEnv.txt\0" \
-	"loadbootenv=fatload mmc ${mmcdev} ${loadaddr} ${bootenv}\0" \
-	"importbootenv=echo Importing environment from mmc ...; " \
-		"env import -t -r $loadaddr $filesize\0" \
 
-#define CONFIG_BOOTCOMMAND \
-	   "mmc dev ${mmcdev}; if mmc rescan; then " \
-		   "if run loadbootenv; then " \
-			   "echo Loaded environment from ${bootenv};" \
-			   "run importbootenv;" \
-		   "fi;" \
-		   "if test -n $uenvcmd; then " \
-			   "echo Running uenvcmd ...;" \
-			   "run uenvcmd;" \
-		   "fi;" \
-		   "if run loadbootscript; then " \
-			   "run bootscript; " \
-		   "else " \
-			   "if run loadimage; then " \
-				   "run mmcboot; " \
-			   "else run netboot; " \
-			   "fi; " \
-		   "fi; " \
-	   "else run netboot; fi"
-#endif
 
 /* Miscellaneous configurable options */
 #define CONFIG_SYS_LONGHELP
@@ -342,14 +271,10 @@
 
 #define CONFIG_ENV_SIZE			SZ_8K
 
-#ifdef CONFIG_SYS_BOOT_QSPI
-#define CONFIG_FSL_QSPI
-#define CONFIG_ENV_IS_IN_SPI_FLASH
-#elif defined CONFIG_SYS_BOOT_NAND
+#ifdef CONFIG_SYS_BOOT_NAND
 #define CONFIG_SYS_USE_NAND
 #define CONFIG_ENV_IS_IN_NAND
 #else
-#define CONFIG_FSL_QSPI
 #define CONFIG_ENV_IS_IN_MMC
 #endif
 
@@ -363,6 +288,7 @@
 #define CONFIG_SYS_NAND_BASE		0x40000000
 #define CONFIG_SYS_NAND_5_ADDR_CYCLE
 #define CONFIG_SYS_NAND_ONFI_DETECTION
+#define CONFIG_SYS_NAND_U_BOOT_OFFS 0x400000 /* offset 4MB */
 
 /* DMA stuff, needed for GPMI/MXS NAND support */
 #define CONFIG_APBH_DMA
@@ -386,16 +312,9 @@
 
 #if defined(CONFIG_ENV_IS_IN_MMC)
 #define CONFIG_ENV_OFFSET		(8 * SZ_64K)
-#elif defined(CONFIG_ENV_IS_IN_SPI_FLASH)
-#define CONFIG_ENV_OFFSET		(384 * 1024)
-#define CONFIG_ENV_SECT_SIZE		(64 * 1024)
-#define CONFIG_ENV_SPI_BUS		CONFIG_SF_DEFAULT_BUS
-#define CONFIG_ENV_SPI_CS		CONFIG_SF_DEFAULT_CS
-#define CONFIG_ENV_SPI_MODE		CONFIG_SF_DEFAULT_MODE
-#define CONFIG_ENV_SPI_MAX_HZ		CONFIG_SF_DEFAULT_SPEED
 #elif defined(CONFIG_ENV_IS_IN_NAND)
 #undef CONFIG_ENV_SIZE
-#define CONFIG_ENV_OFFSET		(60 << 20)
+#define CONFIG_ENV_OFFSET		(8 << 20)
 #define CONFIG_ENV_SECT_SIZE		(128 << 10)
 #define CONFIG_ENV_SIZE			CONFIG_ENV_SECT_SIZE
 #endif

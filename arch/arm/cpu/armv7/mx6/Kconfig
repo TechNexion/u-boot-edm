@@ -172,6 +172,9 @@ config TARGET_PICO_IMX6
 
 config TARGET_PICO_IMX6UL_NAND
 	bool "Support pico-imx6ul-nand"
+	select SUPPORT_SPL
+	select DM
+	select DM_THERMAL
 
 config TARGET_PICOSOM_IMX6UL
 	bool "Support picosom-imx6ul"
