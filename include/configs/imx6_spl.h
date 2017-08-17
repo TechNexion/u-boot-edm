@@ -13,28 +13,33 @@
 
 /*
  * see Figure 8-3 in IMX6DQ/IMX6SDL Reference manuals:
- *  - IMX6SDL OCRAM (IRAM) is from 0x00907000 to 0x0091FFFF
+ *  - IMX6SDL OCRAM (IRAM) is from 0x00908000 to 0x0091FFFF
  *  - IMX6DQ has 2x IRAM of IMX6SDL but we intend to support IMX6SDL as well
  *  - BOOT ROM stack is at 0x0091FFB8
  *  - if icache/dcache is enabled (eFuse/strapping controlled) then the
  *    IMX BOOT ROM will setup MMU table at 0x00918000, therefore we need to
- *    fit between 0x00907000 and 0x00918000.
+ *    fit between 0x00908000 and 0x00918000.
  *  - Additionally the BOOT ROM loads what they consider the firmware image
  *    which consists of a 4K header in front of us that contains the IVT, DCD
- *    and some padding thus 'our' max size is really 0x00908000 - 0x00918000
- *    or 64KB
+ *    and some padding thus 'our' max size is really 0x00909000 - 0x00918000
+ *    or 60KB
  */
 #define CONFIG_SYS_THUMB_BUILD
-#define CONFIG_SPL_LDSCRIPT	"arch/arm/mach-omap2/u-boot-spl.lds"
-#define CONFIG_SPL_TEXT_BASE		0x00908000
-#define CONFIG_SPL_MAX_SIZE		0x10000
+#define CONFIG_SPL_LDSCRIPT	"arch/arm/cpu/armv7/omap-common/u-boot-spl.lds"
+#if defined(CONFIG_MX7S) || defined(CONFIG_MX7D)
+#define CONFIG_SPL_TEXT_BASE		0x00911000
+#define CONFIG_SPL_STACK		0x00920000
+#else
+#define CONFIG_SPL_TEXT_BASE		0x00909000
 #define CONFIG_SPL_STACK		0x0091FFB8
-/*
- * Pad SPL to 68KB (4KB header + 64KB max size). This allows to write the
- * SPL/U-Boot combination generated with u-boot-with-spl.imx directly to a
- * boot media (given that boot media specific offset is configured properly).
- */
-#define CONFIG_SPL_PAD_TO		0x11000
+#endif
+#define CONFIG_SPL_MAX_SIZE		0xF000 /* 60 KB */
+#define CONFIG_SPL_LIBCOMMON_SUPPORT
+#define CONFIG_SPL_LIBGENERIC_SUPPORT
+#define CONFIG_SPL_SERIAL_SUPPORT
+#define CONFIG_SPL_I2C_SUPPORT
+#define CONFIG_SPL_GPIO_SUPPORT
+#define CONFIG_SPL_WATCHDOG_SUPPORT
 
 /* NAND support */
 #if defined(CONFIG_SPL_NAND_SUPPORT)
