@@ -24,7 +24,7 @@ DECLARE_GLOBAL_DATA_PTR;
 
 #if defined(CONFIG_SPL_BUILD)
 
-#define DDR_TYPE_DET   IMX_GPIO_NR(2, 28)
+#define DDR_TYPE_DET   IMX_GPIO_NR(4, 21)
 
 static iomux_v3_cfg_t const ddr_type_detection_pads[] = {
 	/* ddr type detection: 512MB or 1GB */
@@ -161,10 +161,10 @@ static void spl_dram_init(void)
 	gpio_direction_input(DDR_TYPE_DET);
 	
 	 if (gpio_get_value(DDR_TYPE_DET)) {
-		ddr3_512mb_init();
+		ddr3_1gb_init();
 		
 	} else {
-		ddr3_1gb_init();	
+		ddr3_512mb_init();
 	}
 }
 
