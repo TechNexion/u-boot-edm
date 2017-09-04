@@ -308,8 +308,68 @@ static void gpr_init(void)
 	writel(0x007F007F, &iomux->gpr[7]);
 }
 
+#ifdef CONFIG_IMX6_SPREAD_SPECTRUM
+static void enable_spread_spectrum(void)
+{
+	asm volatile (
+		"ldr r0, =#0x20C4000\n"			// base register CCM_BASE_ADDR
+		"ldr r1, [r0,#0x18]\n"			// get the CCM_CMCMR
+		"ldr r3, [r0,#0x18]\n"			// restore it later
+		"and r1, r1, #0xffffcfff\n"		// set r1 to set periph_clk2_sel to "01 derive clock from osc_clk (pll1_ref_clk)"
+		"orr r1, r1, #0x00001000\n"		//
+		"str r1, [r0,#0x18]\n"			// the set it
+		"ldr r1, [r0,#0x14]\n"			// load the CCM_CBCDR
+		"ldr r2, [r0,#0x14]\n"			// restore it later
+		"orr r1, r1, #0x02000000\n"		// set r1 to set periph_clk_sel to "1 derive clock from periph_clk2_clk clock source."
+		"str r1, [r0,#0x14]\n"			// then set it
+
+		"ldr r0, =0x020c8000\n"			//
+		"ldr r1, [r0,#0x30]\n"			// get the CCM_ANALOG_PLL_SYS
+		"orr r1, r1, #0x00010000\n"		// set to bypass
+		"str r1, [r0,#0x30]\n"
+
+		"orr r1, r1, #0x00011000\n"		// set to power down (the docs don't say if there needs to be a delay from the above)
+		"str r1, [r0,#0x30]\n"
+
+		"ldr r1, =0x00001770\n"			// set the denominator to 6000 dec
+		"str r1, [r0,#0x60]\n"
+		"ldr r1, =0x0bb88006\n"			// set the STOP t0 3000 (xbb8) and the STEP to 6 (x006)
+										// giving: range=24M * 3000/6000 = 12M, step=24M * 6 / 6000 = 24khz
+		"str r1, [r0,#0x40]\n"
+
+		"ldr r1, [r0,#0x30]\n"
+
+		"and r1, r1, #0xFFFFEFFF\n"		// power up
+		"str r1, [r0,#0x30]\n"
+
+		"and r1, r1, #0xFFFEFFFF\n"		// enable (the docs don't say if there needs to be a delay from the above)
+		"str r1, [r0,#0x30]\n"
+
+		"ldr r4, =0x0\n"
+	);
+
+	//udelay(10);
+	asm volatile (
+		"pu_delay:\n"				// wait until the pll is locked
+		"ldr r1, [r0,#0xD0]\n"
+		"tst r1, #0x80000000\n"
+		"bne pu_delay\n"
+	);
+
+
+	asm volatile (
+		"ldr r0, =#0x20C4000\n"			// restore and done
+		"str r2, [r0,#0x14]\n"
+		"str r3, [r0,#0x18]\n"
+	);
+}
+#endif
+
 static void spl_dram_init(void)
 {
+#ifdef CONFIG_IMX6_SPREAD_SPECTRUM
+	enable_spread_spectrum();
+#endif
 	switch (get_cpu_type()) {
 	case MXC_CPU_MX6SOLO:
 		mx6sdl_dram_iocfg(32, &mx6sdl_ddr_ioregs, &mx6sdl_grp_ioregs);
