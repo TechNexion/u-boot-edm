@@ -727,7 +727,7 @@ int board_init(void)
 int checkboard(void)
 {
 	printf("SOM: %s\n", som_type());
-	printf("Available baseboard: fairy, mimas, tc0700, tc1000\n");
+	printf("Available baseboard: elf, fairy, mimas, tc0700, tc1000\n");
 
 	return 0;
 }
