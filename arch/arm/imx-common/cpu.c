@@ -29,6 +29,11 @@
 #include <fsl_esdhc.h>
 #endif
 
+#if defined(CONFIG_OF_LIBFDT)
+#include <libfdt.h>
+#include <fdt_support.h>
+#endif
+
 #if defined(CONFIG_DISPLAY_CPUINFO)
 static u32 reset_cause = -1;
 
@@ -339,3 +344,45 @@ void set_chipselect_size(int const cs_size)
 
 	writel(reg, &iomuxc_regs->gpr[1]);
 }
+
+#if defined(CONFIG_OF_LIBFDT) && defined(CONFIG_OF_BOARD_SETUP)
+int ft_board_setup(void *blob, bd_t *bd)
+{
+	__maybe_unused u32 max_freq_khz;
+	int err, i;
+	int nodeoffset, plen, len = 0;
+	u32 *prop, newprop[12];
+
+	nodeoffset = fdt_path_offset(blob, "/cpus/cpu@0");
+	if (nodeoffset >= 0) {
+		prop = (u32 *)fdt_getprop(blob, nodeoffset,
+					    "operating-points", &plen);
+		if (prop) {
+			max_freq_khz = get_cpu_speed_grade_hz() / 1000;
+
+			for(i=0; i<plen; i+=8) {
+				if(__be32_to_cpu(*prop) <= max_freq_khz) {
+					newprop[len] = *prop++;
+					newprop[len + 1] = *prop++;
+					len += 2;
+				}else
+					prop += 2;
+			}
+
+			err = fdt_delprop(blob, nodeoffset,
+					  "operating-points");
+			if (err < 0)
+				puts("error deleting operating-points\n");
+
+			err = fdt_setprop(blob, nodeoffset,
+					  "operating-points",
+					  newprop,
+					  (len * sizeof(u32)));
+			if (err < 0)
+				puts("error adding operating-points\n");
+		}
+	}
+
+	return 0;
+}
+#endif
