@@ -438,6 +438,11 @@ static iomux_v3_cfg_t const lcd_pads[] = {
 	 * LCD_VDD_EN.
 	 */
 	MX6_PAD_JTAG_TMS__GPIO1_IO11 | MUX_PAD_CTRL(NO_PAD_CTRL),
+
+	/*
+	* LCD_POWER_EN.
+	*/
+	MX6_PAD_GPIO1_IO05__GPIO1_IO05 | MUX_PAD_CTRL(NO_PAD_CTRL),
 };
 
 struct lcd_panel_info_t {
@@ -457,6 +462,8 @@ void do_enable_parallel_lcd(struct lcd_panel_info_t const *dev)
 	gpio_direction_output(IMX_GPIO_NR(4, 16) , 1);
 	/* Set LCD enable to high */
 	gpio_direction_output(IMX_GPIO_NR(1, 11) , 1);
+	/* Set LCD power to high */
+	gpio_direction_output(IMX_GPIO_NR(1, 5) , 1);
 }
 
 static struct lcd_panel_info_t const displays[] = {{
