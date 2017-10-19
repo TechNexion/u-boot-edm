@@ -717,7 +717,7 @@ int checkboard(void)
 {
 	puts("Board: EDM1-IMX7D\n");
 
-	printf("Compatible baseboard: fairy, goblin, tucan\n");
+	printf("Compatible baseboard: fairy, goblin, toucan\n");
 
 	return 0;
 }
