@@ -19,6 +19,7 @@
 #include <asm/imx-common/mxc_i2c.h>
 #include <asm/imx-common/boot_mode.h>
 #include <asm/imx-common/video.h>
+#include <asm/imx-common/sata.h>
 #include <asm/io.h>
 #include <linux/sizes.h>
 #include <common.h>
@@ -29,6 +30,8 @@
 #include <phy.h>
 #include <input.h>
 #include <i2c.h>
+#include <power/pmic.h>
+#include <power/pfuze100_pmic.h>
 
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -50,7 +53,12 @@ DECLARE_GLOBAL_DATA_PTR;
 #define USDHC1_CD_GPIO		IMX_GPIO_NR(1, 2)
 #define USDHC3_CD_GPIO		IMX_GPIO_NR(3, 9)
 #define ETH_PHY_RESET		IMX_GPIO_NR(3, 29)
+#define ETH_PHY_AR8035_POWER	IMX_GPIO_NR(7, 13)
 #define REV_DETECTION		IMX_GPIO_NR(2, 28)
+
+#define PMIC_I2C_ADDR 0x08
+
+static bool with_pmic = false;
 
 int dram_init(void)
 {
@@ -102,8 +110,15 @@ static iomux_v3_cfg_t const enet_pads[] = {
 	IOMUX_PADS(PAD_RGMII_RD2__RGMII_RD2  | MUX_PAD_CTRL(ENET_PAD_CTRL)),
 	IOMUX_PADS(PAD_RGMII_RD3__RGMII_RD3  | MUX_PAD_CTRL(ENET_PAD_CTRL)),
 	IOMUX_PADS(PAD_RGMII_RX_CTL__RGMII_RX_CTL | MUX_PAD_CTRL(ENET_PAD_CTRL)),
-	/* AR8031 PHY Reset */
+	/* AR8031/AR8035 PHY Reset */
 	IOMUX_PADS(PAD_EIM_D29__GPIO3_IO29    | MUX_PAD_CTRL(NO_PAD_CTRL)),
+	IOMUX_PADS(PAD_GPIO_6__GPIO1_IO06     | MUX_PAD_CTRL(NO_PAD_CTRL)),
+	IOMUX_PADS(PAD_KEY_COL4__GPIO4_IO14   | MUX_PAD_CTRL(NO_PAD_CTRL)),
+};
+
+static iomux_v3_cfg_t const enet_ar8035_power_pads[] = {
+	/* AR8035 POWER */
+	IOMUX_PADS(PAD_GPIO_18__GPIO7_IO13    | MUX_PAD_CTRL(NO_PAD_CTRL)),
 };
 
 static iomux_v3_cfg_t const rev_detection_pad[] = {
@@ -119,7 +134,14 @@ static void setup_iomux_enet(void)
 {
 	SETUP_IOMUX_PADS(enet_pads);
 
-	/* Reset AR8031 PHY */
+	if (with_pmic) {
+		SETUP_IOMUX_PADS(enet_ar8035_power_pads);
+		/* enable AR8035 POWER */
+		gpio_direction_output(ETH_PHY_AR8035_POWER, 0);
+	}
+	/* wait until 3.3V of PHY and clock become stable */
+	mdelay(10);
+	/* Reset AR8031/AR8035 PHY */
 	gpio_direction_output(ETH_PHY_RESET, 0);
 	mdelay(10);
 	gpio_set_value(ETH_PHY_RESET, 1);
@@ -188,6 +210,114 @@ int board_mmc_init(bd_t *bis)
 	return 0;
 }
 
+static int ar8031_phy_fixup(struct phy_device *phydev)
+{
+	unsigned short val;
+
+	/* To enable AR8031/AR8035 ouput a 125MHz clk from CLK_25M */
+	phy_write(phydev, MDIO_DEVAD_NONE, 0xd, 0x7);
+	phy_write(phydev, MDIO_DEVAD_NONE, 0xe, 0x8016);
+	phy_write(phydev, MDIO_DEVAD_NONE, 0xd, 0x4007);
+
+	val = phy_read(phydev, MDIO_DEVAD_NONE, 0xe);
+	if (with_pmic) {
+		/* AR8035 */
+		val &= 0xffe7;
+		val |= 0x18;
+	} else {
+		/* AR8031 */
+		val &= 0xffe3;
+		val |= 0x18;
+	}
+	phy_write(phydev, MDIO_DEVAD_NONE, 0xe, val);
+
+	/* introduce tx clock delay */
+	phy_write(phydev, MDIO_DEVAD_NONE, 0x1d, 0x5);
+	val = phy_read(phydev, MDIO_DEVAD_NONE, 0x1e);
+	val |= 0x0100;
+	phy_write(phydev, MDIO_DEVAD_NONE, 0x1e, val);
+
+	return 0;
+}
+
+int board_phy_config(struct phy_device *phydev)
+{
+	ar8031_phy_fixup(phydev);
+
+	if (phydev->drv->config)
+		phydev->drv->config(phydev);
+
+	return 0;
+}
+
+struct i2c_pads_info mx6q_i2c1_pad_info = {
+	.scl = {
+		.i2c_mode = MX6Q_PAD_EIM_D21__I2C1_SCL
+			| MUX_PAD_CTRL(I2C_PAD_CTRL),
+		.gpio_mode = MX6Q_PAD_EIM_D21__GPIO3_IO21
+			| MUX_PAD_CTRL(I2C_PAD_CTRL),
+		.gp = IMX_GPIO_NR(3, 21)
+	},
+	.sda = {
+		.i2c_mode = MX6Q_PAD_EIM_D28__I2C1_SDA
+			| MUX_PAD_CTRL(I2C_PAD_CTRL),
+		.gpio_mode = MX6Q_PAD_EIM_D28__GPIO3_IO28
+			| MUX_PAD_CTRL(I2C_PAD_CTRL),
+		.gp = IMX_GPIO_NR(3, 28)
+	}
+};
+
+struct i2c_pads_info mx6dl_i2c1_pad_info = {
+	.scl = {
+		.i2c_mode = MX6DL_PAD_EIM_D21__I2C1_SCL
+			| MUX_PAD_CTRL(I2C_PAD_CTRL),
+		.gpio_mode = MX6DL_PAD_EIM_D21__GPIO3_IO21
+			| MUX_PAD_CTRL(I2C_PAD_CTRL),
+		.gp = IMX_GPIO_NR(3, 21)
+	},
+	.sda = {
+		.i2c_mode = MX6DL_PAD_EIM_D28__I2C1_SDA
+			| MUX_PAD_CTRL(I2C_PAD_CTRL),
+		.gpio_mode = MX6DL_PAD_EIM_D28__GPIO3_IO28
+			| MUX_PAD_CTRL(I2C_PAD_CTRL),
+		.gp = IMX_GPIO_NR(3, 28)
+	}
+};
+
+struct i2c_pads_info mx6q_i2c3_pad_info = {
+	.scl = {
+		.i2c_mode = MX6Q_PAD_GPIO_5__I2C3_SCL
+			| MUX_PAD_CTRL(I2C_PAD_CTRL),
+		.gpio_mode = MX6Q_PAD_GPIO_5__GPIO1_IO05
+			| MUX_PAD_CTRL(I2C_PAD_CTRL),
+		.gp = IMX_GPIO_NR(1, 5)
+	},
+	.sda = {
+		.i2c_mode = MX6Q_PAD_GPIO_16__I2C3_SDA
+			| MUX_PAD_CTRL(I2C_PAD_CTRL),
+		.gpio_mode = MX6Q_PAD_GPIO_16__GPIO7_IO11
+			| MUX_PAD_CTRL(I2C_PAD_CTRL),
+		.gp = IMX_GPIO_NR(7, 11)
+	}
+};
+
+struct i2c_pads_info mx6dl_i2c3_pad_info = {
+	.scl = {
+		.i2c_mode = MX6DL_PAD_GPIO_5__I2C3_SCL
+			| MUX_PAD_CTRL(I2C_PAD_CTRL),
+		.gpio_mode = MX6DL_PAD_GPIO_5__GPIO1_IO05
+			| MUX_PAD_CTRL(I2C_PAD_CTRL),
+		.gp = IMX_GPIO_NR(1, 5)
+	},
+	.sda = {
+		.i2c_mode = MX6DL_PAD_GPIO_16__I2C3_SDA
+			| MUX_PAD_CTRL(I2C_PAD_CTRL),
+		.gpio_mode = MX6DL_PAD_GPIO_16__GPIO7_IO11
+			| MUX_PAD_CTRL(I2C_PAD_CTRL),
+		.gp = IMX_GPIO_NR(7, 11)
+	}
+};
+
 #if defined(CONFIG_VIDEO_IPUV3)
 struct i2c_pads_info mx6q_i2c2_pad_info = {
 	.scl = {
@@ -223,7 +353,7 @@ struct i2c_pads_info mx6dl_i2c2_pad_info = {
 	}
 };
 
-static iomux_v3_cfg_t const fwadapt_7wvga_pads[] = {
+static iomux_v3_cfg_t const ft5x06_wvga_pads[] = {
 	IOMUX_PADS(PAD_DI0_DISP_CLK__IPU1_DI0_DISP_CLK),
 	IOMUX_PADS(PAD_DI0_PIN2__IPU1_DI0_PIN02), /* HSync */
 	IOMUX_PADS(PAD_DI0_PIN3__IPU1_DI0_PIN03), /* VSync */
@@ -247,9 +377,51 @@ static iomux_v3_cfg_t const fwadapt_7wvga_pads[] = {
 	IOMUX_PADS(PAD_DISP0_DAT15__IPU1_DISP0_DATA15),
 	IOMUX_PADS(PAD_DISP0_DAT16__IPU1_DISP0_DATA16),
 	IOMUX_PADS(PAD_DISP0_DAT17__IPU1_DISP0_DATA17),
+	IOMUX_PADS(PAD_DISP0_DAT18__IPU1_DISP0_DATA18),
+	IOMUX_PADS(PAD_DISP0_DAT19__IPU1_DISP0_DATA19),
+	IOMUX_PADS(PAD_DISP0_DAT20__IPU1_DISP0_DATA20),
+	IOMUX_PADS(PAD_DISP0_DAT21__IPU1_DISP0_DATA21),
+	IOMUX_PADS(PAD_DISP0_DAT22__IPU1_DISP0_DATA22),
+	IOMUX_PADS(PAD_DISP0_DAT23__IPU1_DISP0_DATA23),
 	IOMUX_PADS(PAD_SD4_DAT2__GPIO2_IO10 | MUX_PAD_CTRL(NO_PAD_CTRL)), /* DISP0_BKLEN */
 	IOMUX_PADS(PAD_SD4_DAT3__GPIO2_IO11 | MUX_PAD_CTRL(NO_PAD_CTRL)), /* DISP0_VDDEN */
 };
+
+static void setup_iomux_i2c(void)
+{
+	if (is_cpu_type(MXC_CPU_MX6Q) || is_cpu_type(MXC_CPU_MX6D) ||
+		is_cpu_type(MXC_CPU_MX6QP) || is_cpu_type(MXC_CPU_MX6DP)) {
+		setup_i2c(1, CONFIG_SYS_I2C_SPEED, 0x7f, &mx6q_i2c2_pad_info);
+		setup_i2c(2, CONFIG_SYS_I2C_SPEED, 0x7f, &mx6q_i2c3_pad_info);
+	} else {
+		setup_i2c(1, CONFIG_SYS_I2C_SPEED, 0x7f, &mx6dl_i2c2_pad_info);
+		setup_i2c(2, CONFIG_SYS_I2C_SPEED, 0x7f, &mx6dl_i2c3_pad_info);
+	}
+}
+
+/* setup board specific PMIC */
+int power_init_board(void)
+{
+	struct pmic *p;
+	u32 reg;
+
+	/* configure PFUZE100 PMIC */
+	power_pfuze100_init(CONFIG_I2C_PMIC);
+	p = pmic_get("PFUZE100");
+	if (p && !pmic_probe(p)) {
+		pmic_reg_read(p, PFUZE100_DEVICEID, &reg);
+		printf("PMIC:  PFUZE100 ID=0x%02x\n", reg);
+		with_pmic = true;
+
+		/* Set VGEN2 to 1.5V and enable */
+		pmic_reg_read(p, PFUZE100_VGEN2VOL, &reg);
+		reg &= ~(LDO_VOL_MASK);
+		reg |= (LDOA_1_50V | (1 << (LDO_EN)));
+		pmic_reg_write(p, PFUZE100_VGEN2VOL, reg);
+	}
+
+	return 0;
+}
 
 static void do_enable_hdmi(struct display_info_t const *dev)
 {
@@ -262,15 +434,53 @@ static int detect_i2c(struct display_info_t const *dev)
 			(0 == i2c_probe(dev->addr));
 }
 
-static void enable_fwadapt_7wvga(struct display_info_t const *dev)
+static void enable_lvds(struct display_info_t const *dev)
 {
-	SETUP_IOMUX_PADS(fwadapt_7wvga_pads);
+	struct iomuxc *iomux = (struct iomuxc *)
+				IOMUXC_BASE_ADDR;
+
+	/* set CH0 data width to 24bit (IOMUXC_GPR2:5 0=18bit, 1=24bit) */
+	u32 reg = readl(&iomux->gpr[2]);
+	reg |= IOMUXC_GPR2_DATA_WIDTH_CH0_24BIT;
+	writel(reg, &iomux->gpr[2]);
+
+	/* Enable Backlight - use GPIO for Brightness adjustment */
+	SETUP_IOMUX_PAD(PAD_SD4_DAT1__GPIO2_IO09 | MUX_PAD_CTRL(NO_PAD_CTRL));
+	gpio_direction_output(IMX_GPIO_NR(2, 9), 1);
+
+	SETUP_IOMUX_PAD(PAD_SD4_DAT0__GPIO2_IO08 | MUX_PAD_CTRL(NO_PAD_CTRL));
+	gpio_direction_output(IMX_GPIO_NR(2, 8), 1);
+}
+
+static void enable_ft5x06_wvga(struct display_info_t const *dev)
+{
+	SETUP_IOMUX_PADS(ft5x06_wvga_pads);
 
 	gpio_direction_output(IMX_GPIO_NR(2, 10), 1);
 	gpio_direction_output(IMX_GPIO_NR(2, 11), 1);
 }
 
 struct display_info_t const displays[] = {{
+	.bus	= -1,
+	.addr	= 0,
+	.pixfmt = IPU_PIX_FMT_RGB24,
+	.detect = NULL,
+	.enable = enable_lvds,
+	.mode	= {
+		.name		= "hj070na",
+		.refresh	= 60,
+		.xres		= 1024,
+		.yres		= 600,
+		.pixclock	= 15385,
+		.left_margin	= 220,
+		.right_margin	= 40,
+		.upper_margin	= 21,
+		.lower_margin	= 7,
+		.hsync_len	= 60,
+		.vsync_len	= 10,
+		.sync		= FB_SYNC_EXT,
+		.vmode		= FB_VMODE_NONINTERLACED
+} }, {
 	.bus	= -1,
 	.addr	= 0,
 	.pixfmt	= IPU_PIX_FMT_RGB24,
@@ -292,18 +502,18 @@ struct display_info_t const displays[] = {{
 		.vmode          = FB_VMODE_NONINTERLACED
 } }, {
 	.bus	= 1,
-	.addr	= 0x10,
-	.pixfmt	= IPU_PIX_FMT_RGB666,
+	.addr	= 0x38,
+	.pixfmt	= IPU_PIX_FMT_RGB24,
 	.detect	= detect_i2c,
-	.enable	= enable_fwadapt_7wvga,
+	.enable	= enable_ft5x06_wvga,
 	.mode	= {
-		.name           = "FWBADAPT-LCD-F07A-0102",
+		.name           = "FT5x06-WVGA",
 		.refresh        = 60,
 		.xres           = 800,
 		.yres           = 480,
-		.pixclock       = 33260,
-		.left_margin    = 128,
-		.right_margin   = 128,
+		.pixclock       = 30303,
+		.left_margin    = 45,
+		.right_margin   = 210,
 		.upper_margin   = 22,
 		.lower_margin   = 22,
 		.hsync_len      = 1,
@@ -316,19 +526,54 @@ size_t display_count = ARRAY_SIZE(displays);
 static void setup_display(void)
 {
 	struct mxc_ccm_reg *mxc_ccm = (struct mxc_ccm_reg *)CCM_BASE_ADDR;
+	struct iomuxc *iomux = (struct iomuxc *)IOMUXC_BASE_ADDR;
 	int reg;
 
 	enable_ipu_clock();
 	imx_setup_hdmi();
 
+	reg = __raw_readl(&mxc_ccm->CCGR3);
+	reg |=  MXC_CCM_CCGR3_LDB_DI0_MASK | MXC_CCM_CCGR3_LDB_DI1_MASK;
+	writel(reg, &mxc_ccm->CCGR3);
+
+	/* set LDB0, LDB1 clk select to 011/011 */
+	reg = readl(&mxc_ccm->cs2cdr);
+	reg &= ~(MXC_CCM_CS2CDR_LDB_DI0_CLK_SEL_MASK
+		| MXC_CCM_CS2CDR_LDB_DI1_CLK_SEL_MASK);
+	reg |= (3 << MXC_CCM_CS2CDR_LDB_DI0_CLK_SEL_OFFSET)
+		 | (3 << MXC_CCM_CS2CDR_LDB_DI1_CLK_SEL_OFFSET);
+	writel(reg, &mxc_ccm->cs2cdr);
+
+	reg = readl(&mxc_ccm->cscmr2);
+	reg |= MXC_CCM_CSCMR2_LDB_DI0_IPU_DIV | MXC_CCM_CSCMR2_LDB_DI1_IPU_DIV;
+	writel(reg, &mxc_ccm->cscmr2);
+
 	reg = readl(&mxc_ccm->chsccdr);
 	reg |= (CHSCCDR_CLK_SEL_LDB_DI0
 		<< MXC_CCM_CHSCCDR_IPU1_DI0_CLK_SEL_OFFSET);
+	reg |= (CHSCCDR_CLK_SEL_LDB_DI0
+		<< MXC_CCM_CHSCCDR_IPU1_DI1_CLK_SEL_OFFSET);
 	writel(reg, &mxc_ccm->chsccdr);
 
-	/* Disable LCD backlight */
-	SETUP_IOMUX_PAD(PAD_DI0_PIN4__GPIO4_IO20);
-	gpio_direction_input(IMX_GPIO_NR(4, 20));
+	 reg = IOMUXC_GPR2_BGREF_RRMODE_EXTERNAL_RES
+		| IOMUXC_GPR2_DI1_VS_POLARITY_ACTIVE_LOW
+		| IOMUXC_GPR2_DI0_VS_POLARITY_ACTIVE_LOW
+		| IOMUXC_GPR2_BIT_MAPPING_CH1_SPWG
+		| IOMUXC_GPR2_DATA_WIDTH_CH1_24BIT
+		| IOMUXC_GPR2_BIT_MAPPING_CH0_SPWG
+		| IOMUXC_GPR2_DATA_WIDTH_CH0_24BIT
+		| IOMUXC_GPR2_LVDS_CH1_MODE_ENABLED_DI0
+		| IOMUXC_GPR2_LVDS_CH0_MODE_ENABLED_DI0;
+	writel(reg, &iomux->gpr[2]);
+
+	reg = readl(&iomux->gpr[3]);
+
+	reg = (reg & ~(IOMUXC_GPR3_LVDS0_MUX_CTL_MASK
+		| IOMUXC_GPR3_HDMI_MUX_CTL_MASK))
+		| (IOMUXC_GPR3_MUX_SRC_IPU1_DI0
+		<< IOMUXC_GPR3_LVDS0_MUX_CTL_OFFSET);
+
+	writel(reg, &iomux->gpr[3]);
 }
 #endif /* CONFIG_VIDEO_IPUV3 */
 
@@ -345,6 +590,12 @@ int board_early_init_f(void)
 #if defined(CONFIG_VIDEO_IPUV3)
 	setup_display();
 #endif
+#ifdef CONFIG_CMD_SATA
+	/* Only mx6q wandboard has SATA */
+	if (is_cpu_type(MXC_CPU_MX6Q))
+		setup_sata();
+#endif
+
 	return 0;
 }
 
@@ -356,6 +607,9 @@ int overwrite_console(void)
 {
 	return 1;
 }
+
+
+
 
 #ifdef CONFIG_CMD_BMODE
 static const struct boot_mode board_boot_modes[] = {
@@ -377,6 +631,14 @@ static bool is_revc1(void)
 		return false;
 }
 
+static bool is_revd1(void)
+{
+	if (with_pmic)
+		return true;
+	else
+		return false;
+}
+
 int board_late_init(void)
 {
 #ifdef CONFIG_CMD_BMODE
@@ -384,12 +646,16 @@ int board_late_init(void)
 #endif
 
 #ifdef CONFIG_ENV_VARS_UBOOT_RUNTIME_CONFIG
-	if (is_cpu_type(MXC_CPU_MX6Q) || is_cpu_type(MXC_CPU_MX6D))
+	if (is_mx6dqp())
+		setenv("board_rev", "MX6QP");
+	else if (is_cpu_type(MXC_CPU_MX6Q) || is_cpu_type(MXC_CPU_MX6D))
 		setenv("board_rev", "MX6Q");
 	else
 		setenv("board_rev", "MX6DL");
 
-	if (is_revc1())
+	if (is_revd1())
+		setenv("board_name", "D1");
+	else if (is_revc1())
 		setenv("board_name", "C1");
 	else
 		setenv("board_name", "B1");
@@ -402,18 +668,16 @@ int board_init(void)
 	/* address of boot parameters */
 	gd->bd->bi_boot_params = PHYS_SDRAM + 0x100;
 
-	setup_i2c(1, CONFIG_SYS_I2C_SPEED, 0x7f, &mx6dl_i2c2_pad_info);
-	if (is_cpu_type(MXC_CPU_MX6Q) || is_cpu_type(MXC_CPU_MX6D))
-		setup_i2c(1, CONFIG_SYS_I2C_SPEED, 0x7f, &mx6q_i2c2_pad_info);
-	else
-		setup_i2c(1, CONFIG_SYS_I2C_SPEED, 0x7f, &mx6dl_i2c2_pad_info);
+	setup_iomux_i2c();
 
 	return 0;
 }
 
 int checkboard(void)
 {
-	if (is_revc1())
+	if (is_revd1())
+		puts("Board: Wandboard rev D1\n");
+	else if (is_revc1())
 		puts("Board: Wandboard rev C1\n");
 	else
 		puts("Board: Wandboard rev B1\n");
