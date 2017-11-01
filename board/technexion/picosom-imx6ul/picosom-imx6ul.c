@@ -582,7 +582,9 @@ int board_ehci_hcd_init(int port)
 
 int board_early_init_f(void)
 {
+#ifndef CONFIG_SILENT_CONSOLE
 	setup_iomux_uart();
+#endif
 
 	return 0;
 }
@@ -884,7 +886,9 @@ void board_init_f(ulong dummy)
 	timer_init();
 
 	/* UART clocks enabled and gd valid - init serial console */
+#ifndef CONFIG_SILENT_CONSOLE
 	preloader_console_init();
+#endif
 
 	/* DDR initialization */
 	spl_dram_init();

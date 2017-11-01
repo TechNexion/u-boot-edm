@@ -53,6 +53,12 @@
 #define CONFIG_MXC_UART
 #define CONFIG_MXC_UART_BASE		MX6UL_UART6_BASE_ADDR
 
+#ifndef CONFIG_SILENT_CONSOLE
+#define CONFIG_DEBUG_TTY                ttymxc5
+#else
+#define CONFIG_DEBUG_TTY                null
+#endif
+
 /* allow to overwrite serial and ethaddr */
 #define CONFIG_ENV_OVERWRITE
 #define CONFIG_CONS_INDEX		1
@@ -158,7 +164,7 @@
 	"script=boot.scr\0" \
 	"som==autodetect\0" \
 	"image=zImage\0" \
-	"console=ttymxc5\0" \
+	"console=" __stringify(CONFIG_DEBUG_TTY)"\0" \
 	"splashpos=m,m\0" \
 	"baseboard=hobbit\0" \
 	"default_baseboard=hobbit\0" \
