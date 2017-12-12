@@ -141,7 +141,6 @@ static iomux_v3_cfg_t const usdhc1_pads[] = {
 };
 
 /* EMMC/SD */
-#define USDHC2_CD_GPIO IMX_GPIO_NR(4, 19)
 static iomux_v3_cfg_t const usdhc2_emmc_pads[] = {
 	MX6_PAD_NAND_RE_B__USDHC2_CLK | MUX_PAD_CTRL(USDHC_PAD_CTRL),
 	MX6_PAD_NAND_WE_B__USDHC2_CMD | MUX_PAD_CTRL(USDHC_PAD_CTRL),
@@ -280,7 +279,8 @@ int board_mmc_getcd(struct mmc *mmc)
 		ret = !gpio_get_value(USDHC1_CD_GPIO);
 		break;
 	case USDHC2_BASE_ADDR:
-		ret = !gpio_get_value(USDHC2_CD_GPIO); /* Assume uSDHC2 emmc is always present */
+	default:
+		ret = 1; /* Assume uSDHC2 emmc is always present */
 		break;
 	}
 	return ret;
@@ -292,7 +292,6 @@ int board_mmc_init(bd_t *bis)
 	u32 index = 0;
 
 	imx_iomux_v3_setup_multiple_pads(usdhc2_emmc_pads, ARRAY_SIZE(usdhc2_emmc_pads));
-	gpio_direction_input(USDHC2_CD_GPIO);
 
 	imx_iomux_v3_setup_multiple_pads(usdhc1_pads, ARRAY_SIZE(usdhc1_pads));
 	gpio_direction_input(USDHC1_CD_GPIO);
