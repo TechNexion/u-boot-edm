@@ -17,6 +17,7 @@
 #include <asm/arch/imx-rdc.h>
 #include <asm/arch/crm_regs.h>
 #include <dm.h>
+#include <fdt_support.h>
 #include <imx_thermal.h>
 #include <fsl_wdog.h>
 #if defined(CONFIG_FSL_FASTBOOT) && defined(CONFIG_ANDROID_RECOVERY)
@@ -514,3 +515,117 @@ void reset_cpu(ulong addr)
 	}
 }
 
+
+#if defined(CONFIG_OF_LIBFDT) && defined(CONFIG_OF_BOARD_SETUP)
+/*
+ * fdt_pack_reg - pack address and size array into the "reg"-suitable stream
+ */
+static int fdt_pack_reg(const void *fdt, void *buf, u64 *address, u64 *size,
+                        int n)
+{
+        int i;
+        int address_cells = fdt_address_cells(fdt, 0);
+        int size_cells = fdt_size_cells(fdt, 0);
+        char *p = buf;
+
+        for (i = 0; i < n; i++) {
+                if (address_cells == 2)
+                        *(fdt64_t *)p = cpu_to_fdt64(address[i]);
+                else
+                        *(fdt32_t *)p = cpu_to_fdt32(address[i]);
+                p += 4 * address_cells;
+
+                if (size_cells == 2)
+                        *(fdt64_t *)p = cpu_to_fdt64(size[i]);
+                else
+                        *(fdt32_t *)p = cpu_to_fdt32(size[i]);
+                p += 4 * size_cells;
+        }
+
+        return p - (char *)buf;
+}
+
+#ifdef CONFIG_NR_DRAM_BANKS
+#define MEMORY_BANKS_MAX CONFIG_NR_DRAM_BANKS
+#else
+#define MEMORY_BANKS_MAX 4
+#endif
+int ft_board_setup(void *blob, bd_t *bd)
+{
+	__maybe_unused u32 max_freq_khz;
+	int err, i;
+	int nodeoffset, plen, len = 0;
+	u32 *prop, newprop[12];
+
+	err = fdt_check_header(blob);
+	if (err < 0) {
+		printf("%s: %s\n", __FUNCTION__, fdt_strerror(err));
+		return err;
+	}
+
+	nodeoffset = fdt_path_offset(blob, "/cpus/cpu@0");
+	if (nodeoffset >= 0) {
+		prop = (u32 *)fdt_getprop(blob, nodeoffset,
+					    "operating-points", &plen);
+		if (prop) {
+			max_freq_khz = get_cpu_speed_grade_hz() / 1000;
+
+			for(i=0; i<plen; i+=8) {
+				if(__be32_to_cpu(*prop) <= max_freq_khz) {
+					newprop[len] = *prop++;
+					newprop[len + 1] = *prop++;
+					len += 2;
+				}else
+					prop += 2;
+			}
+
+			err = fdt_delprop(blob, nodeoffset,
+					  "operating-points");
+			if (err < 0)
+				printf("error deleting operating-points\n");
+
+			err = fdt_setprop(blob, nodeoffset,
+					  "operating-points",
+					  newprop,
+					  (len * sizeof(u32)));
+			if (err < 0)
+				printf("error adding operating-points\n");
+		}
+	}
+
+#if defined(CONFIG_IMX_BOOTAUX)
+	if(arch_auxiliary_core_check_up(0)) {
+		int banks;
+		u64 start[2], size[2];
+		u8 tmp[MEMORY_BANKS_MAX * 32]; /* Up to 64-bit address + 64-bit size */
+
+		/* find or create "/memory" node. */
+		nodeoffset = fdt_find_or_add_subnode(blob, 0, "memory");
+		if (nodeoffset < 0)
+			return nodeoffset;
+
+		start[0] = bd->bi_dram[0].start;
+		size[0] = SZ_512M - SZ_1M;
+		banks = 1;
+		if (bd->bi_dram[0].size > SZ_512M) {
+			start[1] = bd->bi_dram[0].start + SZ_512M;
+			size[1] = bd->bi_dram[0].size - SZ_512M;
+			banks = 2;
+		}
+
+		len = fdt_pack_reg(blob, tmp, start, size, banks);
+		err = fdt_setprop(blob, nodeoffset, "linux,usable-memory", tmp, len);
+		if (err < 0) {
+				printf("WARNING: could not set %s %s.\n",
+								"linux,usable-memory", fdt_strerror(err));
+				return err;
+		}
+	} else {
+		nodeoffset = fdt_node_offset_by_compatible(blob, -1, "fsl,imx7d-rpmsg");
+		if (nodeoffset > 0)
+			fdt_set_node_status(blob, nodeoffset, FDT_STATUS_DISABLED, 0);
+	}
+#endif
+	return 0;
+}
+#endif
