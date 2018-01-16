@@ -1,0 +1,4 @@
+mmcargs=setenv bootargs console=${console},${baudrate} root=${mmcroot}
+baseboard=hobbit
+bootcmd_mmc=run loadimage;run mmcboot;
+uenvcmd=run bootcmd_mmc
