@@ -14,6 +14,8 @@
 
 #include "imx6_spl.h"
 
+#undef CONFIG_LDO_BYPASS_CHECK
+
 #define CONFIG_MACH_TYPE		MACH_TYPE_WANDBOARD_IMX6
 
 /* Size of malloc() pool */
