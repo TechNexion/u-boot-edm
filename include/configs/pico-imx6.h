@@ -146,6 +146,11 @@
 	"initrd_high=0xffffffff\0" \
 	"fdt_addr=0x18000000\0" \
 	"boot_fdt=try\0" \
+	"nfsroot=/rootfs\0" \
+	"serverip=192.168.0.254\0" \
+	"ipaddr=192.168.0.255\0" \
+	"ethaddr=11:22:33:44:55:66\0" \
+	"ip_dyn=no\0" \
 	"mmcdev=" __stringify(CONFIG_SYS_MMC_ENV_DEV) "\0" \
 	"mmcpart=1\0" \
 	"searchbootdev=" \
@@ -225,6 +230,33 @@
 	"loadbootenv=fatload mmc ${mmcdev} ${loadaddr} ${bootenv}\0" \
 	"importbootenv=echo Importing environment from mmc ...; " \
 		"env import -t -r $loadaddr $filesize\0" \
+	"netargs=setenv bootargs console=${console},${baudrate} " \
+		"root=/dev/nfs " \
+	"ip=${ipaddr} nfsroot=${serverip}:${nfsroot},v3,tcp ${displayinfo} \0" \
+		"netboot=echo Booting from net ...; " \
+		"if test ${ip_dyn} = yes; then " \
+			"setenv get_cmd dhcp; " \
+		"else " \
+			"setenv get_cmd tftp; " \
+		"fi; " \
+		"run loadbootenv; " \
+		"run importbootenv; " \
+		"run setfdt; " \
+		"run netargs; " \
+		"${get_cmd} ${loadaddr} ${image}; " \
+		"if test ${boot_fdt} = yes || test ${boot_fdt} = try; then " \
+			"if ${get_cmd} ${fdt_addr} ${fdtfile}; then " \
+				"bootz ${loadaddr} - ${fdt_addr}; " \
+			"else " \
+				"if test ${boot_fdt} = try; then " \
+					"bootz; " \
+				"else " \
+					"echo WARN: Cannot load the DT; " \
+				"fi; " \
+			"fi; " \
+		"else " \
+			"bootz; " \
+		"fi;\0"
 
 #define CONFIG_BOOTCOMMAND \
 	   "mmc dev ${mmcdev}; if mmc rescan; then " \
