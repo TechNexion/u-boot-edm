@@ -149,7 +149,7 @@
 	"nfsroot=/rootfs\0" \
 	"serverip=192.168.0.254\0" \
 	"ipaddr=192.168.0.255\0" \
-	"ethaddr=11:22:33:44:55:66\0" \
+	"ethaddr=c6:8a:01:5a:a6:72\0" \
 	"ip_dyn=no\0" \
 	"mmcdev=" __stringify(CONFIG_SYS_MMC_ENV_DEV) "\0" \
 	"mmcpart=1\0" \
@@ -232,7 +232,7 @@
 		"env import -t -r $loadaddr $filesize\0" \
 	"netargs=setenv bootargs console=${console},${baudrate} " \
 		"root=/dev/nfs " \
-	"ip=${ipaddr} nfsroot=${serverip}:${nfsroot},v3,tcp ${displayinfo} \0" \
+	"ip=${ipaddr} nfsroot=${serverip}:${nfsroot},v3,tcp rw ${displayinfo} \0" \
 		"netboot=echo Booting from net ...; " \
 		"if test ${ip_dyn} = yes; then " \
 			"setenv get_cmd dhcp; " \
