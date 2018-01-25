@@ -164,6 +164,11 @@
 	"script=boot.scr\0" \
 	"som==autodetect\0" \
 	"image=zImage\0" \
+	"ipaddr=192.168.0.254\0 " \
+	"ethaddr=c6:8a:01:5a:a6:72\0" \
+	"nfsroot=/rootfs\0" \
+	"serverip=192.168.0.255\0" \
+	"ip_dyn=no\0" \
 	"console=" __stringify(CONFIG_DEBUG_TTY)"\0" \
 	"splashpos=m,m\0" \
 	"baseboard=hobbit\0" \
@@ -222,6 +227,33 @@
 	"loadbootenv=fatload mmc ${mmcdev} ${loadaddr} ${bootenv}\0" \
 	"importbootenv=echo Importing environment from mmc ...; " \
 		"env import -t -r $loadaddr $filesize\0" \
+	"netargs=setenv bootargs console=${console},${baudrate} " \
+		"root=/dev/nfs " \
+	"ip=${ipaddr} nfsroot=${serverip}:${nfsroot},v3,tcp rw\0" \
+		"netboot=echo Booting from net ...; " \
+		"if test ${ip_dyn} = yes; then " \
+			"setenv get_cmd dhcp; " \
+		"else " \
+			"setenv get_cmd tftp; " \
+		"fi; " \
+		"run loadbootenv; " \
+		"run importbootenv; " \
+		"run setfdt; " \
+		"run netargs; " \
+		"${get_cmd} ${loadaddr} ${image}; " \
+		"if test ${boot_fdt} = yes || test ${boot_fdt} = try; then " \
+			"if ${get_cmd} ${fdt_addr} ${fdtfile}; then " \
+				"bootz ${loadaddr} - ${fdt_addr}; " \
+			"else " \
+				"if test ${boot_fdt} = try; then " \
+					"bootz; " \
+				"else " \
+					"echo WARN: Cannot load the DT; " \
+				"fi; " \
+			"fi; " \
+		"else " \
+			"bootz; " \
+		"fi;\0"
 
 #define CONFIG_BOOTCOMMAND \
 	   "mmc dev ${mmcdev}; if mmc rescan; then " \
