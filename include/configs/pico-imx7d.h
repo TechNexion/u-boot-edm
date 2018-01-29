@@ -144,7 +144,9 @@
 	"fdt_high=0xffffffff\0" \
 	"fdt_addr=0x83000000\0" \
 	"boot_fdt=try\0" \
-	"ip_dyn=yes\0" \
+	"nfsroot=/srv/rootfs\0" \
+	"serverip=192.168.0.254\0" \
+	"ip_dyn=no\0" \
 	"mmcdev="__stringify(CONFIG_SYS_MMC_ENV_DEV)"\0" \
 	"mmcpart=" __stringify(CONFIG_SYS_MMC_IMG_LOAD_PART) "\0" \
 	"mmcroot=/dev/mmcblk2p2\0" \
@@ -179,15 +181,20 @@
 		"env import -t -r $loadaddr $filesize\0" \
 	"netargs=setenv bootargs console=${console},${baudrate} " \
 		"root=/dev/nfs " \
-	"ip=dhcp nfsroot=${serverip}:${nfsroot},v3,tcp\0" \
+	"ip=${get_ip} nfsroot=${serverip}:${nfsroot},v3,tcp rw\0" \
 		"netboot=echo Booting from net ...; " \
-		"run netargs; " \
-		"if test ${ip_dyn} = yes; then " \
-			"setenv get_cmd dhcp; " \
-		"else " \
+		"if test -n ${ipaddr}; then " \
 			"setenv get_cmd tftp; " \
+			"setenv get_ip ${ipaddr}; " \
+		"else " \
+			"setenv get_cmd dhcp; " \
+			"setenv get_ip dhcp; " \
 		"fi; " \
-		"${get_cmd} ${image}; " \
+		"run loadbootenv; " \
+		"run importbootenv; " \
+		"run setfdt; " \
+		"run netargs; " \
+		"${get_cmd} ${loadaddr} ${image}; " \
 		"if test ${boot_fdt} = yes || test ${boot_fdt} = try; then " \
 			"if ${get_cmd} ${fdt_addr} ${fdt_file}; then " \
 				"bootz ${loadaddr} - ${fdt_addr}; " \
