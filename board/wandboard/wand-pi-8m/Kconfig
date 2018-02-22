@@ -1,0 +1,12 @@
+if TARGET_WAND_PI_8M
+
+config SYS_BOARD
+	default "wand-pi-8m"
+
+config SYS_VENDOR
+	default "wandboard"
+
+config SYS_CONFIG_NAME
+	default "wand-pi-8m"
+
+endif
