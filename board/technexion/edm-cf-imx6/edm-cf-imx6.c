@@ -506,6 +506,9 @@ static void enable_lvds(struct display_info_t const *dev)
 
 	SETUP_IOMUX_PAD(PAD_SD4_DAT0__GPIO2_IO08 | MUX_PAD_CTRL(NO_PAD_CTRL));
 	gpio_direction_output(IMX_GPIO_NR(2, 8), 1);
+
+	SETUP_IOMUX_PAD(PAD_CSI0_DAT13__GPIO5_IO31 | MUX_PAD_CTRL(NO_PAD_CTRL));
+	gpio_direction_output(IMX_GPIO_NR(5, 31), 1);
 }
 
 static void enable_ft5x06_wvga(struct display_info_t const *dev)
