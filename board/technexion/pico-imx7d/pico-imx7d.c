@@ -299,8 +299,8 @@ int board_video_skip(void)
 
 #ifdef CONFIG_FEC_MXC
 static iomux_v3_cfg_t const fec1_pads[] = {
-	MX7D_PAD_SD2_CD_B__ENET2_MDIO | MUX_PAD_CTRL(ENET_PAD_CTRL_MII),
-	MX7D_PAD_SD2_WP__ENET2_MDC | MUX_PAD_CTRL(ENET_PAD_CTRL_MII),
+	MX7D_PAD_SD2_CD_B__ENET1_MDIO | MUX_PAD_CTRL(ENET_PAD_CTRL_MII),
+	MX7D_PAD_SD2_WP__ENET1_MDC | MUX_PAD_CTRL(ENET_PAD_CTRL_MII),
 	MX7D_PAD_ENET1_RGMII_TXC__ENET1_RGMII_TXC | MUX_PAD_CTRL(ENET_PAD_CTRL),
 	MX7D_PAD_ENET1_RGMII_TD0__ENET1_RGMII_TD0 | MUX_PAD_CTRL(ENET_PAD_CTRL),
 	MX7D_PAD_ENET1_RGMII_TD1__ENET1_RGMII_TD1 | MUX_PAD_CTRL(ENET_PAD_CTRL),
@@ -313,8 +313,9 @@ static iomux_v3_cfg_t const fec1_pads[] = {
 	MX7D_PAD_ENET1_RGMII_RD2__ENET1_RGMII_RD2 | MUX_PAD_CTRL(ENET_RX_PAD_CTRL),
 	MX7D_PAD_ENET1_RGMII_RD3__ENET1_RGMII_RD3 | MUX_PAD_CTRL(ENET_RX_PAD_CTRL),
 	MX7D_PAD_ENET1_RGMII_RX_CTL__ENET1_RGMII_RX_CTL | MUX_PAD_CTRL(ENET_RX_PAD_CTRL),
-        MX7D_PAD_SD3_STROBE__GPIO6_IO10 | MUX_PAD_CTRL(NO_PAD_CTRL), // Interrupt
-        MX7D_PAD_SD3_RESET_B__GPIO6_IO11 | MUX_PAD_CTRL(NO_PAD_CTRL), // Reset pin
+	MX7D_PAD_SD3_STROBE__GPIO6_IO10 | MUX_PAD_CTRL(NO_PAD_CTRL),
+	MX7D_PAD_SD3_RESET_B__GPIO6_IO11 | MUX_PAD_CTRL(NO_PAD_CTRL),
+	MX7D_PAD_GPIO1_IO01__CCM_ENET_REF_CLK3 | MUX_PAD_CTRL(ENET_PAD_CTRL),
 };
 
 #define FEC1_RST_GPIO	IMX_GPIO_NR(6, 11)
@@ -323,6 +324,10 @@ static iomux_v3_cfg_t const fec1_pads[] = {
 static void setup_iomux_fec(void)
 {
 	imx_iomux_v3_setup_multiple_pads(fec1_pads, ARRAY_SIZE(fec1_pads));
+
+	gpio_direction_output(FEC1_RST_GPIO, 0);
+	udelay(500);
+	gpio_set_value(FEC1_RST_GPIO, 1);
 }
 #endif
 
@@ -471,10 +476,6 @@ int board_eth_init(bd_t *bis)
 	if (ret)
 		printf("FEC1 MXC: %s:failed\n", __func__);
 
-	gpio_direction_output(FEC1_RST_GPIO, 0);
-	udelay(500);
-	gpio_set_value(FEC1_RST_GPIO, 1);
-
 	return ret;
 }
 
@@ -499,23 +500,21 @@ static int setup_fec(void)
 
 int board_phy_config(struct phy_device *phydev)
 {
-	/* enable rgmii rxc skew and phy mode select to RGMII copper */
-	/*phy_write(phydev, MDIO_DEVAD_NONE, 0x1e, 0x21);
-	phy_write(phydev, MDIO_DEVAD_NONE, 0x1f, 0x7ea8);
-	phy_write(phydev, MDIO_DEVAD_NONE, 0x1e, 0x2f);
-	phy_write(phydev, MDIO_DEVAD_NONE, 0x1f, 0x71b7);*/
-
 	unsigned short val;
 
-	/* To enable AR8035 ouput a 125MHz clk from CLK_25M */
-	phy_write(phydev, MDIO_DEVAD_NONE, 0xd, 0x7);
-	phy_write(phydev, MDIO_DEVAD_NONE, 0xe, 0x8016);
-	phy_write(phydev, MDIO_DEVAD_NONE, 0xd, 0x4007);
+	/* Ar803x phy SmartEEE feature cause link status generates glitch,
+	* which cause ethernet link down/up issue, so disable SmartEEE
+	*/
+	phy_write(phydev, MDIO_DEVAD_NONE, 0xd, 0x3);
+	phy_write(phydev, MDIO_DEVAD_NONE, 0xe, 0x805d);
+	phy_write(phydev, MDIO_DEVAD_NONE, 0xd, 0x4003);
 
 	val = phy_read(phydev, MDIO_DEVAD_NONE, 0xe);
-	val &= 0xffe7;
-	val |= 0x18;
-	phy_write(phydev, MDIO_DEVAD_NONE, 0xe, val);
+	phy_write(phydev, MDIO_DEVAD_NONE, 0xe, val & ~(1 << 8));
+
+	/* Set RGMII IO voltage to 1.8V */
+	phy_write(phydev, MDIO_DEVAD_NONE, 0x1d, 0x1f);
+	phy_write(phydev, MDIO_DEVAD_NONE, 0x1e, 0x8);
 
 	/* introduce tx clock delay */
 	phy_write(phydev, MDIO_DEVAD_NONE, 0x1d, 0x5);
