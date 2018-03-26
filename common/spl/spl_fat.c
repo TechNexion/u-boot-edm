@@ -61,8 +61,10 @@ int spl_load_image_fat(struct spl_image_info *spl_image,
 	struct image_header *header;
 
 	err = spl_register_fat_device(block_dev, partition);
-	if (err)
+	if (err) {
+		printf("SPL: No FAT partition present?");
 		goto end;
+        }
 
 	header = (struct image_header *)(CONFIG_SYS_TEXT_BASE -
 						sizeof(struct image_header));
@@ -94,8 +96,8 @@ int spl_load_image_fat(struct spl_image_info *spl_image,
 end:
 #ifdef CONFIG_SPL_LIBCOMMON_SUPPORT
 	if (err <= 0)
-		printf("%s: error reading image %s, err - %d\n",
-		       __func__, filename, err);
+		printf("SPL: failed to read file %s from FAT partition,"
+			" error code = %d\n", filename, err);
 #endif
 
 	return (err <= 0);
