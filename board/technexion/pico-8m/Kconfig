@@ -1,0 +1,12 @@
+if TARGET_PICO_8M
+
+config SYS_BOARD
+	default "pico-8m"
+
+config SYS_VENDOR
+	default "technexion"
+
+config SYS_CONFIG_NAME
+	default "pico-8m"
+
+endif
