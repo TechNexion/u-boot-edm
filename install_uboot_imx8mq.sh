@@ -102,7 +102,7 @@ function install_uboot_dtb()
 	if [ -f arch/arm/dts/${BOARD}.dtb ] ; then
 		cp arch/arm/dts/${BOARD}.dtb ${TWD}/${MKIMAGE_DIR}/${MKIMAGE_PLAT}
 	else
-		printf "Cannot find sarch/arm/dts/${BOARD}.dtb. Please build u-boot first! \n"
+		printf "Cannot find arch/arm/dts/${BOARD}.dtb. Please build u-boot first! \n"
 	fi
 }
 
@@ -116,21 +116,9 @@ function generate_imx_boot
 		printf "Cannot find tools/mkimage. Please build u-boot first! \n"
 	fi
 
-	#Overwrite the default board name in soc.mak
-	cd ${TWD}
-	BOARD_DEFAULT=`grep '^dtbs =' ${TWD}/${MKIMAGE_DIR}/${MKIMAGE_PLAT}/soc.mak | sed 's/^dtbs = \(.*\)\.dtb$/\1/g'`
-	echo -e "default board name is : ${BOARD_DEFAULT}"
-
-	if [ "$BOARD" != "$BOARD_DEFAULT" ]; then
-		printf "Overwrite default board name as: $BOARD \n"
-		sed -i "s/${BOARD_DEFAULT}/${BOARD}/g" ${TWD}/${MKIMAGE_DIR}/${MKIMAGE_PLAT}/soc.mak
-	else
-		printf "Use default board name: $BOARD_DEFAULT \n"
-	fi
-
 	#Generate bootable binary (This binary contains SPL and u-boot.bin) for flashing
 	cd ${MKIMAGE_DIR}
-	make SOC=${MKIMAGE_PLAT} ${MKIMAGE_TARGET} && \
+	make SOC=${MKIMAGE_PLAT} dtbs=${BOARD}.dtb ${MKIMAGE_TARGET} && \
 	printf "Make target: ${MKIMAGE_TARGET} and generate flash.bin... \n" || printf "Fails to generate flash.bin... \n"
 }
 
@@ -155,7 +143,7 @@ function usage()
     * This script is used to download required firmware files, generate and flash bootable u-boot binary
     *
     * [-d disk-path]: specify the disk to flash u-boot binary, e.g., /dev/sdd
-    * [-b board_name]: specify the name of dtb, e.g.,fsl-imx8mq-evk, wand-pi-8m
+    * [-b dtb_name]: specify the name of dtb, e.g.,fsl-imx8mq-evk, wand-pi-8m, pico-8m
     * [-t]: target u-boot binary is without HDMI firmware
     * [-c]: clean temporary directory
     * [-h]: help
