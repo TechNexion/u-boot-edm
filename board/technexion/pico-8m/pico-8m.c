@@ -40,27 +40,6 @@ static iomux_v3_cfg_t const wdog_pads[] = {
 	IMX8MQ_PAD_GPIO1_IO02__WDOG1_WDOG_B | MUX_PAD_CTRL(WDOG_PAD_CTRL),
 };
 
-#ifdef CONFIG_FSL_QSPI
-static iomux_v3_cfg_t const qspi_pads[] = {
-	IMX8MQ_PAD_NAND_ALE__QSPI_A_SCLK | MUX_PAD_CTRL(QSPI_PAD_CTRL),
-	IMX8MQ_PAD_NAND_CE0_B__QSPI_A_SS0_B | MUX_PAD_CTRL(QSPI_PAD_CTRL),
-
-	IMX8MQ_PAD_NAND_DATA00__QSPI_A_DATA0 | MUX_PAD_CTRL(QSPI_PAD_CTRL),
-	IMX8MQ_PAD_NAND_DATA01__QSPI_A_DATA1 | MUX_PAD_CTRL(QSPI_PAD_CTRL),
-	IMX8MQ_PAD_NAND_DATA02__QSPI_A_DATA2 | MUX_PAD_CTRL(QSPI_PAD_CTRL),
-	IMX8MQ_PAD_NAND_DATA03__QSPI_A_DATA3 | MUX_PAD_CTRL(QSPI_PAD_CTRL),
-};
-
-int board_qspi_init(void)
-{
-	imx_iomux_v3_setup_multiple_pads(qspi_pads, ARRAY_SIZE(qspi_pads));
-
-	set_clk_qspi();
-
-	return 0;
-}
-#endif
-
 static iomux_v3_cfg_t const uart_pads[] = {
 	IMX8MQ_PAD_UART1_RXD__UART1_RX | MUX_PAD_CTRL(UART_PAD_CTRL),
 	IMX8MQ_PAD_UART1_TXD__UART1_TX | MUX_PAD_CTRL(UART_PAD_CTRL),
@@ -114,6 +93,16 @@ static iomux_v3_cfg_t const fec1_rst_pads[] = {
 #define FEC_PWR_PAD IMX_GPIO_NR(1, 0)
 static iomux_v3_cfg_t const fec1_pwr_pads[] = {
 	IMX8MQ_PAD_GPIO1_IO00__GPIO1_IO0 | MUX_PAD_CTRL(NO_PAD_CTRL),
+};
+
+#define WL_REG_ON_PAD IMX_GPIO_NR(3, 24)
+static iomux_v3_cfg_t const wl_reg_on_pads[] = {
+	IMX8MQ_PAD_SAI5_RXD3__GPIO3_IO24 | MUX_PAD_CTRL(NO_PAD_CTRL),
+};
+
+#define BT_ON_PAD IMX_GPIO_NR(3, 21)
+static iomux_v3_cfg_t const bt_on_pads[] = {
+	IMX8MQ_PAD_SAI5_RXD0__GPIO3_IO21 | MUX_PAD_CTRL(NO_PAD_CTRL),
 };
 
 static void setup_iomux_fec(void)
@@ -235,9 +224,24 @@ int board_usb_cleanup(int index, enum usb_init_type init)
 }
 #endif
 
+void setup_wifi(void)
+{
+	imx_iomux_v3_setup_multiple_pads(wl_reg_on_pads, ARRAY_SIZE(wl_reg_on_pads));
+	imx_iomux_v3_setup_multiple_pads(bt_on_pads, ARRAY_SIZE(bt_on_pads));
+
+	gpio_request(WL_REG_ON_PAD, "wl_reg_on");
+	gpio_direction_output(WL_REG_ON_PAD, 0);
+	gpio_set_value(WL_REG_ON_PAD, 0);
+
+	gpio_request(BT_ON_PAD, "bt_on");
+	gpio_direction_output(BT_ON_PAD, 0);
+	gpio_set_value(BT_ON_PAD, 0);
+}
+
+
 int board_init(void)
 {
-	board_qspi_init();
+	setup_wifi();
 
 #ifdef CONFIG_FEC_MXC
 	setup_fec();
