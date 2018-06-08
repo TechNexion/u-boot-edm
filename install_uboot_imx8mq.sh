@@ -190,6 +190,13 @@ if [ "$(id -u)" = "0" ]; then
    echo "This script can not be run as root"
    exit 1
 fi
+
+if [ ! -b $DRIVE ]
+then
+   echo Target block device $DRIVE does not exist
+   usage
+   exit 1
+fi
 print_settings
 install_firmware
 install_uboot_dtb
