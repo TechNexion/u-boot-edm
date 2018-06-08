@@ -36,6 +36,8 @@ DECLARE_GLOBAL_DATA_PTR;
 
 #define WDOG_PAD_CTRL	(PAD_CTL_DSE6 | PAD_CTL_HYS | PAD_CTL_PUE)
 
+static int ddr_size;
+
 static iomux_v3_cfg_t const wdog_pads[] = {
 	IMX8MQ_PAD_GPIO1_IO02__WDOG1_WDOG_B | MUX_PAD_CTRL(WDOG_PAD_CTRL),
 };
@@ -68,11 +70,34 @@ int board_postclk_init(void)
 
 int dram_init(void)
 {
-	/* rom_pointer[1] contains the size of TEE occupies */
-	if (rom_pointer[1])
-		gd->ram_size = PHYS_SDRAM_SIZE - rom_pointer[1];
+	/*************************************************
+	ToDo: It's a dirty workaround to store the
+	information of DDR size into start address of TCM.
+	It'd be better to detect DDR size from DDR controller.
+	**************************************************/
+	ddr_size = readl(M4_BOOTROM_BASE_ADDR);
+
+	if (ddr_size == 0x3) {
+		/* rom_pointer[1] contains the size of TEE occupies */
+		if (rom_pointer[1])
+			gd->ram_size = PHYS_SDRAM_SIZE_3GB - rom_pointer[1];
+		else
+			gd->ram_size = PHYS_SDRAM_SIZE_3GB;
+	}
+	else if (ddr_size == 0x2) {
+		if (rom_pointer[1])
+			gd->ram_size = PHYS_SDRAM_SIZE_2GB - rom_pointer[1];
+		else
+			gd->ram_size = PHYS_SDRAM_SIZE_2GB;
+	}
+	else if (ddr_size == 0x1) {
+		if (rom_pointer[1])
+			gd->ram_size = PHYS_SDRAM_SIZE_1GB - rom_pointer[1];
+		else
+			gd->ram_size = PHYS_SDRAM_SIZE_1GB;
+	}
 	else
-		gd->ram_size = PHYS_SDRAM_SIZE;
+		puts("Unknown DDR type!!!\n");
 
 	return 0;
 }

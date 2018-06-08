@@ -204,11 +204,10 @@
 
 #define CONFIG_SYS_SDRAM_BASE           0x40000000
 #define PHYS_SDRAM                      0x40000000
-#if 0
- #define PHYS_SDRAM_SIZE			SZ_1G /* 1GB DDR */
- #define PHYS_SDRAM_SIZE			SZ_2G /* 2GB DDR */
-#endif
-#define PHYS_SDRAM_SIZE			0xC0000000 /* 3GB DDR */
+
+#define PHYS_SDRAM_SIZE_1GB		SZ_1G /* 1GB DDR */
+#define PHYS_SDRAM_SIZE_2GB		SZ_2G /* 2GB DDR */
+#define PHYS_SDRAM_SIZE_3GB		0xC0000000 /* 3GB DDR */
 #define CONFIG_NR_DRAM_BANKS		1
 
 #define CONFIG_BAUDRATE			115200
