@@ -146,6 +146,44 @@ unsigned imx_ddr_size(void)
 }
 #endif
 
+const char *get_som_type(void) {
+    /* add soc type into boot env variables */
+    if (is_mx6dqp())
+        return "imx6qp";
+    else if (is_mx6dq())
+        return "imx6q";
+    else if (is_mx6sdl())
+        return "imx6dl";
+    else if (is_mx6dl())
+        return "imx6dl";
+    else if (is_cpu_type(MXC_CPU_MX6D))
+        return "imx6d";
+    else if (is_cpu_type(MXC_CPU_MX6DP))
+         return "imx6dp";
+    else if (is_mx6sx())
+        return "imx6sx";
+    else if (is_mx6sl())
+        return "imx6sl";
+    else if (is_mx6sll())
+        return "imx6sll";
+    else if (is_mx6solo())
+        return "imx6s";
+    else if (is_mx6ul())
+        return "imx6ul";
+    else if (is_mx6ull())
+        return "imx6ull";
+    else if (is_mx7())
+        return "imx7d";
+    else if (is_mx7ulp())
+        return "imx7ulp";
+    else if (is_cpu_type(MXC_CPU_MX7S))
+        return "imx7s";
+    else if (is_cpu_type(MXC_CPU_IMX8MQ))
+        return "imx8mq";
+    else
+        return "unknown";
+}
+
 #if defined(CONFIG_DISPLAY_CPUINFO)
 
 const char *get_imx_type(u32 imxtype)
