@@ -40,7 +40,7 @@ defined(CONFIG_MX6DL)) && !defined(CONFIG_MX6S)
 #define CONFIG_MX6DL
 #endif
 
-#define CONFIG_SYS_BOOTM_LEN	0x1000000
+#define CONFIG_SYS_BOOTM_LEN	0xA000000
 
 #include <linux/sizes.h>
 #include <asm/arch/imx-regs.h>
