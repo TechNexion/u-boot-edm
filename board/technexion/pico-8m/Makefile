@@ -7,6 +7,6 @@
 obj-y += pico-8m.o
 
 ifdef CONFIG_SPL_BUILD
-obj-y += spl.o
+obj-y += pico-8m_spl.o
 obj-y += ddr/ddr_init.o ddr/ddrphy_train.o ddr/helper.o
 endif

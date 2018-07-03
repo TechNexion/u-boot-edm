@@ -52,12 +52,12 @@ void spl_dram_init(void)
 		writel(0x3, M4_BOOTROM_BASE_ADDR);
 	}
 	else if (gpio_get_value(DDR_DET_1) && gpio_get_value(DDR_DET_2) && !gpio_get_value(DDR_DET_3)) {
-		puts("dram_init: LPDDR4: 2GB\n");
+		puts("dram_init: LPDDR4 2GB\n");
 		ddr_init_2gb();
 		writel(0x2, M4_BOOTROM_BASE_ADDR);
 	}
 	else if (gpio_get_value(DDR_DET_1) && !gpio_get_value(DDR_DET_2) && gpio_get_value(DDR_DET_3)) {
-		puts("dram_init: LPDDR4: 1GB\n");
+		puts("dram_init: LPDDR4 1GB\n");
 		ddr_init_1gb();
 		writel(0x1, M4_BOOTROM_BASE_ADDR);
 	}
