@@ -57,13 +57,13 @@
 #define CONFIG_SYS_I2C_MXC_I2C2		/* enable I2C bus 2 */
 #define CONFIG_SYS_I2C_MXC_I2C3		/* enable I2C bus 3 */
 
-#define CONFIG_ENV_VARS_UBOOT_RUNTIME_CONFIG
-
 #define CONFIG_POWER
 #define CONFIG_POWER_I2C
 #define CONFIG_POWER_PFUZE100
 #define CONFIG_POWER_PFUZE100_I2C_ADDR 0x08
 #endif
+
+#define CONFIG_ENV_VARS_UBOOT_RUNTIME_CONFIG
 
 #define CONFIG_REMAKE_ELF
 
@@ -102,6 +102,8 @@
 #define CONFIG_PHY_ATHEROS
 #endif
 
+#define PICO_8M_CMA_SIZE                 768M
+
 #define CONFIG_MFG_ENV_SETTINGS \
 	"mfgtool_args=setenv bootargs console=${console},${baudrate} " \
 		"rdinit=/linuxrc " \
@@ -119,6 +121,7 @@
 	"script=boot.scr\0" \
 	"image=Image\0" \
 	"console=ttymxc0,115200 earlycon=ec_imx6q,0x30860000,115200\0" \
+	"cma_size="__stringify(PICO_8M_CMA_SIZE)"\0"                             \
 	"fdt_addr=0x43000000\0"			\
 	"fdt_high=0xffffffffffffffff\0"		\
 	"boot_fdt=try\0" \
@@ -129,7 +132,7 @@
 	"mmcpart=" __stringify(CONFIG_SYS_MMC_IMG_LOAD_PART) "\0" \
 	"mmcroot=" CONFIG_MMCROOT " rootwait rw\0" \
 	"mmcautodetect=yes\0" \
-	"mmcargs=setenv bootargs console=${console} root=${mmcroot}\0 " \
+	"mmcargs=setenv bootargs console=${console} root=${mmcroot} cma=${cma_size}\0 " \
 	"loadbootscript=fatload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${script};\0" \
 	"bootscript=echo Running bootscript from mmc ...; " \
 		"source\0" \

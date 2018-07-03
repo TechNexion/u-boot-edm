@@ -25,31 +25,12 @@
 
 DECLARE_GLOBAL_DATA_PTR;
 
-static iomux_v3_cfg_t const ver_det_pads[] = {
-	IMX8MQ_PAD_NAND_DATA01__GPIO3_IO7 | MUX_PAD_CTRL(NO_PAD_CTRL),
-	IMX8MQ_PAD_NAND_DATA02__GPIO3_IO8 | MUX_PAD_CTRL(NO_PAD_CTRL),
-	IMX8MQ_PAD_NAND_DATA03__GPIO3_IO9 | MUX_PAD_CTRL(NO_PAD_CTRL),
-	IMX8MQ_PAD_NAND_DATA04__GPIO3_IO10 | MUX_PAD_CTRL(NO_PAD_CTRL),
-	IMX8MQ_PAD_NAND_DATA05__GPIO3_IO11 | MUX_PAD_CTRL(NO_PAD_CTRL),
-	IMX8MQ_PAD_NAND_DATA06__GPIO3_IO12 | MUX_PAD_CTRL(NO_PAD_CTRL),
-	IMX8MQ_PAD_NAND_DATA07__GPIO3_IO13 | MUX_PAD_CTRL(NO_PAD_CTRL),
-};
+extern void setup_iomux_ver_det(void);
 
 #define DDR_DET_1		IMX_GPIO_NR(3, 11)
 #define DDR_DET_2		IMX_GPIO_NR(3, 12)
 #define DDR_DET_3		IMX_GPIO_NR(3, 13)
 
-static void setup_iomux_ver_det(void)
-{
-	imx_iomux_v3_setup_multiple_pads(ver_det_pads, ARRAY_SIZE(ver_det_pads));
-
-	gpio_request(DDR_DET_1, "ddr_det_1");
-	gpio_direction_input(DDR_DET_1);
-	gpio_request(DDR_DET_2, "ddr_det_2");
-	gpio_direction_input(DDR_DET_2);
-	gpio_request(DDR_DET_3, "ddr_det_3");
-	gpio_direction_input(DDR_DET_3);
-}
 /***********************************************
 DDR_DET_1    DDR_DET_2   DDR_DET_3
    1            1            1       3G LPDDR4

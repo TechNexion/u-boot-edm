@@ -249,6 +249,32 @@ int board_usb_cleanup(int index, enum usb_init_type init)
 }
 #endif
 
+#define DDR_DET_1		IMX_GPIO_NR(3, 11)
+#define DDR_DET_2		IMX_GPIO_NR(3, 12)
+#define DDR_DET_3		IMX_GPIO_NR(3, 13)
+
+static iomux_v3_cfg_t const ver_det_pads[] = {
+	IMX8MQ_PAD_NAND_DATA01__GPIO3_IO7 | MUX_PAD_CTRL(NO_PAD_CTRL),
+	IMX8MQ_PAD_NAND_DATA02__GPIO3_IO8 | MUX_PAD_CTRL(NO_PAD_CTRL),
+	IMX8MQ_PAD_NAND_DATA03__GPIO3_IO9 | MUX_PAD_CTRL(NO_PAD_CTRL),
+	IMX8MQ_PAD_NAND_DATA04__GPIO3_IO10 | MUX_PAD_CTRL(NO_PAD_CTRL),
+	IMX8MQ_PAD_NAND_DATA05__GPIO3_IO11 | MUX_PAD_CTRL(NO_PAD_CTRL),
+	IMX8MQ_PAD_NAND_DATA06__GPIO3_IO12 | MUX_PAD_CTRL(NO_PAD_CTRL),
+	IMX8MQ_PAD_NAND_DATA07__GPIO3_IO13 | MUX_PAD_CTRL(NO_PAD_CTRL),
+};
+
+void setup_iomux_ver_det(void)
+{
+	imx_iomux_v3_setup_multiple_pads(ver_det_pads, ARRAY_SIZE(ver_det_pads));
+
+	gpio_request(DDR_DET_1, "ddr_det_1");
+	gpio_direction_input(DDR_DET_1);
+	gpio_request(DDR_DET_2, "ddr_det_2");
+	gpio_direction_input(DDR_DET_2);
+	gpio_request(DDR_DET_3, "ddr_det_3");
+	gpio_direction_input(DDR_DET_3);
+}
+
 void setup_wifi(void)
 {
 	imx_iomux_v3_setup_multiple_pads(wl_reg_on_pads, ARRAY_SIZE(wl_reg_on_pads));
@@ -323,6 +349,28 @@ int board_late_init(void)
 #ifdef CONFIG_ENV_VARS_UBOOT_RUNTIME_CONFIG
 	setenv("board_name", "PICO-8M");
 	setenv("board_rev", "iMX8MQ");
+
+	setup_iomux_ver_det();
+	/***********************************************
+	DDR_DET_1    DDR_DET_2   DDR_DET_3
+	1            1            1       3G LPDDR4
+	1            1            0       2G LPDDR4
+	1            0            1       1G LPDDR4
+	************************************************/
+	if (gpio_get_value(DDR_DET_1) && gpio_get_value(DDR_DET_2) && gpio_get_value(DDR_DET_3)) {
+		/* LPDDR4 3GB */
+		setenv("cma_size", "1G");
+	}
+	else if (gpio_get_value(DDR_DET_1) && gpio_get_value(DDR_DET_2) && !gpio_get_value(DDR_DET_3)) {
+		/* LPDDR4 2GB */
+		setenv("cma_size", "1G");
+	}
+	else if (gpio_get_value(DDR_DET_1) && !gpio_get_value(DDR_DET_2) && gpio_get_value(DDR_DET_3)) {
+		/* LPDDR4 1GB */
+		setenv("cma_size", "768M");
+	}
+	else
+		puts("Unknown DDR type!!!\n");
 #endif
 
 #ifdef CONFIG_ENV_IS_IN_MMC
