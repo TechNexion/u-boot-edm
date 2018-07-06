@@ -129,7 +129,7 @@ flash_imx_boot()
      echo "$DRIVE doesn't exist !!!"
      exit
 	fi
-	sudo umount ${DRIVE}*
+	sudo umount ${DRIVE}?
 	sleep 0.1
 	sudo dd if=${TWD}/${MKIMAGE_DIR}/${MKIMAGE_PLAT}/${IMX_BOOT} of=${DRIVE} bs=1k seek=33 oflag=dsync && \
 	printf "Flash flash.bin... \n" || printf "Fails to flash flash.bin... \n"
