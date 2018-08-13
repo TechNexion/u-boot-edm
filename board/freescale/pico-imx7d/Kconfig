@@ -1,4 +1,4 @@
-if TARGET_PICO_IMX7D
+if TARGET_FSL_IMX7D
 
 config SYS_BOARD
 	default "pico-imx7d"

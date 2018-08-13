@@ -30,8 +30,8 @@ config TARGET_MX7D_12X12_LPDDR3_ARM2
 	select DM
 	select DM_THERMAL
 
-config TARGET_PICO_IMX7D
-	bool "Support pico-imx7d"
+config TARGET_FSL_IMX7D
+	bool "Support fsl-imx7d"
 	select MX7D
 	select DM
 	select DM_THERMAL
