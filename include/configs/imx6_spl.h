@@ -25,7 +25,7 @@
  *    or 60KB
  */
 #define CONFIG_SYS_THUMB_BUILD
-#define CONFIG_SPL_LDSCRIPT	"arch/arm/cpu/armv7/omap-common/u-boot-spl.lds"
+#define CONFIG_SPL_LDSCRIPT	"arch/arm/mach-omap2/u-boot-spl.lds"
 #if defined(CONFIG_MX7S) || defined(CONFIG_MX7D)
 #define CONFIG_SPL_TEXT_BASE		0x00911000
 #define CONFIG_SPL_STACK		0x00920000
@@ -34,12 +34,11 @@
 #define CONFIG_SPL_STACK		0x0091FFB8
 #endif
 #define CONFIG_SPL_MAX_SIZE		0xF000 /* 60 KB */
-#define CONFIG_SPL_LIBCOMMON_SUPPORT
-#define CONFIG_SPL_LIBGENERIC_SUPPORT
-#define CONFIG_SPL_SERIAL_SUPPORT
-#define CONFIG_SPL_I2C_SUPPORT
-#define CONFIG_SPL_GPIO_SUPPORT
-#define CONFIG_SPL_WATCHDOG_SUPPORT
+/*
+ * Pad SPL to 68KB (4KB header + 64KB max size). This allows to write the
+ * SPL/U-Boot combination generated with u-boot-with-spl.imx directly to a
+ * boot media (given that boot media specific offset is configured properly).
+ */
 
 /* NAND support */
 #if defined(CONFIG_SPL_NAND_SUPPORT)
@@ -65,7 +64,9 @@
 #define CONFIG_SPL_FS_LOAD_PAYLOAD_NAME  "u-boot.img"
 #endif
 
-#if defined(CONFIG_MX6SX) || defined(CONFIG_MX6UL) || defined(CONFIG_MX6SL)
+#if defined(CONFIG_MX6SX) || defined(CONFIG_MX6UL) || defined(CONFIG_MX6SL) \
+|| defined(CONFIG_MX7S) || defined(CONFIG_MX7D)
+
 #define CONFIG_SPL_BSS_START_ADDR      0x88200000
 #define CONFIG_SPL_BSS_MAX_SIZE        0x100000		/* 1 MB */
 #define CONFIG_SYS_SPL_MALLOC_START    0x88300000
