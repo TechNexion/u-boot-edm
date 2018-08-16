@@ -15,7 +15,7 @@ PLATFORM="imx8mq"
 BRANCH_VER="imx_4.9.51_imx8m_ga"
 DDR_FW_VER="7.4"
 #BOARD="fsl-imx8mq-evk"
-BOARD="wand-pi-8m"
+BOARD="pico-8m"
 
 FSL_MIRROR="https://www.nxp.com/lgfiles/NMG/MAD/YOCTO"
 FIRMWARE_DIR="firmware_imx8mq"
@@ -171,41 +171,41 @@ print_settings()
 
 while getopts "tchd:b:" OPTION
 do
-    case $OPTION in
-        d) 
-           DRIVE="$OPTARG"
-           ;;
-        b) 
-           BOARD="$OPTARG"
-           ;;
-        t) 
-           MKIMAGE_TARGET='flash_spl_uboot';
-           ;;
-		c) 
-		   rm -rf ${FIRMWARE_DIR} ${MKIMAGE_DIR}
-		   echo "Clean ${FIRMWARE_DIR} ${MKIMAGE_DIR}..."
-		   exit
-		   ;;
-        ?|h) usage
-           exit
-           ;;
-    esac
+	case $OPTION in
+		d)
+			DRIVE="$OPTARG"
+			;;
+		b)
+			BOARD="$OPTARG"
+			;;
+		t)
+			MKIMAGE_TARGET='flash_spl_uboot';
+			;;
+		c)
+			rm -rf ${FIRMWARE_DIR} ${MKIMAGE_DIR}
+			echo "Clean ${FIRMWARE_DIR} ${MKIMAGE_DIR}..."
+			exit
+			;;
+		?|h) usage
+			exit
+			;;
+        *) usage
+			exit
+			;;
+	esac
 done
 
 if [ "$(id -u)" = "0" ]; then
-   echo "This script can not be run as root"
-   exit 1
+	echo "This script can not be run as root"
+	exit 1
 fi
 
-if [ ! -b $DRIVE ]
-then
-   echo Target block device $DRIVE does not exist
-   usage
-   exit 1
-fi
 print_settings
 install_firmware
 install_uboot_dtb
 generate_imx_boot
-flash_imx_boot
-
+if [ -b $DRIVE ]; then
+	flash_imx_boot
+else
+	echo Target block device $DRIVE does not exist, so skip flash_imx_boot
+fi
