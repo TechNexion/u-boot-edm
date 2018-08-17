@@ -1,7 +1,7 @@
 /*
  * Copyright 2018 TechNexion Ltd.
  * Copyright 2017 NXP
- * 
+ *
  * Author: Richard Hu <richard.hu@technexion.com>
  *
  * SPDX-License-Identifier:     GPL-2.0+
@@ -396,6 +396,9 @@ int board_late_init(void)
 
 #ifdef CONFIG_ENV_IS_IN_MMC
 	board_late_mmc_env_init();
+#endif
+#ifdef CONFIG_ENV_VARS_UBOOT_RUNTIME_CONFIG
+	setenv("som", get_som_type());
 #endif
 
 	return 0;

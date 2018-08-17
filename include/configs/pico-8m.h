@@ -1,8 +1,9 @@
 /*
- * Copyright 2018 TechNexion Ltd.
- * Copyright 2017 NXP
- * 
+ * Copyright (C) 2018 Technexion Ltd.
+ *
  * Author: Richard Hu <richard.hu@technexion.com>
+ *         Tapani Utriainen <tapani@technexion.com>
+ *         Po Cheng <po.cheng@technexion.com>
  *
  * SPDX-License-Identifier:     GPL-2.0+
  */
@@ -63,6 +64,8 @@
 #define CONFIG_POWER_PFUZE100_I2C_ADDR 0x08
 #endif
 
+#define CONFIG_SYS_BOOTM_LEN       0xA000000
+
 #define CONFIG_ENV_VARS_UBOOT_RUNTIME_CONFIG
 
 #define CONFIG_REMAKE_ELF
@@ -107,37 +110,64 @@
 	"mfgtool_args=setenv bootargs console=${console},${baudrate} " \
 		"rdinit=/linuxrc " \
 		"g_mass_storage.stall=0 g_mass_storage.removable=1 " \
-		"g_mass_storage.idVendor=0x066F g_mass_storage.idProduct=0x37FF "\
-		"g_mass_storage.iSerialNumber=\"\" "\
-		"clk_ignore_unused "\
+		"g_mass_storage.idVendor=0x066F g_mass_storage.idProduct=0x37FF " \
+		"g_mass_storage.iSerialNumber=\"\" " \
+		"clk_ignore_unused " \
 		"\0" \
 	"initrd_addr=0x43800000\0" \
 	"initrd_high=0xffffffff\0" \
-	"bootcmd_mfg=run mfgtool_args;booti ${loadaddr} ${initrd_addr} ${fdt_addr};\0" \
+	"bootcmd_mfg=echo Booting from mfgtool ...; run mfgtool_args; " \
+		"echo ${bootargs}; " \
+		"booti ${loadaddr} ${initrd_addr} ${fdt_addr}\0"
+
 /* Initial environment variables */
-#define CONFIG_EXTRA_ENV_SETTINGS		\
+#define CONFIG_EXTRA_ENV_SETTINGS \
 	CONFIG_MFG_ENV_SETTINGS \
 	"script=boot.scr\0" \
 	"image=Image\0" \
 	"console=ttymxc0,115200 earlycon=ec_imx6q,0x30860000,115200\0" \
 	"splashpos=m,m\0" \
-	"cma_size="__stringify(PICO_8M_CMA_SIZE)"\0"                             \
-	"fdt_addr=0x43000000\0"			\
-	"fdt_high=0xffffffffffffffff\0"		\
+	"som=autodetect\0" \
+	"baseboard=pi\0" \
+	"default_baseboard=pi\0" \
+	"cma_size="__stringify(PICO_8M_CMA_SIZE)"\0" \
+	"fdt_addr=0x43000000\0" \
+	"fdt_high=0xffffffff\0" \
 	"boot_fdt=try\0" \
 	"fdt_file=pico-8m.dtb\0" \
-	"initrd_addr=0x43800000\0"		\
+	"ip_dyn=yes\0" \
+	"initrd_addr=0x43800000\0" \
 	"initrd_high=0xffffffffffffffff\0" \
 	"mmcdev="__stringify(CONFIG_SYS_MMC_ENV_DEV)"\0" \
 	"mmcpart=" __stringify(CONFIG_SYS_MMC_IMG_LOAD_PART) "\0" \
 	"mmcroot=" CONFIG_MMCROOT " rootwait rw\0" \
 	"mmcautodetect=yes\0" \
-	"mmcargs=setenv bootargs console=${console} root=${mmcroot} cma=${cma_size}\0 " \
+	"mmcargs=setenv bootargs console=${console} root=${mmcroot} cma=${cma_size}\0" \
 	"loadbootscript=fatload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${script};\0" \
 	"bootscript=echo Running bootscript from mmc ...; " \
 		"source\0" \
 	"loadimage=fatload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${image}\0" \
-	"display=hdmi\0" \
+	"displayautodetect=on\0" \
+	"setvideoargs=" \
+		"if test ${displayautodetect} = off; then " \
+			"echo Applying default hdmi display setting...; " \
+			"setenv display hdmi; " \
+		"else " \
+			"echo Detecting monitor...; " \
+			"if hdmidet; then " \
+				"setenv display hdmi; " \
+				"setenv fitboard pi_hdmi; " \
+			"else " \
+				"echo - no HDMI monitor; " \
+			"fi; " \
+			"i2c dev 2; " \
+			"if i2c probe 0x38; then " \
+				"setenv display mipi5; " \
+				"setenv fitboard pi; " \
+			"else " \
+				"echo '- no FT5x06 touch panel';" \
+			"fi; " \
+		"fi\0" \
 	"setfdt=" \
 		"if test ${display} = mipi5; then " \
 			"setenv fdt_file pico-8m-dcss-ili9881c.dtb; " \
@@ -152,6 +182,7 @@
 	"mmcboot=echo Booting from mmc ...; " \
 		"run mmcargs; " \
 		"run setfdt; " \
+		"echo ${bootargs}; " \
 		"if test ${boot_fdt} = yes || test ${boot_fdt} = try; then " \
 			"if run loadfdt; then " \
 				"booti ${loadaddr} - ${fdt_addr}; " \
@@ -166,6 +197,7 @@
 		"ip=dhcp nfsroot=${serverip}:${nfsroot},v3,tcp\0" \
 	"netboot=echo Booting from net ...; " \
 		"run netargs;  " \
+		"echo ${bootargs}; " \
 		"if test ${ip_dyn} = yes; then " \
 			"setenv get_cmd dhcp; " \
 		"else " \
@@ -180,27 +212,40 @@
 			"fi; " \
 		"else " \
 			"booti; " \
-		"fi;\0"
+		"fi;\0" \
+	"fitboard=pi\0" \
+	"fit_addr=0x44000000\0" \
+	"fit_high=0xffffffff\0" \
+	"fitargs=setenv bootargs console=${console} root=/dev/ram0 rootwait rw\0" \
+	"loadfit=fatload mmc ${mmcdev}:${mmcpart} ${fit_addr} tnrescue.itb\0" \
+	"fitboot=echo Booting from FIT image ...; " \
+		"run fitargs; " \
+		"echo ${bootargs}; " \
+		"bootm ${fit_addr}#config@${som}_${fitboard}\0"
 
 #define CONFIG_BOOTCOMMAND \
 	   "mmc dev ${mmcdev}; if mmc rescan; then " \
+		   "run setvideoargs; " \
 		   "if run loadbootenv; then " \
-			   "echo Loaded environment from ${bootenv};" \
-			   "run importbootenv;" \
-		   "fi;" \
+			   "echo Loaded environment from ${bootenv}; " \
+			   "run importbootenv; " \
+		   "fi; " \
 		   "if test -n $uenvcmd; then " \
-			   "echo Running uenvcmd ...;" \
-			   "run uenvcmd;" \
-		   "fi;" \
+			   "echo Running uenvcmd ...; " \
+			   "run uenvcmd; " \
+		   "fi; " \
 		   "if run loadbootscript; then " \
 			   "run bootscript; " \
-		   "else " \
-			   "if run loadimage; then " \
-				   "run mmcboot; " \
-			   "else run netboot; " \
-			   "fi; " \
 		   "fi; " \
-	   "else booti ${loadaddr} - ${fdt_addr}; fi"
+		   "if run loadfit; then " \
+			   "run fitboot; " \
+		   "fi; " \
+		   "if run loadimage; then " \
+			   "run mmcboot; " \
+		   "else " \
+			   "echo WARN: Cannot load kernel from boot media; " \
+		   "fi; " \
+	   "else run netboot; fi"
 
 /* Link Definitions */
 #define CONFIG_LOADADDR			0x40480000
@@ -217,7 +262,7 @@
 
 #define CONFIG_ENV_OVERWRITE
 #define CONFIG_ENV_OFFSET               (64 * SZ_64K)
-#define CONFIG_ENV_SIZE			0x1000
+#define CONFIG_ENV_SIZE			0x1800
 #define CONFIG_ENV_IS_IN_MMC
 #define CONFIG_SYS_MMC_ENV_DEV		1   /* USDHC2 */
 #define CONFIG_MMCROOT			"/dev/mmcblk1p2"  /* USDHC2 */
