@@ -60,9 +60,17 @@ hostprogs-$(CONFIG_FIT_SIGNATURE) += fit_info fit_check_sign
 
 FIT_SIG_OBJS-$(CONFIG_FIT_SIGNATURE) := common/image-sig.o
 # Flattened device tree objects
-LIBFDT_OBJS := $(addprefix lib/libfdt/, \
-			fdt.o fdt_ro.o fdt_rw.o fdt_strerror.o fdt_wip.o \
-			fdt_region.o fdt_sw.o)
+LIBFDT_CSRCS := fdt.c fdt_ro.c fdt_rw.c fdt_strerror.c fdt_wip.c \
+			fdt_region.c fdt_sw.c
+# Unfortunately setup.py below cannot handle srctree being ".." which it often
+# is. It fails with an error like:
+# Fatal error: can't create build/temp.linux-x86_64-2.7/../lib/libfdt/fdt.o:
+#    No such file or directory
+# To fix this, use an absolute path.
+libfdt_tree := $(shell readlink -f $(srctree)/lib/libfdt)
+LIBFDT_SRCS := $(addprefix $(libfdt_tree)/, $(LIBFDT_CSRCS))
+#LIBFDT_SWIG := $(addprefix $(libfdt_tree)/, pylibfdt/libfdt.i)
+LIBFDT_OBJS := $(addprefix lib/libfdt/, $(patsubst %.c, %.o, $(LIBFDT_CSRCS)))
 RSA_OBJS-$(CONFIG_FIT_SIGNATURE) := $(addprefix lib/rsa/, \
 					rsa-sign.o rsa-verify.o rsa-checksum.o \
 					rsa-mod-exp.o)
@@ -119,7 +127,7 @@ hostprogs-y += \
 _libfdt.so-sharedobjs += $(LIBFDT_OBJS)
 libfdt:
 
-tools/_libfdt.so: $(patsubst %.o,%.c,$(LIBFDT_OBJS)) tools/libfdt_wrap.c
+tools/_libfdt.so: $(LIBFDT_SRCS) tools/libfdt_wrap.c
 	LDFLAGS="$(HOSTLDFLAGS)" python $(srctree)/lib/libfdt/setup.py \
 		"$(_hostc_flags)" $^
 	mv _libfdt.so $@
