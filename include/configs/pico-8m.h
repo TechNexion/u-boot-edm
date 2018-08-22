@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Technexion Ltd.
+ * Copyright 2018 TechNexion Ltd.
  * Copyright 2017 NXP
  * 
  * Author: Richard Hu <richard.hu@technexion.com>
