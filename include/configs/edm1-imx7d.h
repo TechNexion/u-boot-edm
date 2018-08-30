@@ -132,8 +132,9 @@
 
 #ifdef CONFIG_CMD_BOOTAUX
 #define UPDATE_M4_ENV \
-	"m4image=m4_qspi.bin\0" \
-	"loadm4image=fatload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${m4image}\0" \
+	"tcm_addr=0x7F8000\0" \
+	"m4image=m4_tcm.bin\0" \
+	"loadm4image=fatload mmc ${mmcdev}:${mmcpart} ${tcm_addr} ${m4image}\0" \
 	"update_m4_from_sd=" \
 		"if sf probe 0:0; then " \
 			"if run loadm4image; then " \
@@ -144,7 +145,12 @@
 				"sf write ${loadaddr} 0x0 ${filesize}; " \
 			"fi; " \
 		"fi\0" \
-	"m4boot=sf probe 0:0; bootaux "__stringify(CONFIG_SYS_AUXCORE_BOOTDATA)"\0"
+	"m4boot=" \
+		"if run loadm4image; then " \
+			"setenv mcu -m4; " \
+			"dcache flush; " \
+			"bootaux ${tcm_addr}; " \
+		"fi\0"
 #else
 #define UPDATE_M4_ENV ""
 #endif
@@ -225,9 +231,10 @@
 	"bootscript=echo Running bootscript from mmc ...; " \
 		"source\0" \
 	"loadimage=fatload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${image}\0" \
-	"setfdt=setenv fdt_file ${som}_${baseboard}.dtb\0" \
+	"setfdt=setenv fdt_file ${som}_${baseboard}${mcu}.dtb\0" \
 	"loadfdt=fatload mmc ${mmcdev}:${mmcpart} ${fdt_addr} ${fdt_file}\0" \
 	"mmcboot=echo Booting from mmc ...; " \
+		"run m4boot; " \
 		"run searchbootdev; " \
 		"run mmcargs; " \
 		"echo baseboard is ${baseboard}; " \
