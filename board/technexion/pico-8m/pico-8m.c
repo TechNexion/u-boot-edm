@@ -77,7 +77,14 @@ int dram_init(void)
 	**************************************************/
 	ddr_size = readl(M4_BOOTROM_BASE_ADDR);
 
-	if (ddr_size == 0x3) {
+	if (ddr_size == 0x4) {
+		/* rom_pointer[1] contains the size of TEE occupies */
+		if (rom_pointer[1])
+			gd->ram_size = PHYS_SDRAM_SIZE_4GB - rom_pointer[1];
+		else
+			gd->ram_size = PHYS_SDRAM_SIZE_4GB;
+	}
+	else if (ddr_size == 0x3) {
 		/* rom_pointer[1] contains the size of TEE occupies */
 		if (rom_pointer[1])
 			gd->ram_size = PHYS_SDRAM_SIZE_3GB - rom_pointer[1];
@@ -353,11 +360,16 @@ int board_late_init(void)
 	setup_iomux_ver_det();
 	/***********************************************
 	DDR_DET_1    DDR_DET_2   DDR_DET_3
+	0            0            1       4G LPDDR4
 	1            1            1       3G LPDDR4
 	1            1            0       2G LPDDR4
 	1            0            1       1G LPDDR4
 	************************************************/
-	if (gpio_get_value(DDR_DET_1) && gpio_get_value(DDR_DET_2) && gpio_get_value(DDR_DET_3)) {
+	if (!gpio_get_value(DDR_DET_1) && !gpio_get_value(DDR_DET_2) && gpio_get_value(DDR_DET_3)) {
+		/* LPDDR4 4GB */
+		setenv("cma_size", "1G");
+	}
+	else if (gpio_get_value(DDR_DET_1) && gpio_get_value(DDR_DET_2) && gpio_get_value(DDR_DET_3)) {
 		/* LPDDR4 3GB */
 		setenv("cma_size", "1G");
 	}

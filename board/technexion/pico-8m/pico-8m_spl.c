@@ -33,6 +33,7 @@ extern void setup_iomux_ver_det(void);
 
 /***********************************************
 DDR_DET_1    DDR_DET_2   DDR_DET_3
+   0            0            1       4G LPDDR4
    1            1            1       3G LPDDR4
    1            1            0       2G LPDDR4
    1            0            1       1G LPDDR4
@@ -46,7 +47,13 @@ void spl_dram_init(void)
 	information of DDR size into start address of TCM.
 	U-boot would extract this information in dram_init().
 	**************************************************/
-	if (gpio_get_value(DDR_DET_1) && gpio_get_value(DDR_DET_2) && gpio_get_value(DDR_DET_3)) {
+	
+	if (!gpio_get_value(DDR_DET_1) && !gpio_get_value(DDR_DET_2) && gpio_get_value(DDR_DET_3)) {
+		puts("dram_init: LPDDR4 4GB\n");
+		ddr_init_4gb();
+		writel(0x4, M4_BOOTROM_BASE_ADDR);
+	}
+	else if (gpio_get_value(DDR_DET_1) && gpio_get_value(DDR_DET_2) && gpio_get_value(DDR_DET_3)) {
 		puts("dram_init: LPDDR4 3GB\n");
 		ddr_init_3gb();
 		writel(0x3, M4_BOOTROM_BASE_ADDR);
@@ -60,7 +67,8 @@ void spl_dram_init(void)
 		puts("dram_init: LPDDR4 1GB\n");
 		ddr_init_1gb();
 		writel(0x1, M4_BOOTROM_BASE_ADDR);
-	}
+	}	
+
 	else
 		puts("Unknown DDR type!!!\n");
 }
