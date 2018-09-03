@@ -50,8 +50,11 @@ install_firmware()
 	fi
 	cd imx-atf
 	#Apply patch to adapt for different types of LPDDR4
-	wget "https://github.com/TechNexion/meta-edm-bsp-release/raw/rocko_4.9.88-2.0.0_GA/recipes-bsp/imx-atf/imx-atf/0001-ATF-support-to-different-LPDDR4-configurations.patch"
-	git am 0001-ATF-support-to-different-LPDDR4-configurations.patch
+	if [ ! -f 0001-ATF-support-to-different-LPDDR4-configurations.patch ] ; then
+		wget "https://github.com/TechNexion/meta-edm-bsp-release/raw/rocko_4.9.88-2.0.0_GA/recipes-bsp/imx-atf/imx-atf/0001-ATF-support-to-different-LPDDR4-configurations.patch"
+		git am 0001-ATF-support-to-different-LPDDR4-configurations.patch
+	fi
+
 	if [ ! -f build/imx8mq/release/bl31.bin ] ; then
 		make PLAT=${PLATFORM} bl31 || printf "Fails to build ATF firmware \n"
 	fi	
