@@ -1,0 +1,6 @@
+Technexion EDM1-IMX7D board
+M:	Ray Chang <ray.chang@technexion.com>
+S:	Maintained
+F:	board/technexion/edm1-imx7d/
+F:	include/configs/edm1-imx7d.h
+F:	configs/edm1-imx7d_spl_defconfig
