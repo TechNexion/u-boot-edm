@@ -12,6 +12,7 @@ enum fw_type {
 void ddr_init_1gb(void);
 void ddr_init_2gb(void);
 void ddr_init_3gb(void);
+void ddr_init_4gb(void);
 void ddr_load_train_code(enum fw_type type);
 void lpddr4_800M_cfg_phy(void);
 
