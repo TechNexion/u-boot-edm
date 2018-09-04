@@ -109,6 +109,15 @@ int dram_init(void)
 	return 0;
 }
 
+/* Get the top of usable RAM */
+ulong board_get_usable_ram_top(ulong total_size)
+{
+        if(gd->ram_top > 0x100000000)
+            gd->ram_top = 0x100000000;
+
+        return gd->ram_top;
+}
+
 #ifdef CONFIG_OF_BOARD_SETUP
 int ft_board_setup(void *blob, bd_t *bd)
 {
