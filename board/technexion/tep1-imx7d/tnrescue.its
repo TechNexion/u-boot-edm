@@ -1,0 +1,254 @@
+/*
+ * U-Boot uImage source file with multiple kernels, ramdisks and FDT blobs
+ */
+
+/dts-v1/;
+
+/ {
+	description = "Various kernels, ramdisks and FDT blobs";
+	#address-cells = <1>;
+
+	images {
+		kernel@1 {
+			description = "TechNexion IMX6/IMX7/IMX8 Linux Kernel";
+			data = /incbin/("./zImage");
+			type = "kernel";
+			arch = "arm";
+			os = "linux";
+			compression = "none";
+			load = <0x19F00000>;
+			entry = <0x19F00000>;
+			hash@2 {
+				algo = "md5";
+			};
+		};
+
+		ramdisk@1 {
+			description = "TechNexion Rescue/Installer Ramdisk with Qt";
+			data = /incbin/("./rootfs.cpio.xz");
+			type = "ramdisk";
+			arch = "arm";
+			os = "linux";
+			compression = "none";
+			load = <0x1B000000>;
+			entry = <0x1B000000>;
+			hash@1 {
+				algo = "sha1";
+			};
+		};
+		/* imx6dl */
+		fdt@1 {
+			description = "imx6dl-edm_fairy";
+			data = /incbin/("./dtb/imx6dl-edm1-cf-pmic_fairy.dtb");
+			type = "flat_dt";
+			arch = "arm";
+			compression = "none";
+			load = <0x19E00000>;
+			hash@1 {
+				algo = "crc32";
+			};
+		};
+		fdt@2 {
+			description = "imx6dl-edm_tc1000";
+			data = /incbin/("./dtb/imx6dl-edm1-cf-pmic_tc1000.dtb");
+			type = "flat_dt";
+			arch = "arm";
+			compression = "none";
+			load = <0x19E00000>;
+			hash@1 {
+				algo = "crc32";
+			};
+		};
+		fdt@3 {
+			description = "imx6dl-edm_tc1000_new-panel";
+			data = /incbin/("./dtb/imx6dl-edm1-cf-pmic_tc1000_vxt101.dtb");
+			type = "flat_dt";
+			arch = "arm";
+			compression = "none";
+			load = <0x19E00000>;
+			hash@1 {
+				algo = "crc32";
+			};
+		};
+		fdt@4 {
+			description = "imx6dl-edm_tc0700";
+			data = /incbin/("./dtb/imx6dl-edm1-cf-pmic_tc0700.dtb");
+			type = "flat_dt";
+			arch = "arm";
+			compression = "none";
+			load = <0x19E00000>;
+			hash@1 {
+				algo = "crc32";
+			};
+		};
+		/* imx6q */
+		fdt@5 {
+			description = "imx6q-edm_fairy";
+			data = /incbin/("./dtb/imx6q-edm1-cf-pmic_fairy.dtb");
+			type = "flat_dt";
+			arch = "arm";
+			compression = "none";
+			load = <0x19E00000>;
+			hash@1 {
+				algo = "crc32";
+			};
+		};
+		fdt@6 {
+			description = "imx6q-edm_tc1000";
+			data = /incbin/("./dtb/imx6q-edm1-cf-pmic_tc1000.dtb");
+			type = "flat_dt";
+			arch = "arm";
+			compression = "none";
+			load = <0x19E00000>;
+			hash@1 {
+				algo = "crc32";
+			};
+		};
+		fdt@7 {
+			description = "imx6q-edm_tc1000_new-panel";
+			data = /incbin/("./dtb/imx6q-edm1-cf-pmic_tc1000_vxt101.dtb");
+			type = "flat_dt";
+			arch = "arm";
+			compression = "none";
+			load = <0x19E00000>;
+			hash@1 {
+				algo = "crc32";
+			};
+		};
+		fdt@8 {
+			description = "imx6q-edm_tc0700";
+			data = /incbin/("./dtb/imx6q-edm1-cf-pmic_tc0700.dtb");
+			type = "flat_dt";
+			arch = "arm";
+			compression = "none";
+			load = <0x19E00000>;
+			hash@1 {
+				algo = "crc32";
+			};
+		};
+		/* imx6qp */
+		fdt@9 {
+			description = "imx6qp-edm_fairy";
+			data = /incbin/("./dtb/imx6qp-edm1-cf-pmic_fairy.dtb");
+			type = "flat_dt";
+			arch = "arm";
+			compression = "none";
+			load = <0x19E00000>;
+			hash@1 {
+				algo = "crc32";
+			};
+		};
+		fdt@10 {
+			description = "imx6qp-edm_tc1000";
+			data = /incbin/("./dtb/imx6qp-edm1-cf-pmic_tc1000.dtb");
+			type = "flat_dt";
+			arch = "arm";
+			compression = "none";
+			load = <0x19E00000>;
+			hash@1 {
+				algo = "crc32";
+			};
+		};
+		fdt@11 {
+			description = "imx6qp-edm_tc1000_new-panel";
+			data = /incbin/("./dtb/imx6qp-edm1-cf-pmic_tc1000_vxt101.dtb");
+			type = "flat_dt";
+			arch = "arm";
+			compression = "none";
+			load = <0x19E00000>;
+			hash@1 {
+				algo = "crc32";
+			};
+		};
+		fdt@12 {
+			description = "imx6qp-edm_tc0700";
+			data = /incbin/("./dtb/imx6qp-edm1-cf-pmic_tc0700.dtb");
+			type = "flat_dt";
+			arch = "arm";
+			compression = "none";
+			load = <0x19E00000>;
+			hash@1 {
+				algo = "crc32";
+			};
+		};
+	};
+
+	configurations {
+		default = "config@imx6dl_tc1000_vxt101";
+		/* imx6dl */
+		config@imx6dl_fairy {
+			description = "EDM-FAIRY-IMX6DL";
+			kernel = "kernel@1";
+			ramdisk = "ramdisk@1";
+			fdt = "fdt@1";
+		};
+		config@imx6dl_tc1000 {
+			description = "EDM-TC1000-IMX6DL";
+			kernel = "kernel@1";
+			ramdisk = "ramdisk@1";
+			fdt = "fdt@2";
+		};
+		config@imx6dl_tc1000_vxt101 {
+			description = "EDM-TC1000_VXT101-IMX6DL";
+			kernel = "kernel@1";
+			ramdisk = "ramdisk@1";
+			fdt = "fdt@3";
+		};
+		config@imx6dl_tc0700 {
+			description = "EDM-TC0700-IMX6DL";
+			kernel = "kernel@1";
+			ramdisk = "ramdisk@1";
+			fdt = "fdt@4";
+		};
+		/* imx6q */
+		config@imx6q_fairy {
+			description = "EDM-FAIRY-IMX6Q";
+			kernel = "kernel@1";
+			ramdisk = "ramdisk@1";
+			fdt = "fdt@5";
+		};
+		config@imx6q_tc1000 {
+			description = "EDM-TC1000-IMX6Q";
+			kernel = "kernel@1";
+			ramdisk = "ramdisk@1";
+			fdt = "fdt@6";
+		};
+		config@imx6q_tc1000_vxt101 {
+			description = "EDM-TC1000_VXT101-IMX6Q";
+			kernel = "kernel@1";
+			ramdisk = "ramdisk@1";
+			fdt = "fdt@7";
+		};
+		config@imx6q_tc0700 {
+			description = "EDM-TC0700-IMX6Q";
+			kernel = "kernel@1";
+			ramdisk = "ramdisk@1";
+			fdt = "fdt@8";
+		};
+		/* imx6qp */
+		config@imx6qp_fairy {
+			description = "EDM-FAIRY-IMX6QP";
+			kernel = "kernel@1";
+			ramdisk = "ramdisk@1";
+			fdt = "fdt@9";
+		};
+		config@imx6qp_tc1000 {
+			description = "EDM-TC1000-IMX6QP";
+			kernel = "kernel@1";
+			ramdisk = "ramdisk@1";
+			fdt = "fdt@10";
+		};
+		config@imx6qp_tc1000_vxt101 {
+			description = "EDM-TC1000_VXT101-IMX6QP";
+			kernel = "kernel@1";
+			ramdisk = "ramdisk@1";
+			fdt = "fdt@11";
+		};
+		config@imx6qp_tc0700 {
+			description = "EDM-TC0700-IMX6QP";
+			kernel = "kernel@1";
+			ramdisk = "ramdisk@1";
+			fdt = "fdt@12";
+		};
+	};
+};

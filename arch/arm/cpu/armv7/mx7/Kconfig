@@ -78,6 +78,14 @@ config TARGET_PICO_IMX7D
 	select DM_THERMAL
 	select SUPPORT_SPL
 
+config TARGET_TEP1_IMX7D
+	bool "Support tep1-imx7d"
+	select BOARD_LATE_INIT
+	select MX7D
+	select DM
+	select DM_THERMAL
+	select SUPPORT_SPL
+
 config TARGET_EDM1_IMX7D
 	bool "Support edm1-imx7d"
 	select BOARD_LATE_INIT
@@ -114,6 +122,7 @@ source "board/freescale/pico-imx7d/Kconfig"
 source "board/freescale/multa-imx7d/Kconfig"
 source "board/technexion/pico-imx7d/Kconfig"
 source "board/technexion/edm1-imx7d/Kconfig"
+source "board/technexion/tep1-imx7d/Kconfig"
 source "board/toradex/colibri_imx7/Kconfig"
 source "board/warp7/Kconfig"
 
