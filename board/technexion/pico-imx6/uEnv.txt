@@ -1,0 +1,2 @@
+displayinfo=video=mxcfb0:dev=ldb,1024x600@60,if=RGB24
+baseboard=dwarf
