@@ -687,7 +687,7 @@ void *video_hw_init(void)
 		return NULL;
 	}
 
-	/* start dccs */
+	/* start dcss */
 	imx8m_display_init((uint64_t) fb, encoding, &gmode);
 
 	panel.frameAdrs = (ulong) fb;
