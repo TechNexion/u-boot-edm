@@ -31,6 +31,7 @@
 void ddr_cfg_phy_1gb(void);
 void ddr_cfg_phy_2gb(void);
 void ddr_cfg_phy_3gb(void);
+void ddr_cfg_phy_4gb(void);
 volatile unsigned int tmp, tmp_t, i;
 void ddr_init_1gb(void)
 {
