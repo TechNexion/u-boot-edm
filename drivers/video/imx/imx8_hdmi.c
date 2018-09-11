@@ -294,3 +294,11 @@ void imx8_hdmi_disable(void)
 		return;
 	}
 }
+
+uint8_t imx8_hdmi_hpd_status(void)
+{
+	CDN_API_STATUS ret;
+	uint8_t stat;
+	ret = CDN_API_HDMITX_GetHpdStatus_blocking(&stat);
+	return (ret == CDN_OK) ? stat : 0;
+}

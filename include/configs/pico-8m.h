@@ -270,6 +270,7 @@
 
 #define CONFIG_MXC_OCOTP
 #define CONFIG_CMD_FUSE
+#define CONFIG_CMD_HDMIDETECT /* for hdmi panel detection */
 
 /* I2C Configs */
 #define CONFIG_SYS_I2C_SPEED		  100000
