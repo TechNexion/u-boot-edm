@@ -181,6 +181,7 @@
 	"splashpos=m,m\0" \
 	"som=imx7d-edm1\0" \
 	"baseboard=gnome\0" \
+	"wifi_module=qca\0" \
 	"default_baseboard=fairy\0" \
 	"fdt_high=0xffffffff\0" \
 	"initrd_high=0xffffffff\0" \
@@ -203,8 +204,13 @@
 	"bootscript=echo Running bootscript from mmc ...; " \
 		"source\0" \
 	"loadimage=fatload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${image}\0" \
-	"setfdt=setenv fdt_file ${som}_${baseboard}${mcu}.dtb\0" \
-	"loadfdt=fatload mmc ${mmcdev}:${mmcpart} ${fdt_addr} ${fdt_file}\0" \
+	"setfdt=" \
+		"if test ${wifi_module} = qca; then " \
+			"setenv fdtfile ${som}-${wifi_module}_${baseboard}${mcu}.dtb; " \
+		"else " \
+			"setenv fdtfile ${som}_${baseboard}${mcu}.dtb;" \
+		"fi\0" \
+	"loadfdt=fatload mmc ${mmcdev}:${mmcpart} ${fdt_addr} ${fdtfile}\0" \
 	"mmcboot=echo Booting from mmc ...; " \
 		"run m4boot; " \
 		"run searchbootdev; " \
