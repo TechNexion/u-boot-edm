@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Technexion Ltd.
+ * Copyright (C) 2018 TechNexion Ltd.
  *
  * Author: Richard Hu <richard.hu@technexion.com>
  *
@@ -170,9 +170,8 @@ static void spl_dram_init(void)
 	setup_iomux_ddr_type_detection();
 	gpio_direction_input(DDR_TYPE_DET);
 
-	 if (gpio_get_value(DDR_TYPE_DET)) {
+	if (gpio_get_value(DDR_TYPE_DET)) {
 		ddr3_512mb_init();
-
 	} else {
 		ddr3_1gb_init();
 	}

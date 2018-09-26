@@ -1,8 +1,9 @@
 /*
- * Copyright (C) 2018 Technexion Ltd.
+ * Copyright (C) 2018 TechNexion Ltd.
  *
  * Author: Tapani Utriainen <tapani@technexion.com>
  *         Richard Hu <richard.hu@technexion.com>
+ *         Ray Chang <ray.chang@technexion.com>
  *
  * SPDX-License-Identifier:	GPL-2.0+
  */
@@ -131,7 +132,6 @@ static void setup_iomux_ddr_type_detection(void)
 
 int dram_init(void)
 {
-
 	unsigned int ddr_size;
 
 	setup_iomux_ddr_type_detection();
@@ -254,12 +254,12 @@ static iomux_v3_cfg_t const lcd_pads[] = {
 	MX7D_PAD_LCD_DATA22__LCD_DATA22 | MUX_PAD_CTRL(LCD_PAD_CTRL),
 	MX7D_PAD_LCD_DATA23__LCD_DATA23 | MUX_PAD_CTRL(LCD_PAD_CTRL),
 
-	MX7D_PAD_GPIO1_IO06__GPIO1_IO6	| MUX_PAD_CTRL(LCD_PAD_CTRL), /* LCD_VDD_EN */
+	MX7D_PAD_LCD_RESET__GPIO3_IO4	| MUX_PAD_CTRL(LCD_PAD_CTRL), /* LCD_VDD_EN */
 };
 
 static iomux_v3_cfg_t const pwm_pads[] = {
 	/* Use GPIO for Brightness adjustment, duty cycle = period */
-	MX7D_PAD_GPIO1_IO11__GPIO1_IO11 | MUX_PAD_CTRL(NO_PAD_CTRL), /* LCD_BLT_CTRL */
+	MX7D_PAD_GPIO1_IO10__GPIO1_IO10 | MUX_PAD_CTRL(NO_PAD_CTRL), /* LCD_BLT_CTRL */
 };
 
 struct lcd_panel_info_t {
@@ -276,9 +276,9 @@ void do_enable_parallel_lcd(struct lcd_panel_info_t const *dev)
 	imx_iomux_v3_setup_multiple_pads(pwm_pads, ARRAY_SIZE(pwm_pads));
 
 	/* Set Brightness to high */
-	gpio_direction_output(IMX_GPIO_NR(1, 11) , 1);
+	gpio_direction_output(IMX_GPIO_NR(1, 10) , 1);
 	/* Set LCD enable to high */
-	gpio_direction_output(IMX_GPIO_NR(1, 6) , 1);
+	gpio_direction_output(IMX_GPIO_NR(3, 4) , 1);
 }
 
 static struct lcd_panel_info_t const displays[] = {{
@@ -389,13 +389,12 @@ static void setup_iomux_fec(void)
 }
 #endif
 
-static iomux_v3_cfg_t const bcm4339_pads[] = {
+static iomux_v3_cfg_t const wifi_pads[] = {
 	MX7D_PAD_SAI1_RX_BCLK__GPIO6_IO17  | MUX_PAD_CTRL(NO_PAD_CTRL), //wifi reset
-	MX7D_PAD_SAI1_RX_SYNC__GPIO6_IO16  | MUX_PAD_CTRL(NO_PAD_CTRL), //bt reset
+	MX7D_PAD_SAI1_TX_SYNC__GPIO6_IO14  | MUX_PAD_CTRL(NO_PAD_CTRL), //bt reset
 };
 
 static iomux_v3_cfg_t const ccm_clko_pads[] = {
-	MX7D_PAD_GPIO1_IO03__CCM_CLKO2 | MUX_PAD_CTRL(NO_PAD_CTRL),
 	MX7D_PAD_GPIO1_IO02__CCM_CLKO1 | MUX_PAD_CTRL(NO_PAD_CTRL),
 };
 
@@ -620,7 +619,7 @@ int board_init(void)
 #endif
 
 	//edm1-imx7 custom initialize
-	imx_iomux_v3_setup_multiple_pads(bcm4339_pads, ARRAY_SIZE(bcm4339_pads));
+	imx_iomux_v3_setup_multiple_pads(wifi_pads, ARRAY_SIZE(wifi_pads));
 	imx_iomux_v3_setup_multiple_pads(ccm_clko_pads, ARRAY_SIZE(ccm_clko_pads));
 
 	gpio_direction_output(BT_RST_GPIO, 1);
