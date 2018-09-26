@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Technexion Ltd.
+ * Copyright (C) 2018 TechNexion Ltd.
  *
  * Author: Richard Hu <richard.hu@technexion.com>
  *
@@ -38,6 +38,11 @@ static void setup_iomux_ddr_type_detection(void)
 
 static void ddr3_512mb_init(void)
 {
+	writel(0x4F400005, 0x30391000);
+	/* Clear then set bit30 to ensure exit from DDR retention */
+	writel(0x40000000, 0x30360388);
+	writel(0x40000000, 0x30360384);
+
 	writel(0x00000002, 0x30391000);
 	writel(0x01040001, 0x307a0000);
 	writel(0x00400046, 0x307a0064);
@@ -97,6 +102,11 @@ static void ddr3_512mb_init(void)
 
 static void ddr3_1gb_init(void)
 {
+	writel(0x4F400005, 0x30391000);
+	/* Clear then set bit30 to ensure exit from DDR retention */
+	writel(0x40000000, 0x30360388);
+	writel(0x40000000, 0x30360384);
+
 	writel(0x00000002, 0x30391000);
 	writel(0x01040001, 0x307a0000);
 	writel(0x80400003, 0x307a01a0);
