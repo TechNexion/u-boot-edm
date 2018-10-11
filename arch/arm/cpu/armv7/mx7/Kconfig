@@ -30,12 +30,6 @@ config TARGET_MX7D_12X12_LPDDR3_ARM2
 	select DM
 	select DM_THERMAL
 
-config TARGET_FSL_IMX7D
-	bool "Support fsl-imx7d"
-	select MX7D
-	select DM
-	select DM_THERMAL
-
 config TARGET_MULTA_IMX7D
 	bool "Support multa-imx7d"
 	select MX7D
@@ -118,7 +112,6 @@ source "board/freescale/mx7d_12x12_lpddr3_arm2/Kconfig"
 source "board/freescale/mx7d_12x12_ddr3_arm2/Kconfig"
 source "board/freescale/mx7d_19x19_ddr3_arm2/Kconfig"
 source "board/freescale/mx7d_19x19_lpddr3_arm2/Kconfig"
-source "board/freescale/pico-imx7d/Kconfig"
 source "board/freescale/multa-imx7d/Kconfig"
 source "board/technexion/pico-imx7d/Kconfig"
 source "board/technexion/edm1-imx7d/Kconfig"
