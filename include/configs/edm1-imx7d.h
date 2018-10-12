@@ -254,7 +254,7 @@
 		"run netargs; " \
 		"${get_cmd} ${loadaddr} ${image}; " \
 		"if test ${boot_fdt} = yes || test ${boot_fdt} = try; then " \
-			"if ${get_cmd} ${fdt_addr} ${fdt_file}; then " \
+			"if ${get_cmd} ${fdt_addr} ${fdtfile}; then " \
 				"bootz ${loadaddr} - ${fdt_addr}; " \
 			"else " \
 				"if test ${boot_fdt} = try; then " \
