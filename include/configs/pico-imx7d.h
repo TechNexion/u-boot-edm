@@ -182,6 +182,7 @@
 	"splashpos=m,m\0" \
 	"som=imx7d-pico\0" \
 	"baseboard=pi\0" \
+	"wifi_module=qca\0" \
 	"default_baseboard=pi\0" \
 	"fdt_high=0xffffffff\0" \
 	"initrd_high=0xffffffff\0" \
@@ -204,8 +205,13 @@
 	"bootscript=echo Running bootscript from mmc ...; " \
 		"source\0" \
 	"loadimage=fatload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${image}\0" \
-	"setfdt=setenv fdt_file ${som}_${baseboard}${mcu}.dtb\0" \
-	"loadfdt=fatload mmc ${mmcdev}:${mmcpart} ${fdt_addr} ${fdt_file}\0" \
+	"setfdt=" \
+		"if test ${wifi_module} = qca; then " \
+			"setenv fdtfile ${som}-${wifi_module}_${baseboard}${mcu}.dtb; " \
+		"else " \
+			"setenv fdtfile ${som}_${baseboard}${mcu}.dtb;" \
+		"fi\0" \
+	"loadfdt=fatload mmc ${mmcdev}:${mmcpart} ${fdt_addr} ${fdtfile}\0" \
 	"mmcboot=echo Booting from mmc ...; " \
 		"run m4boot; " \
 		"run searchbootdev; " \
@@ -249,7 +255,7 @@
 		"run netargs; " \
 		"${get_cmd} ${loadaddr} ${image}; " \
 		"if test ${boot_fdt} = yes || test ${boot_fdt} = try; then " \
-			"if ${get_cmd} ${fdt_addr} ${fdt_file}; then " \
+			"if ${get_cmd} ${fdt_addr} ${fdtfile}; then " \
 				"bootz ${loadaddr} - ${fdt_addr}; " \
 			"else " \
 				"if test ${boot_fdt} = try; then " \
