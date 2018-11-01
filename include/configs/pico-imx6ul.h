@@ -115,6 +115,7 @@
 	"console=ttymxc5\0" \
 	"splashpos=m,m\0" \
 	"baseboard=pi\0" \
+	"wifi_module=qca\0" \
 	"default_baseboard=pi\0" \
 	"fdtfile=undefined\0" \
 	"fdt_high=0xffffffff\0" \
@@ -141,7 +142,12 @@
 	"bootscript=echo Running bootscript from mmc ...; " \
 		"source\0" \
 	"loadimage=fatload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${image}\0" \
-	"setfdt=setenv fdtfile ${som}_${baseboard}.dtb\0" \
+	"setfdt=" \
+		"if test ${wifi_module} = qca; then " \
+			"setenv fdtfile ${som}-${wifi_module}_${baseboard}.dtb; " \
+		"else " \
+			"setenv fdtfile ${som}_${baseboard}.dtb;" \
+		"fi\0" \
 	"loadfdt=fatload mmc ${mmcdev}:${mmcpart} ${fdt_addr} ${fdtfile}\0" \
 	"mmcboot=echo Booting from mmc ...; " \
 		"run detectmem; " \
