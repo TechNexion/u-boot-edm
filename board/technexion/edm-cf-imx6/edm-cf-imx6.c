@@ -240,8 +240,6 @@ int board_mmc_init(bd_t *bis)
 	return 0;
 }
 
-
-
 static int mx6_rgmii_rework(struct phy_device *phydev)
 {
 	unsigned short val;
@@ -442,13 +440,13 @@ static const char* som_type(void)
 
 	if (!gpio_get_value(EDM_SOM_DET_R149)) {
 		if (with_pmic) {
-			RETURN_SOM_TYPE(edm1-cf-pmic)
+			RETURN_SOM_TYPE(edm1)
 		} else {
 			RETURN_SOM_TYPE(edm1-cf)
 		}
 	} else {
 		if (with_pmic) {
-			RETURN_SOM_TYPE(edm2-cf-pmic)
+			RETURN_SOM_TYPE(edm2)
 		} else {
 			RETURN_SOM_TYPE(edm2-cf)
 		}
@@ -730,7 +728,13 @@ int board_init(void)
 int checkboard(void)
 {
 	printf("SOM: %s\n", som_type());
-	printf("Available baseboard: elf, fairy, mimas, tc0700, tc1000\n");
+	if (!gpio_get_value(EDM_SOM_DET_R149)) {
+		/* EDM1 */
+		printf("Available EDM1 baseboard: Fairy, Gnome, TC0700 \n");
+	} else {
+		/* EDM2 */
+		printf("Available EDM2 baseboard: Elf, Gremlin, TC1000 \n");
+	}
 
 	return 0;
 }
