@@ -78,6 +78,8 @@
 #define AIPS1_ARB_END_ADDR              0x020FFFFF
 #define AIPS2_ARB_BASE_ADDR             0x02100000
 #define AIPS2_ARB_END_ADDR              0x021FFFFF
+
+#define NOC_DDR_BASE_ADDR           (GPV0_BASE_ADDR + 0xB0000)
 /* AIPS3 only on i.MX6SX */
 #define AIPS3_ARB_BASE_ADDR             0x02200000
 #define AIPS3_ARB_END_ADDR              0x022FFFFF
