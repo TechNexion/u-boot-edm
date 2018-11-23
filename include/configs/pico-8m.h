@@ -75,7 +75,6 @@
 #define CONFIG_OF_BOARD_SETUP
 
 #undef CONFIG_CMD_EXPORTENV
-#undef CONFIG_CMD_IMPORTENV
 #undef CONFIG_CMD_IMLS
 
 #undef CONFIG_CMD_CRC32
@@ -138,9 +137,21 @@
 	"bootscript=echo Running bootscript from mmc ...; " \
 		"source\0" \
 	"loadimage=fatload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${image}\0" \
+	"display=hdmi\0" \
+	"setfdt=" \
+		"if test ${display} = mipi5; then " \
+			"setenv fdt_file pico-8m-dcss-ili9881c.dtb; " \
+		"elif test ${display} = hdmi; then; " \
+			"setenv fdt_file pico-8m.dtb;" \
+		"fi\0" \
 	"loadfdt=fatload mmc ${mmcdev}:${mmcpart} ${fdt_addr} ${fdt_file}\0" \
+	"bootenv=uEnv.txt\0" \
+	"loadbootenv=fatload mmc ${mmcdev} ${loadaddr} ${bootenv}\0" \
+	"importbootenv=echo Importing environment from mmc ...; " \
+		"env import -t -r $loadaddr $filesize\0" \
 	"mmcboot=echo Booting from mmc ...; " \
 		"run mmcargs; " \
+		"run setfdt; " \
 		"if test ${boot_fdt} = yes || test ${boot_fdt} = try; then " \
 			"if run loadfdt; then " \
 				"booti ${loadaddr} - ${fdt_addr}; " \
@@ -173,6 +184,14 @@
 
 #define CONFIG_BOOTCOMMAND \
 	   "mmc dev ${mmcdev}; if mmc rescan; then " \
+		   "if run loadbootenv; then " \
+			   "echo Loaded environment from ${bootenv};" \
+			   "run importbootenv;" \
+		   "fi;" \
+		   "if test -n $uenvcmd; then " \
+			   "echo Running uenvcmd ...;" \
+			   "run uenvcmd;" \
+		   "fi;" \
 		   "if run loadbootscript; then " \
 			   "run bootscript; " \
 		   "else " \
