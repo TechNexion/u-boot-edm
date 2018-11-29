@@ -377,11 +377,17 @@ config TARGET_EDM_CF_IMX6
 
 config TARGET_PICO_IMX6UL
 	bool "Support pico-imx6ul"
-        select BOARD_LATE_INIT
-        select MX6UL
-        select DM
-        select DM_THERMAL
-        select SUPPORT_SPL
+	select BOARD_LATE_INIT
+	select MX6UL
+	select DM
+	select DM_THERMAL
+	select SUPPORT_SPL
+
+config TARGET_TEK_IMX6
+	bool "Support tek-imx6"
+	select DM
+	select DM_THERMAL
+	select SUPPORT_SPL
 
 config TARGET_LITEBOARD
 	bool "Grinn liteBoard (i.MX6UL)"
@@ -530,6 +536,7 @@ source "board/tbs/tbs2910/Kconfig"
 source "board/technexion/pico-imx6/Kconfig"
 source "board/technexion/edm-cf-imx6/Kconfig"
 source "board/technexion/pico-imx6ul/Kconfig"
+source "board/technexion/tek-imx6/Kconfig"
 source "board/tqc/tqma6/Kconfig"
 source "board/toradex/apalis_imx6/Kconfig"
 source "board/toradex/colibri_imx6/Kconfig"
