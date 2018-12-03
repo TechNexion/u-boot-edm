@@ -631,11 +631,15 @@ int board_late_init(void)
 	char *s;
 	char fdt_name[24];
 
+	setenv("som", get_som_type());
+	setenv("form", sbc_type());
+	setenv("baseboard", sbc_type());
+
 	if ((s = getenv ("fdtfile_autodetect")) != NULL) {
 		if (strncmp (s, "off", 3) != 0) {
 			if (is_mx6dqp())
 				sprintf(fdt_name, "imx6qp-%s.dtb", sbc_type());
-			else if (is_cpu_type(MXC_CPU_MX6Q) || is_cpu_type(MXC_CPU_MX6D))
+			else if (is_mx6dq())
 				sprintf(fdt_name, "imx6q-%s.dtb", sbc_type());
 			else
 				sprintf(fdt_name, "imx6dl-%s.dtb", sbc_type());

@@ -3,6 +3,7 @@
  *
  * Author: Richard Hu <richard.hu@technexion.com>
  *         Ray Chang <ray.chang@technexion.com>
+ *         Po Cheng <po.cheng@technexion.com>
  *
  * SPDX-License-Identifier:	GPL-2.0+
  */
@@ -134,6 +135,8 @@
 	"image=zImage\0" \
 	"console=" __stringify(DEBUG_TTY)"\0" \
 	"splashpos=m,m\0" \
+	"baseboard=tek3\0" \
+	"form=tek3\0" \
 	"fdtfile=undefined\0" \
 	"fdt_high=0xffffffff\0" \
 	"initrd_high=0xffffffff\0" \
@@ -196,6 +199,7 @@
 	"mmcboot=echo Booting from ${bootmedia} ...; " \
 		"run searchbootdev; " \
 		"run mmcargs; " \
+		"echo ${bootargs}; " \
 		"if test ${boot_fdt} = yes || test ${boot_fdt} = try; then " \
 			"if run loadfdt; then " \
 				"bootz ${loadaddr} - ${fdt_addr}; " \
@@ -213,11 +217,14 @@
 	"loadbootenv=fatload ${bootmedia} ${mmcdev} ${loadaddr} ${bootenv}\0" \
 	"importbootenv=echo Importing environment from ${bootmedia} ...; " \
 		"env import -t -r $loadaddr $filesize\0" \
+	"fitargs=setenv bootargs console=${console},${baudrate} root=/dev/ram0 rootwait rw; run videoargs\0" \
+	"loadfit=fatload mmc ${mmcdev} 0x17880000 tnrescue.itb\0" \
+	"fitboot=echo Booting from FIT image...; " \
+		"run fitargs; echo ${bootargs}; " \
+		"bootm 17880000#config@${som}-${form}_${baseboard};\0"
 
 #define CONFIG_BOOTCOMMAND \
-		   "if test ${bootmedia} = mmc; then " \
-			   "mmc dev ${mmcdev}; mmc rescan; " \
-		   "fi;" \
+	   "mmc dev ${mmcdev}; if mmc rescan; then " \
 		   "if run loadbootenv; then " \
 			   "echo Loaded environment from ${bootenv};" \
 			   "run importbootenv;" \
@@ -228,13 +235,16 @@
 		   "fi;" \
 		   "if run loadbootscript; then " \
 			   "run bootscript; " \
+		   "fi; " \
+		   "if run loadfit; then " \
+			   "run fitboot; " \
+		   "fi; " \
+		   "if run loadimage; then " \
+			   "run mmcboot; " \
 		   "else " \
-			   "if run loadimage; then " \
-				   "run mmcboot; " \
-			   "else " \
-				   "echo WARN: Cannot load kernel from boot media; " \
-			   "fi; " \
-		   "fi; "
+			   "echo WARN: Cannot load kernel from boot media; " \
+		   "fi; " \
+	   "else run netboot; fi"
 
 /* Miscellaneous configurable options */
 #define CONFIG_SYS_LONGHELP
