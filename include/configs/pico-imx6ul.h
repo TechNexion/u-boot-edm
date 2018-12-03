@@ -1,5 +1,10 @@
 /*
- * Copyright (C) 2015 Technexion Ltd.
+ * Copyright (C) 2018 TechNexion Ltd.
+ *
+ * Author: Tapani Utriainen <tapani@technexion.com>
+ *         Richard Hu <richard.hu@technexion.com>
+ *         Alvin Chen <alvin.chen@technexion.com>
+ *         Po Cheng <po.cheng@technexion.com>
  *
  * Configuration settings for the Technexion PICO-IMX6UL-EMMC board.
  *
@@ -46,9 +51,7 @@
 #define CONFIG_SYS_FSL_USDHC_NUM	1
 
 #define CONFIG_SUPPORT_EMMC_BOOT /* eMMC specific */
-#endif
 
-#ifdef CONFIG_CMD_NET
 #define CONFIG_FEC_MXC
 #define CONFIG_MII
 #define CONFIG_FEC_ENET_DEV		1
@@ -115,6 +118,7 @@
 	"console=ttymxc5\0" \
 	"splashpos=m,m\0" \
 	"baseboard=pi\0" \
+	"form=pico\0" \
 	"wifi_module=qca\0" \
 	"default_baseboard=pi\0" \
 	"fdtfile=undefined\0" \
@@ -144,9 +148,9 @@
 	"loadimage=fatload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${image}\0" \
 	"setfdt=" \
 		"if test ${wifi_module} = qca; then " \
-			"setenv fdtfile ${som}-${wifi_module}_${baseboard}.dtb; " \
+			"setenv fdtfile ${som}-${form}-${wifi_module}_${baseboard}.dtb; " \
 		"else " \
-			"setenv fdtfile ${som}_${baseboard}.dtb;" \
+			"setenv fdtfile ${som}-${form}_${baseboard}.dtb;" \
 		"fi\0" \
 	"loadfdt=fatload mmc ${mmcdev}:${mmcpart} ${fdt_addr} ${fdtfile}\0" \
 	"mmcboot=echo Booting from mmc ...; " \
@@ -202,7 +206,10 @@
 			"fi; " \
 		"else " \
 			"bootz; " \
-		"fi;\0"
+		"fi;\0" \
+	"loadfit=fatload mmc ${mmcdev}:${mmcpart} 0x87880000 tnrescue.itb\0" \
+	"fit_args=setenv bootargs console=${console},${baudrate} root=/dev/ram0 rootwait rw\0" \
+	"fitboot=run fit_args; echo ${bootargs}; bootm 87880000#config@${som}-${form}_${baseboard};\0"
 
 #define CONFIG_BOOTCOMMAND \
 	   "mmc dev ${mmcdev}; if mmc rescan; then " \
@@ -216,11 +223,14 @@
 		   "fi;" \
 		   "if run loadbootscript; then " \
 			   "run bootscript; " \
+		   "fi;" \
+		   "if run loadfit; then " \
+			   "run fitboot; " \
+		   "fi; " \
+		   "if run loadimage; then " \
+			   "run mmcboot; " \
 		   "else " \
-			   "if run loadimage; then " \
-				   "run mmcboot; " \
-			   "else run netboot; " \
-			   "fi; " \
+			   "echo WARN: Cannot load kernel from boot media; " \
 		   "fi; " \
 	   "else run netboot; fi"
 

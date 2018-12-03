@@ -694,9 +694,6 @@ static const struct boot_mode board_boot_modes[] = {
 
 int board_late_init(void)
 {
-#ifdef CONFIG_ENV_VARS_UBOOT_RUNTIME_CONFIG
-        char strsom[16] = "";
-#endif
 #ifdef CONFIG_CMD_BMODE
 	add_board_boot_modes(board_boot_modes);
 #endif /* CONFIG_CMD_BMODE */
@@ -708,8 +705,7 @@ int board_late_init(void)
 	set_wdog_reset((struct wdog_regs *)WDOG1_BASE_ADDR);
 
 #ifdef CONFIG_ENV_VARS_UBOOT_RUNTIME_CONFIG
-	sprintf(strsom, "%s-pico", get_som_type());
-	setenv("som", strsom);
+	setenv("som", get_som_type());
 #endif /* CONFIG_ENV_VARS_UBOOT_RUNTIME_CONFIG */
 
 	return 0;
