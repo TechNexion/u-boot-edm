@@ -179,7 +179,8 @@
 	"stdout=serial\0" \
 	"console=ttymxc2\0" \
 	"splashpos=m,m\0" \
-	"som=imx7d-edm1\0" \
+	"som=imx7d\0" \
+	"form=edm1\0" \
 	"baseboard=gnome\0" \
 	"wifi_module=qca\0" \
 	"default_baseboard=fairy\0" \
@@ -206,15 +207,16 @@
 	"loadimage=fatload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${image}\0" \
 	"setfdt=" \
 		"if test ${wifi_module} = qca; then " \
-			"setenv fdtfile ${som}-${wifi_module}_${baseboard}${mcu}.dtb; " \
+			"setenv fdtfile ${som}-${form}-${wifi_module}_${baseboard}${mcu}.dtb; " \
 		"else " \
-			"setenv fdtfile ${som}_${baseboard}${mcu}.dtb;" \
+			"setenv fdtfile ${som}-${form}_${baseboard}${mcu}.dtb;" \
 		"fi\0" \
 	"loadfdt=fatload mmc ${mmcdev}:${mmcpart} ${fdt_addr} ${fdtfile}\0" \
 	"mmcboot=echo Booting from mmc ...; " \
 		"run m4boot; " \
 		"run searchbootdev; " \
 		"run mmcargs; " \
+		"echo ${bootargs}; " \
 		"echo baseboard is ${baseboard}; " \
 		"run setfdt; " \
 		"if test ${boot_fdt} = yes || test ${boot_fdt} = try; then " \
@@ -252,6 +254,7 @@
 		"run importbootenv; " \
 		"run setfdt; " \
 		"run netargs; " \
+		"echo ${bootargs}; " \
 		"${get_cmd} ${loadaddr} ${image}; " \
 		"if test ${boot_fdt} = yes || test ${boot_fdt} = try; then " \
 			"if ${get_cmd} ${fdt_addr} ${fdtfile}; then " \
@@ -265,7 +268,10 @@
 			"fi; " \
 		"else " \
 			"bootz; " \
-		"fi;\0"
+		"fi;\0" \
+	"loadfit=fatload mmc ${mmcdev}:${mmcpart} 0x87880000 tnrescue.itb\0" \
+	"fit_args=setenv bootargs console=${console},${baudrate} root=/dev/ram0 rootwait rw\0" \
+	"fitboot=run fit_args; echo ${bootargs}; bootm 87880000#config@${som}-${form}-${wifi_module}_${baseboard};\0"
 
 #define CONFIG_BOOTCOMMAND \
 	   "mmc dev ${mmcdev}; if mmc rescan; then " \
@@ -279,11 +285,14 @@
 		   "fi;" \
 		   "if run loadbootscript; then " \
 			   "run bootscript; " \
+		   "fi; " \
+		   "if run loadfit; then " \
+			   "run fitboot; " \
+		   "fi; " \
+		   "if run loadimage; then " \
+			   "run mmcboot; " \
 		   "else " \
-			   "if run loadimage; then " \
-				   "run mmcboot; " \
-			   "else run netboot; " \
-			   "fi; " \
+			   "echo WARN: Cannot load kernel from boot media; " \
 		   "fi; " \
 	   "else run netboot; fi"
 #endif
