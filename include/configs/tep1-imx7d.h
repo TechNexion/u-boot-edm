@@ -4,6 +4,7 @@
  * Author: Tapani Utriainen <tapani@technexion.com>
  *         Richard Hu <richard.hu@technexion.com>
  *         Alvin Chen <alvin.chen@technexion.com>
+ *         Po Cheng <po.cheng@technexion.com>
  *
  * SPDX-License-Identifier:	GPL-2.0+
  */
@@ -179,6 +180,7 @@
 	"console=ttymxc1\0" \
 	"splashpos=m,m\0" \
 	"som=imx7d\0" \
+	"form=tep1\0" \
 	"baseboard=tep1\0" \
 	"default_baseboard=tep1\0" \
 	"fdt_high=0xffffffff\0" \
@@ -208,6 +210,7 @@
 		"run m4boot; " \
 		"run searchbootdev; " \
 		"run mmcargs; " \
+		"echo ${bootargs}; " \
 		"echo baseboard is ${baseboard}; " \
 		"run setfdt; " \
 		"if test ${boot_fdt} = yes || test ${boot_fdt} = try; then " \
@@ -245,6 +248,7 @@
 		"run importbootenv; " \
 		"run setfdt; " \
 		"run netargs; " \
+		"echo ${bootargs}; " \
 		"${get_cmd} ${loadaddr} ${image}; " \
 		"if test ${boot_fdt} = yes || test ${boot_fdt} = try; then " \
 			"if ${get_cmd} ${fdt_addr} ${fdt_file}; then " \
@@ -258,7 +262,10 @@
 			"fi; " \
 		"else " \
 			"bootz; " \
-		"fi;\0"
+		"fi;\0" \
+	"loadfit=fatload mmc ${mmcdev}:${mmcpart} 0x87880000 tnrescue.itb\0" \
+	"fit_args=setenv bootargs console=${console},${baudrate} root=/dev/ram0 rootwait rw\0" \
+	"fitboot=run fit_args; echo ${bootargs}; bootm 87880000#config@${som}-${form}_${baseboard};\0"
 
 #define CONFIG_BOOTCOMMAND \
 	   "mmc dev ${mmcdev}; if mmc rescan; then " \
@@ -272,11 +279,14 @@
 		   "fi;" \
 		   "if run loadbootscript; then " \
 			   "run bootscript; " \
+		   "fi; " \
+		   "if run loadfit; then " \
+			   "run fitboot; " \
+		   "fi; " \
+		   "if run loadimage; then " \
+			   "run mmcboot; " \
 		   "else " \
-			   "if run loadimage; then " \
-				   "run mmcboot; " \
-			   "else run netboot; " \
-			   "fi; " \
+			   "echo WARN: Cannot load kernel from boot media; " \
 		   "fi; " \
 	   "else run netboot; fi"
 #endif
