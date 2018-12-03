@@ -602,12 +602,18 @@ int board_late_init(void)
 	mdelay(10);
 	gpio_set_value(BT_NRST, 1);
 
+#ifdef CONFIG_ENV_VARS_UBOOT_RUNTIME_CONFIG
+	setenv("som", get_som_type());
+#endif
+
 	if ((s = getenv ("fdtfile_autodetect")) != NULL) {
 		if (strncmp (s, "off", 3) != 0) {
-			if (is_cpu_type(MXC_CPU_MX6Q) || is_cpu_type(MXC_CPU_MX6D))
-				setenv("som", "imx6q-pico");
+			if (is_mx6dqp())
+				setenv("som", "imx6qp");
+			else if (is_mx6dq())
+				setenv("som", "imx6q");
 			else
-				setenv("som", "imx6dl-pico");
+				setenv("som", get_som_type());
 		}
 	}
 
