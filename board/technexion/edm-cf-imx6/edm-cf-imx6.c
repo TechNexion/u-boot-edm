@@ -431,7 +431,7 @@ static void setup_iomux_i2c(void)
 	}
 }
 
-static const char* som_type(void)
+static const char* form_type(void)
 {
 	/*
 	 * EDM boots from i-NAND or SD1
@@ -440,15 +440,15 @@ static const char* som_type(void)
 
 	if (!gpio_get_value(EDM_SOM_DET_R149)) {
 		if (with_pmic) {
-			RETURN_SOM_TYPE(edm1)
+			return STRING(edm1);
 		} else {
-			RETURN_SOM_TYPE(edm1-cf)
+			return STRING(edm1-cf);
 		}
 	} else {
 		if (with_pmic) {
-			RETURN_SOM_TYPE(edm2)
+			return STRING(edm2);
 		} else {
-			RETURN_SOM_TYPE(edm2-cf)
+			return STRING(edm2-cf);
 		}
 	}
 }
@@ -680,10 +680,18 @@ int board_late_init(void)
 #ifdef CONFIG_ENV_VARS_UBOOT_RUNTIME_CONFIG
 	char *s;
 
+	setenv("som", get_som_type());
+
 	if ((s = getenv ("fdtfile_autodetect")) != NULL) {
 		if (strncmp (s, "off", 3) != 0) {
-			setenv("som", som_type());
+			if (is_mx6dqp())
+				setenv("som", "imx6qp");
+			else if (is_mx6dq())
+				setenv("som", "imx6q");
+			else
+				setenv("som", get_som_type());
 		}
+		setenv("form", form_type());
 	}
 
 	if ((s = getenv ("bootdev_autodetect")) != NULL) {
@@ -727,7 +735,7 @@ int board_init(void)
 
 int checkboard(void)
 {
-	printf("SOM: %s\n", som_type());
+	printf("SOM: %s-%s\n", get_som_type(), form_type());
 	if (!gpio_get_value(EDM_SOM_DET_R149)) {
 		/* EDM1 */
 		printf("Available EDM1 baseboard: Fairy, Gnome, TC0700 \n");

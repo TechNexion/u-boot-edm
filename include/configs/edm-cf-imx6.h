@@ -135,6 +135,7 @@
 	"console=" __stringify(DEBUG_TTY)"\0" \
 	"splashpos=m,m\0" \
 	"som=autodetect\0" \
+	"form=edm1\0" \
 	"baseboard=fairy\0" \
 	"wifi_module=qca\0" \
 	"default_baseboard=fairy\0" \
@@ -198,15 +199,16 @@
 	"loadimage=fatload ${bootmedia} ${mmcdev}:${mmcpart} ${loadaddr} ${image}\0" \
 	"setfdt=" \
 		"if test ${wifi_module} = qca; then " \
-			"setenv fdtfile ${som}-${wifi_module}_${baseboard}.dtb; " \
+			"setenv fdtfile ${som}-${form}-${wifi_module}_${baseboard}.dtb; " \
 		"else " \
-			"setenv fdtfile ${som}_${baseboard}.dtb;" \
+			"setenv fdtfile ${som}-${form}_${baseboard}.dtb;" \
 		"fi\0" \
 	"loadfdt=fatload ${bootmedia} ${mmcdev}:${mmcpart} ${fdt_addr} ${fdtfile}\0" \
 	"mmcboot=echo Booting from ${bootmedia} ...; " \
 		"run searchbootdev; " \
 		"run mmcargs; " \
 		"echo baseboard is ${baseboard}; " \
+		"echo ${bootargs}; " \
 		"run setfdt; " \
 		"if test ${boot_fdt} = yes || test ${boot_fdt} = try; then " \
 			"if run loadfdt; then " \
@@ -230,11 +232,12 @@
 	"loadbootenv=fatload ${bootmedia} ${mmcdev} ${loadaddr} ${bootenv}\0" \
 	"importbootenv=echo Importing environment from ${bootmedia} ...; " \
 		"env import -t -r $loadaddr $filesize\0" \
+	"loadfit=fatload mmc ${mmcdev}:${mmcpart} 0x17880000 tnrescue.itb\0" \
+	"fit_args=setenv bootargs console=${console},${baudrate} root=/dev/ram0 rootwait rw; run videoargs\0" \
+	"fitboot=run fit_args; echo ${bootargs}; bootm 17880000#config@${som}-${form}_${baseboard}\0" \
 
 #define CONFIG_BOOTCOMMAND \
-		   "if test ${bootmedia} = mmc; then " \
-			   "mmc dev ${mmcdev}; mmc rescan; " \
-		   "fi;" \
+	   "mmc dev ${mmcdev}; if mmc rescan; then " \
 		   "if run loadbootenv; then " \
 			   "echo Loaded environment from ${bootenv};" \
 			   "run importbootenv;" \
@@ -245,13 +248,16 @@
 		   "fi;" \
 		   "if run loadbootscript; then " \
 			   "run bootscript; " \
+		   "fi; " \
+		   "if run loadfit; then " \
+			   "run fitboot; " \
+		   "fi; " \
+		   "if run loadimage; then " \
+			   "run mmcboot; " \
 		   "else " \
-			   "if run loadimage; then " \
-				   "run mmcboot; " \
-			   "else " \
-				   "echo WARN: Cannot load kernel from boot media; " \
-			   "fi; " \
-		   "fi; "
+			   "echo WARN: Cannot load kernel from boot media; " \
+		   "fi; " \
+	   "else run netboot; fi"
 
 /* Miscellaneous configurable options */
 #define CONFIG_SYS_LONGHELP
