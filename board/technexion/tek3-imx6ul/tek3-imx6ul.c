@@ -683,6 +683,8 @@ int board_late_init(void)
 	set_wdog_reset((struct wdog_regs *)WDOG1_BASE_ADDR);
 
 #ifdef CONFIG_ENV_VARS_UBOOT_RUNTIME_CONFIG
+	setenv("som", get_som_type());
+
 	setup_iomux_ddr_type_detection();
 	gpio_direction_input(DDR_TYPE_DET);
 
