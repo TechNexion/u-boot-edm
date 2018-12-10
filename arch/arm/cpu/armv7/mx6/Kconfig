@@ -395,6 +395,12 @@ config TARGET_TEK3_IMX6UL
 	select MX6UL
 	select SUPPORT_SPL
 
+config TARGET_TEP1_IMX6UL
+	bool "Support tep1-imx6ul"
+	select BOARD_LATE_INIT
+	select MX6UL
+	select SUPPORT_SPL
+
 config TARGET_LITEBOARD
 	bool "Grinn liteBoard (i.MX6UL)"
 	select BOARD_LATE_INIT
@@ -544,6 +550,7 @@ source "board/technexion/edm-cf-imx6/Kconfig"
 source "board/technexion/pico-imx6ul/Kconfig"
 source "board/technexion/tek-imx6/Kconfig"
 source "board/technexion/tek3-imx6ul/Kconfig"
+source "board/technexion/tep1-imx6ul/Kconfig"
 source "board/tqc/tqma6/Kconfig"
 source "board/toradex/apalis_imx6/Kconfig"
 source "board/toradex/colibri_imx6/Kconfig"
