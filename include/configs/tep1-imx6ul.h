@@ -222,6 +222,8 @@
 		   "fi; " \
 		   "if run loadimage; then " \
 			   "run mmcboot; " \
+		   "else " \
+			   "echo WARN: Cannot load kernel from boot media; " \
 		   "fi; " \
 	   "else run netboot; fi"
 
