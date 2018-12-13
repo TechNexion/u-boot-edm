@@ -59,6 +59,28 @@
 				algo = "sha1";
 			};
 		};
+		fdt@3 {
+			description = "imx6dl-edm1_tc0700";
+			data = /incbin/("./dtb/imx6dl-edm1_tc0700.dtb");
+			type = "flat_dt";
+			arch = "arm";
+			compression = "none";
+			load = <0x19E00000>;
+			hash@1 {
+				algo = "sha1";
+			};
+		};
+		fdt@4 {
+			description = "imx6dl-edm1_tc1000";
+			data = /incbin/("./dtb/imx6dl-edm1_tc1000.dtb");
+			type = "flat_dt";
+			arch = "arm";
+			compression = "none";
+			load = <0x19E00000>;
+			hash@1 {
+				algo = "sha1";
+			};
+		};
 		/* imx6q */
 		fdt@8 {
 			description = "imx6q-edm1_fairy";
@@ -82,6 +104,28 @@
 				algo = "sha1";
 			};
 		};
+		fdt@10 {
+			description = "imx6q-edm1_tc0700";
+			data = /incbin/("./dtb/imx6q-edm1_tc0700.dtb");
+			type = "flat_dt";
+			arch = "arm";
+			compression = "none";
+			load = <0x19E00000>;
+			hash@1 {
+				algo = "sha1";
+			};
+		};
+		fdt@11 {
+			description = "imx6q-edm1_tc1000";
+			data = /incbin/("./dtb/imx6q-edm1_tc1000.dtb");
+			type = "flat_dt";
+			arch = "arm";
+			compression = "none";
+			load = <0x19E00000>;
+			hash@1 {
+				algo = "sha1";
+			};
+		};
 		/* imx6qp */
 		fdt@20 {
 			description = "imx6qp-edm1_fairy";
@@ -95,8 +139,30 @@
 			};
 		};
 		fdt@21 {
-			description = "imx6q-edm1_gnome";
+			description = "imx6qp-edm1_gnome";
 			data = /incbin/("./dtb/imx6qp-edm1_gnome.dtb");
+			type = "flat_dt";
+			arch = "arm";
+			compression = "none";
+			load = <0x19E00000>;
+			hash@1 {
+				algo = "sha1";
+			};
+		};
+		fdt@22 {
+			description = "imx6qp-edm1_tc0700";
+			data = /incbin/("./dtb/imx6qp-edm1_tc0700.dtb");
+			type = "flat_dt";
+			arch = "arm";
+			compression = "none";
+			load = <0x19E00000>;
+			hash@1 {
+				algo = "sha1";
+			};
+		};
+		fdt@23 {
+			description = "imx6qp-edm1_tc1000";
+			data = /incbin/("./dtb/imx6qp-edm1_tc1000.dtb");
 			type = "flat_dt";
 			arch = "arm";
 			compression = "none";
@@ -122,6 +188,18 @@
 			ramdisk = "ramdisk@1";
 			fdt = "fdt@2";
 		};
+		config@imx6dl-edm1_tc0700 {
+			description = "EDM1-TOUCAN-0700-IMX6DL";
+			kernel = "kernel@1";
+			ramdisk = "ramdisk@1";
+			fdt = "fdt@3";
+		};
+		config@imx6dl-edm1_tc1000 {
+			description = "EDM1-TOUCAN-1000-IMX6DL";
+			kernel = "kernel@1";
+			ramdisk = "ramdisk@1";
+			fdt = "fdt@4";
+		};
 		/* imx6q */
 		config@imx6q-edm1_fairy {
 			description = "EDM1-FAIRY-IMX6Q";
@@ -135,6 +213,18 @@
 			ramdisk = "ramdisk@1";
 			fdt = "fdt@9";
 		};
+		config@imx6q-edm1_tc0700 {
+			description = "EDM1-TOUCAN-0700-IMX6Q";
+			kernel = "kernel@1";
+			ramdisk = "ramdisk@1";
+			fdt = "fdt@10";
+		};
+		config@imx6q-edm1_tc1000 {
+			description = "EDM1-TOUCAN-1000-IMX6Q";
+			kernel = "kernel@1";
+			ramdisk = "ramdisk@1";
+			fdt = "fdt@11";
+		};
 		/* imx6qp */
 		config@imx6qp-edm1_fairy {
 			description = "EDM1-FAIRY-IMX6QP";
@@ -147,6 +237,18 @@
 			kernel = "kernel@1";
 			ramdisk = "ramdisk@1";
 			fdt = "fdt@21";
+		};
+		config@imx6qp-edm1_tc0700 {
+			description = "EDM1-TOUCAN-0700-IMX6QP";
+			kernel = "kernel@1";
+			ramdisk = "ramdisk@1";
+			fdt = "fdt@22";
+		};
+		config@imx6qp-edm1_tc1000 {
+			description = "EDM1-TOUCAN-1000-IMX6QP";
+			kernel = "kernel@1";
+			ramdisk = "ramdisk@1";
+			fdt = "fdt@23";
 		};
 	};
 };
