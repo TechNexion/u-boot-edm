@@ -30,93 +30,7 @@ DECLARE_GLOBAL_DATA_PTR;
 #ifdef CONFIG_SPL_BUILD
 
 #ifdef CONFIG_MX6
-
-/*
- * Driving strength:
- *   0x30 == 40 Ohm
- *   0x28 == 48 Ohm
- */
 #define IMX6UL_DRIVE_STRENGTH		0x30
-/* configure MX6UltraLite/UltraLiteLite mmdc DDR io registers */
-static struct mx6ul_iomux_ddr_regs mx6ul_ddr_ioregs = {
-	.dram_dqm0 = IMX6UL_DRIVE_STRENGTH,
-	.dram_dqm1 = IMX6UL_DRIVE_STRENGTH,
-	.dram_ras = IMX6UL_DRIVE_STRENGTH,
-	.dram_cas = IMX6UL_DRIVE_STRENGTH,
-	.dram_odt0 = IMX6UL_DRIVE_STRENGTH,
-	.dram_odt1 = IMX6UL_DRIVE_STRENGTH,
-	.dram_sdba2 = 0x00000000,
-	.dram_sdclk_0 = 0x00000008,
-	.dram_sdqs0 = 0x00000038,
-	.dram_sdqs1 = IMX6UL_DRIVE_STRENGTH,
-	.dram_reset = IMX6UL_DRIVE_STRENGTH,
-};
-
-static struct mx6ul_iomux_grp_regs mx6ul_grp_ioregs = {
-	.grp_addds = IMX6UL_DRIVE_STRENGTH,
-	.grp_ddrmode_ctl = 0x00020000,
-	.grp_b0ds = IMX6UL_DRIVE_STRENGTH,
-	.grp_ctlds = IMX6UL_DRIVE_STRENGTH,
-	.grp_b1ds = IMX6UL_DRIVE_STRENGTH,
-	.grp_ddrpke = 0x00000000,
-	.grp_ddrmode = 0x00020000,
-	.grp_ddr_type = 0x000c0000,
-};
-
-/*
- * calibration - these are the various CPU/DDR3 combinations we support
- */
-
-static struct mx6_mmdc_calibration mx6_mmcd_calib = {
-	.p0_mpwldectrl0 = 0x00000000,
-	.p0_mpdgctrl0 = 0x01400140,
-	.p0_mprddlctl = 0x40404044,
-	.p0_mpwrdlctl = 0x40405450,
-};
-
-struct mx6_ddr_sysinfo mx6ul_ddr_sysinfo = {
-	.dsize = 0,
-	.cs_density = 20,
-	.ncs = 1,
-	.cs1_mirror = 0,
-	.rtt_wr = 2,
-	.rtt_nom = 1,		/* RTT_Nom = RZQ/2 */
-	.walat = 1,		/* Write additional latency */
-	.ralat = 5,		/* Read additional latency */
-	.mif3_mode = 3,		/* Command prediction working mode */
-	.bi_on = 1,		/* Bank interleaving enabled */
-	.sde_to_rst = 0x10,	/* 14 cycles, 200us (JEDEC default) */
-	.rst_to_cke = 0x23,	/* 33 cycles, 500us (JEDEC default) */
-	.ddr_type = DDR_TYPE_DDR3,
-};
-
-/* 2Gb DDR3 256MB at 400MHz */
-static struct mx6_ddr3_cfg ddr_2gb_800mhz = {
-	.mem_speed = 800,
-	.density = 2,
-	.width = 16,
-	.banks = 8,
-	.rowaddr = 14,
-	.coladdr = 10,
-	.pagesz = 2,
-	.trcd = 1500,
-	.trcmin = 5250,
-	.trasmin = 3750,
-};
-
-/* 4Gb DDR3 512MB at 400MHz */
-static struct mx6_ddr3_cfg ddr_4gb_800mhz = {
-	.mem_speed = 800,
-	.density = 4,
-	.width = 16,
-	.banks = 8,
-	.rowaddr = 15,
-	.coladdr = 10,
-	.pagesz = 2,
-	.trcd = 1500,
-	.trcmin = 5250,
-	.trasmin = 3750,
-};
 #endif
 
 static iomux_v3_cfg_t const ddr_type_detection_pads[] = {
@@ -143,17 +57,116 @@ static void ccgr_init(void)
 	writel(0xFFFFFFFF, &ccm->CCGR7);
 }
 
+static void ddr3_512mb_init(void)
+{
+	writel(0xFFFFFFFF, 0x020C4080);
+	writel(0x000C0000, 0x020E04B4);
+	writel(0x00000000, 0x020E04AC);
+	writel(0x00000030, 0x020E027C);
+	writel(0x00000030, 0x020E0250);
+	writel(0x00000030, 0x020E024C);
+	writel(0x00000030, 0x020E0490);
+	writel(0x00000030, 0x020E0288);
+	writel(0x00000000, 0x020E0270);
+	writel(0x00000030, 0x020E0260);
+	writel(0x00000030, 0x020E0264);
+	writel(0x00000030, 0x020E04A0);
+	writel(0x00020000, 0x020E0494);
+	writel(0x00000030, 0x020E0280);
+	writel(0x00000030, 0x020E0284);
+	writel(0x00020000, 0x020E04B0);
+	writel(0x00000030, 0x020E0498);
+	writel(0x00000030, 0x020E04A4);
+	writel(0x00000030, 0x020E0244);
+	writel(0x00000030, 0x020E0248);
+	writel(0xA1390003, 0x021B0800);
+	writel(0x00000000, 0x021B080C);
+	writel(0x001F001F ,0x021b0810);
+	writel(0x41440144, 0x021B083C);
+	writel(0x00000000, 0x021b0840);
+	writel(0x40403032, 0x021B0848);
+	writel(0x4040362E, 0x021B0850);
+	writel(0x33333333, 0x021B081C);
+	writel(0x33333333, 0x021B0820);
+	writel(0xf3333333, 0x021B082C);
+	writel(0xf3333333, 0x021B0830);
+	writel(0x00921012, 0x021B08C0);
+	writel(0x00000800, 0x021B08B8);
+	writel(0x0002002D, 0x021B0004);
+	writel(0x1B333030, 0x021B0008);
+	writel(0x676B52F3, 0x021B000C);
+	writel(0xB66D0B63, 0x021B0010);
+	writel(0x01FF00DB, 0x021B0014);
+	writel(0x00201740, 0x021B0018);
+	writel(0x000026D2, 0x021B002C);
+	writel(0x006B1023, 0x021B0030);
+	writel(0x0000004F, 0x021B0040);
+	writel(0x84180000, 0x021B0000);
+	writel(0x00000800, 0x021B0020);
+	writel(0x00000227, 0x021B0818);
+	writel(0x0002556D, 0x021B0004);
+	writel(0x00011006, 0x021B0404);
+}
+
+static void ddr3_256mb_init(void)
+{
+	writel(0xFFFFFFFF, 0x020C4080);
+	writel(0x000C0000, 0x020E04B4);
+	writel(0x00000000, 0x020E04AC);
+	writel(0x00000030, 0x020E027C);
+	writel(0x00000030, 0x020E0250);
+	writel(0x00000030, 0x020E024C);
+	writel(0x00000030, 0x020E0490);
+	writel(0x00000030, 0x020E0288);
+	writel(0x00000000, 0x020E0270);
+	writel(0x00000030, 0x020E0260);
+	writel(0x00000030, 0x020E0264);
+	writel(0x00000030, 0x020E04A0);
+	writel(0x00020000, 0x020E0494);
+	writel(0x00000030, 0x020E0280);
+	writel(0x00000030, 0x020E0284);
+	writel(0x00020000, 0x020E04B0);
+	writel(0x00000030, 0x020E0498);
+	writel(0x00000030, 0x020E04A4);
+	writel(0x00000030, 0x020E0244);
+	writel(0x00000030, 0x020E0248);
+	writel(0xA1390003, 0x021B0800);
+	writel(0x00000000, 0x021B080C);
+	writel(0x414C0148, 0x021B083C);
+	writel(0x00000000, 0x021b0840);
+	writel(0x40404446, 0x021B0848);
+	writel(0x4040544E, 0x021B0850);
+	writel(0x33333333, 0x021B081C);
+	writel(0x33333333, 0x021B0820);
+	writel(0xf3333333, 0x021B082C);
+	writel(0xf3333333, 0x021B0830);
+	writel(0x00921012, 0x021B08C0);
+	writel(0x00000800, 0x021B08B8);
+	writel(0x0002002D, 0x021B0004);
+	writel(0x1B333030, 0x021B0008);
+	writel(0x3F4352F3, 0x021B000C);
+	writel(0xB66D0B63, 0x021B0010);
+	writel(0x01FF00DB, 0x021B0014);
+	writel(0x00201740, 0x021B0018);
+	writel(0x000026D2, 0x021B002C);
+	writel(0x00431023, 0x021B0030);
+	writel(0x00000047, 0x021B0040);
+	writel(0x83180000, 0x021B0000);
+	writel(0x00000800, 0x021B0020);
+	writel(0x00000227, 0x021B0818);
+	writel(0x0002556D, 0x021B0004);
+	writel(0x00011006, 0x021B0404);
+}
+
 static void spl_dram_init(void)
 {
 	setup_iomux_ddr_type_detection();
 	gpio_direction_input(DDR_TYPE_DET);
 
 	if (!gpio_get_value(DDR_TYPE_DET)) {
-		mx6ul_dram_iocfg(ddr_4gb_800mhz.width, &mx6ul_ddr_ioregs, &mx6ul_grp_ioregs);
-		mx6_dram_cfg(&mx6ul_ddr_sysinfo, &mx6_mmcd_calib, &ddr_4gb_800mhz);
+		ddr3_512mb_init();
 	} else {
-		mx6ul_dram_iocfg(ddr_2gb_800mhz.width, &mx6ul_ddr_ioregs, &mx6ul_grp_ioregs);
-		mx6_dram_cfg(&mx6ul_ddr_sysinfo, &mx6_mmcd_calib, &ddr_2gb_800mhz);
+		ddr3_256mb_init();
 	}
 }
 
