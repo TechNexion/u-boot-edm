@@ -234,7 +234,9 @@
 		"else " \
 			"bootz; " \
 		"fi;\0" \
-	"fitargs=setenv bootargs console=${console},${baudrate} root=/dev/ram0 rootwait rw; run videoargs\0" \
+	"fitargs=setenv bootargs console=${console},${baudrate} root=/dev/ram0 rootwait rw " \
+		"modules-load=g_acm_ms g_acm_ms.stall=0 g_acm_ms.removable=1 g_acm_ms.file=/dev/mmcblk${mmcdev} " \
+		"g_acm_ms.iSerialNumber=${ethaddr} g_acm_ms.iManufacturer=TechNexion; run videoargs\0" \
 	"loadfit=fatload mmc ${mmcdev} 0x17880000 tnrescue.itb\0" \
 	"fitboot=echo Booting from FIT image...; " \
 		"run fitargs; echo ${bootargs}; " \

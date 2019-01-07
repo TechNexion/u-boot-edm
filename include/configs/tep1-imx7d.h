@@ -264,7 +264,9 @@
 			"bootz; " \
 		"fi;\0" \
 	"loadfit=fatload mmc ${mmcdev}:${mmcpart} 0x87880000 tnrescue.itb\0" \
-	"fit_args=setenv bootargs console=${console},${baudrate} root=/dev/ram0 rootwait rw\0" \
+	"fit_args=setenv bootargs console=${console},${baudrate} root=/dev/ram0 rootwait rw " \
+		"modules-load=g_acm_ms g_acm_ms.stall=0 g_acm_ms.removable=1 g_acm_ms.file=/dev/mmcblk${mmcdev} " \
+		"g_acm_ms.iSerialNumber=${ethaddr} g_acm_ms.iManufacturer=TechNexion\0" \
 	"fitboot=run fit_args; echo ${bootargs}; bootm 87880000#config@${som}-${form}_${baseboard};\0"
 
 #define CONFIG_BOOTCOMMAND \
