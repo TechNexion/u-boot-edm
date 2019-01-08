@@ -674,7 +674,7 @@ int power_init_board(void)
 
 	pmic_reg_read(p, PFUZE3000_DEVICEID, &reg);
 	pmic_reg_read(p, PFUZE3000_REVID, &rev_id);
-	printf("PMIC: PFUZE300 DEV_ID=0x%x REV_ID=0x%x\n", reg, rev_id);
+	printf("PMIC: PFUZE3000 DEV_ID=0x%x REV_ID=0x%x\n", reg, rev_id);
 
 	/* disable Low Power Mode during standby mode */
 	pmic_reg_read(p, PFUZE3000_LDOGCTL, &reg);
@@ -694,7 +694,7 @@ int power_init_board(void)
 	/* decrease SW1B normal voltage to 0.975V */
 	pmic_reg_read(p, PFUZE3000_SW1BVOLT, &reg);
 	reg &= ~0x1f;
-	reg |= PFUZE3000_SW1AB_SETP(975);
+	reg |= PFUZE3000_SW1AB_SETP(9750);
 	pmic_reg_write(p, PFUZE3000_SW1BVOLT, reg);
 
 	return 0;
