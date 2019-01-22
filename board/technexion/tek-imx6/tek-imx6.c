@@ -33,6 +33,7 @@
 #ifdef CONFIG_CMD_SATA
 #include <asm/imx-common/sata.h>
 #endif
+#include <usb.h>
 
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -445,6 +446,59 @@ static int detect_i2c(struct display_info_t const *dev)
 			(0 == i2c_probe(dev->addr));
 }
 
+struct touth_device {
+	u16 idVendor;
+	char prod[24];
+};
+
+static struct touth_device touch_matches[] = {
+	{0x0eef, "eGalaxTouch EXC3146-10"},
+	{0x0eef, "eGalaxTouch EXC3160-15"},
+};
+
+static char usb_inited = -1;
+
+static int detect_usb(struct display_info_t const *dev)
+{
+#ifndef CONFIG_DM_USB
+	void *ctrl;
+	struct usb_device *udev = NULL;
+	int ret, i;
+
+	if (usb_inited != dev->bus) {
+		usb_hub_reset();
+		ret = usb_lowlevel_init(dev->bus, USB_INIT_HOST, &ctrl);
+		if ((ret == -ENODEV) || ret)	/* No such device or other error*/
+			return 0;
+
+		ret = usb_alloc_new_device(ctrl, &udev);
+		if (ret)
+			return 0;
+
+		ret = usb_new_device(udev);
+		if (ret)
+			usb_free_device(udev->controller);
+
+		usb_inited = dev->bus;
+	}
+
+	for(i = 0; i < USB_MAX_DEVICE; i++) {
+		udev = usb_get_dev_index(i);
+		if (udev == NULL)
+			continue;
+
+		if (udev->descriptor.idVendor != touch_matches[dev->addr].idVendor)
+			continue;
+
+		if (udev->descriptor.bDescriptorType == USB_DT_DEVICE)
+			if(strncmp(udev->prod, touch_matches[dev->addr].prod, strlen(touch_matches[dev->addr].prod)) == 0)
+				return 1;
+	}
+
+#endif /* !define(CONFIG_DM_USB) */
+	return 0;
+}
+
 static void enable_lvds(struct display_info_t const *dev)
 {
 	struct iomuxc *iomux = (struct iomuxc *)
@@ -489,6 +543,46 @@ struct display_info_t const displays[] = {{
 		.lower_margin   = 7,
 		.hsync_len      = 60,
 		.vsync_len      = 10,
+		.sync           = FB_SYNC_EXT,
+		.vmode          = FB_VMODE_NONINTERLACED
+} }, {
+	.bus	= 1,
+	.addr	= 0,
+	.pixfmt = IPU_PIX_FMT_RGB24,
+	.detect = detect_usb,
+	.enable = enable_lvds,
+	.mode	= {
+		.name           = "10inch_v01",
+		.refresh        = 60,
+		.xres           = 1280,
+		.yres           = 800,
+		.pixclock       = 1000000000000ULL/71100000,
+		.left_margin    = 40,
+		.right_margin   = 40,
+		.upper_margin   = 10,
+		.lower_margin   = 3,
+		.hsync_len      = 80,
+		.vsync_len      = 10,
+		.sync           = FB_SYNC_EXT,
+		.vmode          = FB_VMODE_NONINTERLACED
+} }, {
+	.bus	= 1,
+	.addr	= 1,
+	.pixfmt = IPU_PIX_FMT_RGB24,
+	.detect = detect_usb,
+	.enable = enable_lvds,
+	.mode	= {
+		.name           = "LVDS_SIN_1368x768",
+		.refresh        = 60,
+		.xres           = 1368,
+		.yres           = 768,
+		.pixclock       = 13158,
+		.left_margin    = 90,
+		.right_margin   = 90,
+		.upper_margin   = 17,
+		.lower_margin   = 17,
+		.hsync_len      = 20,
+		.vsync_len      = 4,
 		.sync           = FB_SYNC_EXT,
 		.vmode          = FB_VMODE_NONINTERLACED
 } }, {
@@ -637,12 +731,17 @@ int board_late_init(void)
 
 	if ((s = getenv ("fdtfile_autodetect")) != NULL) {
 		if (strncmp (s, "off", 3) != 0) {
+			if(detect_usb(&displays[2])) {		// detect 15-inch panel
+				strncpy(s, "_15inch", 7);
+			} else
+				s[0] = 0;
+
 			if (is_mx6dqp())
-				sprintf(fdt_name, "imx6qp-%s.dtb", sbc_type());
+				sprintf(fdt_name, "imx6qp-%s%s.dtb", sbc_type(), s);
 			else if (is_mx6dq())
-				sprintf(fdt_name, "imx6q-%s.dtb", sbc_type());
+				sprintf(fdt_name, "imx6q-%s%s.dtb", sbc_type(), s);
 			else
-				sprintf(fdt_name, "imx6dl-%s.dtb", sbc_type());
+				sprintf(fdt_name, "imx6dl-%s%s.dtb", sbc_type(), s);
 		}
 		setenv("fdtfile", fdt_name);
 	}
