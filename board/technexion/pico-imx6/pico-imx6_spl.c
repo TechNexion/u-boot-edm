@@ -130,6 +130,20 @@ struct mx6sdl_iomux_grp_regs mx6sdl_grp_ioregs = {
 	.grp_b7ds = IMX6SDL_DRIVE_STRENGTH,
 };
 
+/* Kingston B5116ECMDXGJD-U for i.mx6Quad operating DDR at 528MHz */
+static struct mx6_ddr3_cfg b511ecmdxg_1066mhz = {
+	.mem_speed = 1066,
+	.density = 8,
+	.width = 16,
+	.banks = 8,
+	.rowaddr = 16,
+	.coladdr = 10,
+	.pagesz = 2,
+	.trcd = 1312,
+	.trcmin = 5062,
+	.trasmin = 3750,
+};
+
 /* H5T04G63AFR-PB for i.mx6Solo/DL operating DDR at 400MHz */
 static struct mx6_ddr3_cfg h5t04g63afr_800mhz = {
 	.mem_speed = 800,
@@ -161,6 +175,15 @@ static struct mx6_ddr3_cfg h5tq2g63ffr_800mhz = {
 /*
  * calibration - these are the various CPU/DDR3 combinations we support
  */
+
+static struct mx6_mmdc_calibration mx6q_2g_mmdc_calib = {
+	.p0_mpwldectrl0 = 0x001A001F,
+	.p0_mpwldectrl1 = 0x002A001B,
+	.p0_mpdgctrl0 = 0x03380344,
+	.p0_mpdgctrl1 = 0x032C032C,
+	.p0_mprddlctl = 0x44383838,
+	.p0_mpwrdlctl = 0x36383838,
+};
 
 static struct mx6_mmdc_calibration mx6q_1g_mmdc_calib = {
 	.p0_mpwldectrl0 = 0x00000000,
@@ -301,6 +324,8 @@ static void enable_spread_spectrum(void)
 
 static void spl_dram_init(void)
 {
+	unsigned long ram_size;
+
 #ifdef CONFIG_IMX6_SPREAD_SPECTRUM
 	enable_spread_spectrum();
 #endif
@@ -316,7 +341,16 @@ static void spl_dram_init(void)
 	case MXC_CPU_MX6D:
 	case MXC_CPU_MX6Q:
 		mx6dq_dram_iocfg(32, &mx6dq_ddr_ioregs, &mx6dq_grp_ioregs);
-		mx6_dram_cfg(&mem_s, &mx6q_1g_mmdc_calib, &h5t04g63afr_800mhz);
+		mx6_dram_cfg(&mem_s, &mx6q_2g_mmdc_calib, &b511ecmdxg_1066mhz);
+
+		/*
+		* Get actual RAM size, so we can adjust DDR row size for <SZ_2G
+		* memories
+		*/
+		ram_size = get_ram_size((void *)CONFIG_SYS_SDRAM_BASE, SZ_2G);
+		if (ram_size < SZ_2G) {
+			mx6_dram_cfg(&mem_s, &mx6q_1g_mmdc_calib, &h5t04g63afr_800mhz);
+		}
 		break;
 	}
 
