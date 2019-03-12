@@ -24,11 +24,23 @@ DECLARE_GLOBAL_DATA_PTR;
 
 #if defined(CONFIG_SPL_BUILD)
 
-#define DDR_TYPE_DET   IMX_GPIO_NR(1, 12)
+/**********************************************
+* Revision Detection
+*
+* DDR_TYPE_DET_1   DDR_TYPE_DET_2
+*   GPIO_1           GPIO_2
+*     0                1           2GB DDR3
+*     0                0           1GB DDR3
+*     1                0           512MB DDR3
+***********************************************/
+#define DDR_TYPE_DET_1   IMX_GPIO_NR(1, 12)
+#define DDR_TYPE_DET_2   IMX_GPIO_NR(1, 13)
 
 static iomux_v3_cfg_t const ddr_type_detection_pads[] = {
 	/* ddr type detection: 512MB or 1GB */
 	MX7D_PAD_GPIO1_IO12__GPIO1_IO12 | MUX_PAD_CTRL(NO_PAD_CTRL),
+	/* ddr type detection: 2GB */
+	MX7D_PAD_GPIO1_IO13__GPIO1_IO13 | MUX_PAD_CTRL(NO_PAD_CTRL),
 };
 
 static void setup_iomux_ddr_type_detection(void)
@@ -165,14 +177,84 @@ static void ddr3_1gb_init(void)
 	while ((readl(0x307a0004) & 0x1) != 0x1);
 }
 
+static void ddr3_2gb_init(void)
+{
+	writel(0x4F400005, 0x30391000);
+	/* Clear then set bit30 to ensure exit from DDR retention */
+	writel(0x40000000, 0x30360388);
+	writel(0x40000000, 0x30360384);
+
+	writel(0x00000002, 0x30391000);
+	writel(0x01040001, 0x307A0000);
+	writel(0x00400046, 0x307A0064);
+	writel(0x00000001, 0x307a0490);
+	writel(0x00690000, 0x307A00D4);
+	writel(0x00020083, 0x307A00D0);
+	writel(0x00000000, 0x307A00D8);
+	writel(0x09300004, 0x307A00DC);
+	writel(0x04080000, 0x307A00E0);
+	writel(0x00100004, 0x307A00E4);
+	writel(0x0000033F, 0x307A00F4);
+	writel(0x09081109, 0x307A0100);
+	writel(0x0007020D, 0x307A0104);
+	writel(0x03040407, 0x307A0108);
+	writel(0x00002006, 0x307A010C);
+	writel(0x04020205, 0x307A0110);
+	writel(0x03030202, 0x307A0114);
+	writel(0x00000803, 0x307A0120);
+	writel(0x00800020, 0x307A0180);
+	writel(0x02098204, 0x307A0190);
+	writel(0x00030303, 0x307A0194);
+	writel(0x80400003, 0x307A01A0);
+	writel(0x00100020, 0x307A01A4);
+	writel(0x80100004, 0x307A01A8);
+	writel(0x0000001F, 0x307A0200);
+	writel(0x00181818, 0x307A0204);
+	writel(0x00000000, 0x307A020C);
+	writel(0x00000F0F, 0x307A0210);
+	writel(0x04040404, 0x307A0214);
+	writel(0x04040404, 0x307A0218);
+	writel(0x06000604, 0x307A0240);
+	writel(0x00000001, 0x307A0244);
+
+	writel(0x00000000, 0x30391000);
+	writel(0x17420F40, 0x30790000);
+	writel(0x10210100, 0x30790004);
+	writel(0x00060807, 0x30790010);
+	writel(0x1010007E, 0x307900B0);
+	writel(0x00000D6E, 0x3079009C);
+
+	writel(0x04040404, 0x30790030);
+	writel(0x0A0A0A0A, 0x30790020);
+	writel(0x01000010, 0x30790050);
+	writel(0x00000010, 0x30790050);
+	writel(0x0E407304, 0x307900C0);
+	writel(0x0E447304, 0x307900C0);
+	writel(0x0E447306, 0x307900C0);
+	writel(0x0E447304, 0x307900C0);
+
+	while ((readl(0x307900c4) & 0x1) != 0x1);
+
+	writel(0x0e447304, 0x307900c0);
+	writel(0x0e407304, 0x307900c0);
+
+	writel(0x00000000, 0x30384130);
+	writel(0x00000178, 0x30340020);
+	writel(0x00000002, 0x30384130);
+	writel(0x0000000f, 0x30790018);
+
+	while ((readl(0x307a0004) & 0x1) != 0x1);
+}
+
 static void spl_dram_init(void)
 {
 	setup_iomux_ddr_type_detection();
-	gpio_direction_input(DDR_TYPE_DET);
+	gpio_direction_input(DDR_TYPE_DET_1);
+	gpio_direction_input(DDR_TYPE_DET_2);
 
-	 if (gpio_get_value(DDR_TYPE_DET)) {
-		ddr3_512mb_init();
-
+	if (gpio_get_value(DDR_TYPE_DET_1)) {
+	} else if (gpio_get_value(DDR_TYPE_DET_2)) {
+		ddr3_2gb_init();
 	} else {
 		ddr3_1gb_init();
 	}

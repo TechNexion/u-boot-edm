@@ -76,8 +76,6 @@ DECLARE_GLOBAL_DATA_PTR;
 
 #define EPDC_PAD_CTRL	0x0
 
-#define DDR_TYPE_DET	IMX_GPIO_NR(1, 12)
-
 #ifdef CONFIG_SYS_I2C_MXC
 #define PC MUX_PAD_CTRL(I2C_PAD_CTRL)
 /* I2C1*/
@@ -123,9 +121,23 @@ struct i2c_pads_info i2c_pad_info4 = {
 };
 #endif
 
+/**********************************************
+* Revision Detection
+*
+* DDR_TYPE_DET_1   DDR_TYPE_DET_2
+*   GPIO_1           GPIO_2
+*     0                1           2GB DDR3
+*     0                0           1GB DDR3
+*     1                0           512MB DDR3
+***********************************************/
+#define DDR_TYPE_DET_1   IMX_GPIO_NR(1, 12)
+#define DDR_TYPE_DET_2   IMX_GPIO_NR(1, 13)
+
 static iomux_v3_cfg_t const ddr_type_detection_pads[] = {
-	/* ddr type detection */
+	/* ddr type detection: 512MB or 1GB */
 	MX7D_PAD_GPIO1_IO12__GPIO1_IO12 | MUX_PAD_CTRL(NO_PAD_CTRL),
+	/* ddr type detection: 2GB */
+	MX7D_PAD_GPIO1_IO13__GPIO1_IO13 | MUX_PAD_CTRL(NO_PAD_CTRL),
 };
 
 static void setup_iomux_ddr_type_detection(void)
@@ -136,18 +148,21 @@ static void setup_iomux_ddr_type_detection(void)
 int dram_init(void)
 {
 
-	unsigned int ddr_size;
+	ulong ddr_size;
 
 	setup_iomux_ddr_type_detection();
-	gpio_direction_input(DDR_TYPE_DET);
+	gpio_direction_input(DDR_TYPE_DET_1);
+	gpio_direction_input(DDR_TYPE_DET_2);
 
-	if (gpio_get_value(DDR_TYPE_DET)) {
-		ddr_size = 512;
+	if (gpio_get_value(DDR_TYPE_DET_1)) {
+		ddr_size = SZ_512M;
+	} else if (gpio_get_value(DDR_TYPE_DET_2)) {
+		ddr_size = SZ_2G;
 	} else {
-		ddr_size = 1024;
+		ddr_size = SZ_1G;
 	}
 
-	gd->ram_size = ((ulong)ddr_size * 1024 * 1024);
+	gd->ram_size = ddr_size;
 
 	return 0;
 }
