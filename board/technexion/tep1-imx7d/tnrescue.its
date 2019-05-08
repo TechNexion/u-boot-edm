@@ -10,14 +10,14 @@
 
 	images {
 		kernel@1 {
-			description = "TechNexion IMX6/IMX7/IMX8 Linux Kernel";
+			description = "TechNexion IMX6/IMX7 Linux Kernel";
 			data = /incbin/("./zImage");
 			type = "kernel";
 			arch = "arm";
 			os = "linux";
 			compression = "none";
-			load = <0x89F00000>;
-			entry = <0x89F00000>;
+			load = <0x80800000>;
+			entry = <0x80800000>;
 			hash@1 {
 				algo = "md5";
 			};
@@ -32,23 +32,20 @@
 			arch = "arm";
 			os = "linux";
 			compression = "none";
-			load = <0x8B000000>;
-			entry = <0x8B000000>;
+			load = <0x83800000>;
+			entry = <0x83800000>;
 			hash@1 {
 				algo = "sha1";
 			};
 		};
-		fdt@9 {
+		fdt@13 {
 			description = "imx7d-tep1";
 			data = /incbin/("./dtb/imx7d-tep1.dtb");
 			type = "flat_dt";
 			arch = "arm";
 			compression = "none";
-			load = <0x89E00000>;
+			load = <0x83000000>;
 			hash@1 {
-				algo = "crc32";
-			};
-			hash@2 {
 				algo = "sha1";
 			};
 		};
@@ -61,7 +58,7 @@
 			description = "TEP1-IMX7D";
 			kernel = "kernel@1";
 			ramdisk = "ramdisk@1";
-			fdt = "fdt@9";
+			fdt = "fdt@13";
 		};
 	};
 };
