@@ -27,6 +27,7 @@
 DECLARE_GLOBAL_DATA_PTR;
 
 #define DDR_TYPE_DET			IMX_GPIO_NR(5, 1)
+#define DDR_TYPE_DET2			IMX_GPIO_NR(1, 18)
 
 #ifdef CONFIG_SPL_BUILD
 
@@ -120,13 +121,65 @@ static struct mx6_ddr3_cfg ddr_4gb_800mhz = {
 };
 #endif
 
+static void issi_ddr3_1024mb_init(void)
+{
+	writel(0xFFFFFFFF, 0x020C4080);
+	writel(0x000C0000, 0x020E04B4);
+	writel(0x00000000, 0x020E04AC);
+	writel(0x00000030, 0x020E027C);
+	writel(0x00000030, 0x020E0250);
+	writel(0x00000030, 0x020E024C);
+	writel(0x00000030, 0x020E0490);
+	writel(0x00000030, 0x020E0288);
+	writel(0x00000000, 0x020E0270);
+	writel(0x00000030, 0x020E0260);
+	writel(0x00000030, 0x020E0264);
+	writel(0x00000030, 0x020E04A0);
+	writel(0x00020000, 0x020E0494);
+	writel(0x00000030, 0x020E0280);
+	writel(0x00000030, 0x020E0284);
+	writel(0x00020000, 0x020E04B0);
+	writel(0x00000030, 0x020E0498);
+	writel(0x00000030, 0x020E04A4);
+	writel(0x00000030, 0x020E0244);
+	writel(0x00000030, 0x020E0248);
+	writel(0xA1390003, 0x021B0800);
+	writel(0x00000000, 0x021B080C);
+	writel(0x001F001F ,0x021b0810);
+	writel(0x4150014C, 0x021B083C);
+	writel(0x00000000, 0x021b0840);
+	writel(0x4040444A, 0x021B0848);
+	writel(0x40405450, 0x021B0850);
+	writel(0x33333333, 0x021B081C);
+	writel(0x33333333, 0x021B0820);
+	writel(0xf3333333, 0x021B082C);
+	writel(0xf3333333, 0x021B0830);
+	writel(0x00921012, 0x021B08C0);
+	writel(0x00000800, 0x021B08B8);
+	writel(0x0005005A, 0x021B0004);
+	writel(0x36333030, 0x021B0008);
+	writel(0xCFD7C7F3, 0x021B000C);
+	writel(0x926D0B63, 0x021B0010);
+	writel(0x01FF00DB, 0x021B0014);
+	writel(0x00211740, 0x021B0018);
+	writel(0x000026D2, 0x021B002C);
+	writel(0x00D71023, 0x021B0030);
+	writel(0x0000005F, 0x021B0040);
+	writel(0x85180000, 0x021B0000);
+	writel(0x00000800, 0x021B0020);
+	writel(0x00000227, 0x021B0818);
+	writel(0x0005559A, 0x021B0004);
+	writel(0x00011006, 0x021B0404);
+}
+
 static iomux_v3_cfg_t const ddr_type_detection_pads[] = {
 	MX6_PAD_SNVS_TAMPER1__GPIO5_IO01 | MUX_PAD_CTRL(NO_PAD_CTRL),
+	MX6_PAD_UART1_CTS_B__GPIO1_IO18 | MUX_PAD_CTRL(NO_PAD_CTRL),
 };
 
 static void setup_iomux_ddr_type_detection(void)
 {
-	SETUP_IOMUX_PADS(ddr_type_detection_pads);
+	imx_iomux_v3_setup_multiple_pads(ddr_type_detection_pads, ARRAY_SIZE(ddr_type_detection_pads));
 }
 
 /* clock control general registers */
@@ -147,14 +200,20 @@ static void ccgr_init(void)
 static void spl_dram_init(void)
 {
 	setup_iomux_ddr_type_detection();
-	gpio_direction_input(DDR_TYPE_DET);
+	gpio_direction_input(DDR_TYPE_DET2);
 
-	if (gpio_get_value(DDR_TYPE_DET)) {
-		mx6ul_dram_iocfg(ddr_4gb_800mhz.width, &mx6ul_ddr_ioregs, &mx6ul_grp_ioregs);
-		mx6_dram_cfg(&mx6ul_ddr_sysinfo, &mx6_mmcd_calib, &ddr_4gb_800mhz);
-	} else {
-		mx6ul_dram_iocfg(ddr_2gb_800mhz.width, &mx6ul_ddr_ioregs, &mx6ul_grp_ioregs);
-		mx6_dram_cfg(&mx6ul_ddr_sysinfo, &mx6_mmcd_calib, &ddr_2gb_800mhz);
+	if (gpio_get_value(DDR_TYPE_DET2)) {
+		issi_ddr3_1024mb_init();
+	}
+	else {
+		gpio_direction_input(DDR_TYPE_DET);
+		if (gpio_get_value(DDR_TYPE_DET)) {
+			mx6ul_dram_iocfg(ddr_4gb_800mhz.width, &mx6ul_ddr_ioregs, &mx6ul_grp_ioregs);
+			mx6_dram_cfg(&mx6ul_ddr_sysinfo, &mx6_mmcd_calib, &ddr_4gb_800mhz);
+		} else {
+			mx6ul_dram_iocfg(ddr_2gb_800mhz.width, &mx6ul_ddr_ioregs, &mx6ul_grp_ioregs);
+			mx6_dram_cfg(&mx6ul_ddr_sysinfo, &mx6_mmcd_calib, &ddr_2gb_800mhz);
+		}
 	}
 }
 
