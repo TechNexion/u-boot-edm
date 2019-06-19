@@ -1390,8 +1390,14 @@ void mx6_ddr3_cfg(const struct mx6_ddr_sysinfo *sysinfo,
 		MMDC1(mprddqby3dl, 0x33333333);
 	}
 
-	/* MMDC Termination: rtt_nom:2 RZQ/2(120ohm), rtt_nom:1 RZQ/4(60ohm) */
-	val = (sysinfo->rtt_nom == 2) ? 0x00011117 : 0x00022227;
+	/* MMDC Termination: rtt_nom:2 RZQ/2(120ohm), rtt_nom:1 RZQ/4(60ohm), rtt_nom:0 disable ODT */
+	if (sysinfo->rtt_nom == 0)
+		val = 0x00000007;
+	else if (sysinfo->rtt_nom == 2)
+		val = 0x00011117;
+	else
+		val = 0x00022227;
+
 	mmdc0->mpodtctrl = val;
 	if (sysinfo->dsize > 1)
 		MMDC1(mpodtctrl, val);
