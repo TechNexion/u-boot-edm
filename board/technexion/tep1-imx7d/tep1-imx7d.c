@@ -383,8 +383,17 @@ static iomux_v3_cfg_t const enet_pwr_en_pads[] = {
 	MX7D_PAD_I2C4_SDA__GPIO4_IO15 | MUX_PAD_CTRL(NO_PAD_CTRL), // power pin
 };
 
+static iomux_v3_cfg_t const usb_hub_rev_pads[] = {
+	MX7D_PAD_I2C4_SCL__GPIO4_IO14 | MUX_PAD_CTRL(NO_PAD_CTRL),
+	/* Revision Detect
+		USB2 HOST:R68 10K-R2 ON,R65 10K-R2 OFF.
+		USB2 OTG :R65 10K-R2 ON,R68 10K-R2 OFF.
+	*/
+};
+
 #define FEC_RST_GPIO	IMX_GPIO_NR(5, 11)
 #define FEC_PWR_GPIO    IMX_GPIO_NR(4, 15)
+#define USB_HUB_REV_GPIO    IMX_GPIO_NR(4, 14)
 
 
 static void setup_iomux_fec(void)
@@ -717,6 +726,14 @@ int board_late_init(void)
 	set_wdog_reset((struct wdog_regs *)WDOG1_BASE_ADDR);
 
 	setenv("som", get_som_type());
+	
+	// USB HUB Revision Detect	
+	imx_iomux_v3_setup_multiple_pads(usb_hub_rev_pads, ARRAY_SIZE(usb_hub_rev_pads));
+	gpio_direction_input(USB_HUB_REV_GPIO);
+	if (gpio_get_value(USB_HUB_REV_GPIO) == 1) {
+		setenv("baseboard", "tep1-a2");
+	}	
+	
 	return 0;
 }
 
