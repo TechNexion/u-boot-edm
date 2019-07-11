@@ -126,16 +126,15 @@
 	"initrd_high=0xffffffff\0" \
 	"fdt_addr=0x83000000\0" \
 	"boot_fdt=try\0" \
-	"mmcdev=" __stringify(CONFIG_SYS_MMC_ENV_DEV) "\0" \
-	"mmcpart=1\0" \
 	"detectmem=" \
 		"if test ${memdet} = 512MB; then " \
 			"setenv memsize cma=128M; " \
 		"else " \
 			"setenv memsize cma=96M; " \
 		"fi\0" \
-	"mmcdev="__stringify(CONFIG_SYS_MMC_ENV_DEV)"\0" \
+	"mmcdev=" __stringify(CONFIG_SYS_MMC_ENV_DEV) "\0" \
 	"mmcpart=" __stringify(CONFIG_SYS_MMC_IMG_LOAD_PART) "\0" \
+	"mmcrootdev=/dev/mmcblk" __stringify(CONFIG_SYS_MMC_ENV_DEV) "\0" \
 	"mmcroot=" CONFIG_MMCROOT " rootwait rw\0" \
 	"mmcautodetect=yes\0" \
 	"mmcargs=setenv bootargs console=${console},${baudrate} " \
@@ -148,13 +147,14 @@
 	"loadimage=fatload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${image}\0" \
 	"setfdt=" \
 		"if test -n ${wifi_module} && test ${wifi_module} = qca; then " \
+			"setenv fitboard -${wifi_module}_${baseboard}; " \
 			"setenv fdtfile ${som}-${form}-${wifi_module}_${baseboard}.dtb; " \
 		"else " \
+			"setenv fitboard _${baseboard}; " \
 			"setenv fdtfile ${som}-${form}_${baseboard}.dtb;" \
 		"fi\0" \
 	"loadfdt=fatload mmc ${mmcdev}:${mmcpart} ${fdt_addr} ${fdtfile}\0" \
 	"mmcboot=echo Booting from mmc ...; " \
-		"run detectmem; " \
 		"run mmcargs; " \
 		"echo baseboard is ${baseboard}; " \
 		"run setfdt; " \
@@ -208,13 +208,14 @@
 			"bootz; " \
 		"fi;\0" \
 	"loadfit=fatload mmc ${mmcdev}:${mmcpart} 0x87880000 tnrescue.itb\0" \
-	"fit_args=setenv bootargs console=${console},${baudrate} root=/dev/ram0 rootwait rw " \
-		"modules-load=g_acm_ms g_acm_ms.stall=0 g_acm_ms.removable=1 g_acm_ms.file=/dev/mmcblk${mmcdev} " \
+	"fit_args=setenv bootargs console=${console},${baudrate} ${memsize} root=/dev/ram0 rootwait rw " \
+		"modules-load=g_acm_ms g_acm_ms.stall=0 g_acm_ms.removable=1 g_acm_ms.file=/dev/${mmcrootdev} " \
 		"g_acm_ms.iSerialNumber=${ethaddr} g_acm_ms.iManufacturer=TechNexion\0" \
-	"fitboot=run fit_args; echo ${bootargs}; bootm 87880000#config@${som}-${form}_${baseboard};\0"
+	"fitboot=run fit_args; echo ${bootargs}; bootm 87880000#config@${som}-${form}${fitboard};\0"
 
 #define CONFIG_BOOTCOMMAND \
 	   "mmc dev ${mmcdev}; if mmc rescan; then " \
+		   "run detectmem; " \
 		   "if run loadbootenv; then " \
 			   "echo Loaded environment from ${bootenv};" \
 			   "run importbootenv;" \

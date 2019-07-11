@@ -140,6 +140,7 @@
 	"initrd_high=0xffffffffffffffff\0" \
 	"mmcdev="__stringify(CONFIG_SYS_MMC_ENV_DEV)"\0" \
 	"mmcpart=" __stringify(CONFIG_SYS_MMC_IMG_LOAD_PART) "\0" \
+	"mmcrootdev=/dev/mmcblk" __stringify(CONFIG_SYS_MMC_ENV_DEV)"\0" \
 	"mmcroot=" CONFIG_MMCROOT " rootwait rw\0" \
 	"mmcautodetect=yes\0" \
 	"mmcargs=setenv bootargs console=${console} root=${mmcroot} cma=${cma_size}\0" \
@@ -156,22 +157,22 @@
 			"echo Detecting monitor...; " \
 			"if hdmidet; then " \
 				"setenv display hdmi; " \
-				"setenv fitboard pi_hdmi; " \
 			"else " \
 				"echo - no HDMI monitor; " \
 			"fi; " \
 			"i2c dev 2; " \
 			"if i2c probe 0x38; then " \
 				"setenv display mipi5; " \
-				"setenv fitboard pi; " \
 			"else " \
 				"echo '- no FT5x06 touch panel';" \
 			"fi; " \
 		"fi\0" \
 	"setfdt=" \
 		"if test ${display} = mipi5; then " \
+			"setenv fitboard _pi; " \
 			"setenv fdt_file pico-8m-dcss-ili9881c.dtb; " \
 		"elif test ${display} = hdmi; then; " \
+			"setenv fitboard _pi_hdmi; " \
 			"setenv fdt_file pico-8m.dtb;" \
 		"fi\0" \
 	"loadfdt=fatload mmc ${mmcdev}:${mmcpart} ${fdt_addr} ${fdt_file}\0" \
@@ -213,17 +214,13 @@
 		"else " \
 			"booti; " \
 		"fi;\0" \
-	"fitboard=pi\0" \
 	"fit_addr=0x44000000\0" \
 	"fit_high=0xffffffff\0" \
 	"fitargs=setenv bootargs console=${console} root=/dev/ram0 rootwait rw " \
-		"modules-load=g_acm_ms g_acm_ms.stall=0 g_acm_ms.removable=1 g_acm_ms.file=/dev/mmcblk${mmcdev} " \
+		"modules-load=g_acm_ms g_acm_ms.stall=0 g_acm_ms.removable=1 g_acm_ms.file=${mmcrootdev} " \
 		"g_acm_ms.iSerialNumber=${ethaddr} g_acm_ms.iManufacturer=TechNexion\0" \
 	"loadfit=fatload mmc ${mmcdev}:${mmcpart} ${fit_addr} tnrescue.itb\0" \
-	"fitboot=echo Booting from FIT image ...; " \
-		"run fitargs; " \
-		"echo ${bootargs}; " \
-		"bootm ${fit_addr}#config@${som}_${fitboard}\0"
+	"fitboot=run setfdt; run fitargs; bootm ${fit_addr}#config@${som}${fitboard}\0"
 
 #define CONFIG_BOOTCOMMAND \
 	   "mmc dev ${mmcdev}; if mmc rescan; then " \

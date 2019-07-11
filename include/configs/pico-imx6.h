@@ -125,8 +125,10 @@
 	"mmcpart=1\0" \
 	"searchbootdev=" \
 		"if test ${bootdev} = SD0; then " \
+			"setenv mmcrootdev /dev/mmcblk2; " \
 			"setenv mmcroot /dev/mmcblk2p2 rootwait rw; " \
 		"else " \
+			"setenv mmcrootdev /dev/mmcblk0; " \
 			"setenv mmcroot /dev/mmcblk0p2 rootwait rw; " \
 		"fi\0" \
 	"mmcargs=setenv bootargs console=${console},${baudrate} " \
@@ -173,13 +175,14 @@
 	"loadimage=fatload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${image}\0" \
 	"setfdt=" \
 		"if test ${wifi_module} = qca; then " \
+			"setenv fitboard -${wifi_module}_${baseboard}; " \
 			"setenv fdtfile ${som}-${form}-${wifi_module}_${baseboard}.dtb; " \
 		"else " \
+			"setenv fitboard _${baseboard}; " \
 			"setenv fdtfile ${som}-${form}_${baseboard}.dtb;" \
 		"fi\0" \
 	"loadfdt=fatload mmc ${mmcdev}:${mmcpart} ${fdt_addr} ${fdtfile}\0" \
 	"mmcboot=echo Booting from mmc ...; " \
-		"run searchbootdev; " \
 		"run mmcargs; " \
 		"echo baseboard is ${baseboard}; " \
 		"echo ${bootargs}; " \
@@ -234,17 +237,15 @@
 		"else " \
 			"bootz; " \
 		"fi;\0" \
-	"blknum=${mmcdev}\0" \
 	"fitargs=setenv bootargs console=${console},${baudrate} root=/dev/ram0 rootwait rw " \
-		"modules-load=g_acm_ms g_acm_ms.stall=0 g_acm_ms.removable=1 g_acm_ms.file=/dev/mmcblk${blknum} " \
+		"modules-load=g_acm_ms g_acm_ms.stall=0 g_acm_ms.removable=1 g_acm_ms.file=${mmcrootdev} " \
 		"g_acm_ms.iSerialNumber=${ethaddr} g_acm_ms.iManufacturer=TechNexion; run videoargs\0" \
 	"loadfit=fatload mmc ${mmcdev} 0x17880000 tnrescue.itb\0" \
-	"fitboot=echo Booting from FIT image...; " \
-		"run fitargs; echo ${bootargs}; " \
-		"bootm 17880000#config@${som}-${form}_${baseboard};\0"
+	"fitboot=run setfdt; run fitargs; bootm 17880000#config@${som}-${form}${fitboard};\0"
 
 #define CONFIG_BOOTCOMMAND \
 	   "mmc dev ${mmcdev}; if mmc rescan; then " \
+		   "run searchbootdev; " \
 		   "if run loadbootenv; then " \
 			   "echo Loaded environment from ${bootenv};" \
 			   "run importbootenv;" \

@@ -192,8 +192,10 @@
 	"mmcpart=" __stringify(CONFIG_SYS_MMC_IMG_LOAD_PART) "\0" \
 	"searchbootdev=" \
 		"if test ${bootdev} = SD0; then " \
+			"setenv mmcrootdev /dev/mmcblk2; " \
 			"setenv mmcroot /dev/mmcblk2p2 rootwait rw; " \
 		"else " \
+			"setenv mmcrootdev /dev/mmcblk0; " \
 			"setenv mmcroot /dev/mmcblk0p2 rootwait rw; " \
 		"fi\0" \
 	"mmcautodetect=yes\0" \
@@ -204,11 +206,10 @@
 	"bootscript=echo Running bootscript from mmc ...; " \
 		"source\0" \
 	"loadimage=fatload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${image}\0" \
-	"setfdt=setenv fdt_file ${som}-${baseboard}.dtb\0" \
+	"setfdt=setenv fdt_file ${som}-${baseboard}.dtb; setenv fitboard _${baseboard};\0" \
 	"loadfdt=fatload mmc ${mmcdev}:${mmcpart} ${fdt_addr} ${fdt_file}\0" \
 	"mmcboot=echo Booting from mmc ...; " \
 		"run m4boot; " \
-		"run searchbootdev; " \
 		"run mmcargs; " \
 		"echo ${bootargs}; " \
 		"echo baseboard is ${baseboard}; " \
@@ -265,12 +266,13 @@
 		"fi;\0" \
 	"loadfit=fatload mmc ${mmcdev}:${mmcpart} 0x87880000 tnrescue.itb\0" \
 	"fit_args=setenv bootargs console=${console},${baudrate} root=/dev/ram0 rootwait rw " \
-		"modules-load=g_acm_ms g_acm_ms.stall=0 g_acm_ms.removable=1 g_acm_ms.file=/dev/mmcblk${mmcdev} " \
+		"modules-load=g_acm_ms g_acm_ms.stall=0 g_acm_ms.removable=1 g_acm_ms.file=/dev/${mmcrootdev} " \
 		"g_acm_ms.iSerialNumber=${ethaddr} g_acm_ms.iManufacturer=TechNexion\0" \
-	"fitboot=run fit_args; echo ${bootargs}; bootm 87880000#config@${som}-${form}_${baseboard};\0"
+	"fitboot=run setfdt; run fit_args; echo ${bootargs}; bootm 87880000#config@${som}-${form}${fitboard};\0"
 
 #define CONFIG_BOOTCOMMAND \
 	   "mmc dev ${mmcdev}; if mmc rescan; then " \
+		   "run searchbootdev; " \
 		   "if run loadbootenv; then " \
 			   "echo Loaded environment from ${bootenv};" \
 			   "run importbootenv;" \
