@@ -1,0 +1,156 @@
+# set common enviornment settings/scripts
+# i.e. booti or bootz, and proper device tree file name for all technexion boards
+setenv findcmd 'if test ${soc} = imx8m; then setenv cmdboot booti; setenv imagefile Image; else setenv cmdboot bootz; setenv imagefile zImage; fi'
+# note: only search 1st and 2nd partitions for /sbin/init for TN's conventional disk image setup
+setenv findroot '
+for devp in 1 2; do
+  if test -e ${devtype} ${devnum}:${devp} /sbin/init; then
+    part uuid ${devtype} ${devnum}:${devp} rootuuid;
+    setenv mmcroot /dev/mmcblk${devnum}p${devp};
+    setenv mmcrootdev /dev/mmcblk${devnum};
+  fi;
+done;
+'
+# note: this is the part where TN modify according to our dtb naming rules
+setenv findfdt '
+  setenv has_fdt 0;
+  if test -n ${som} && test -n ${form} && test -n ${baseboard}; then
+    setenv fdtname ${som}-${form}-${baseboard}
+
+    if test ${som} = imx8mm ; then
+      if test -n ${bridge} ; then
+        setenv fdtname ${fdtname}-${bridge};
+      fi;
+      if test -n ${panel}; then
+        setenv fdtname ${fdtname}-${panel};
+      else
+        if test -n ${voicehat} ; then
+          setenv fdtname ${fdtname}-${voicehat};
+        fi;
+        if itest ${has_m4} == 1; then
+          setenv fdtname ${fdtname}-m4;
+        fi;
+      fi;
+    fi;
+
+    if test ${som} = imx8mq ; then
+      if test -m ${dispif} ; then
+        setenv fdtname ${fdtname}-${dispif};
+        if test -n ${bridge} ; then
+          setenv fdtname ${fdtname}-${bridge};
+        fi;
+        if test -n ${panel}; then
+          setenv fdtname ${fdtname}-${panel};
+        fi;
+      else
+        if test -n ${voicehat} ; then
+          setenv fdtname ${fdtname}-${voicehat};
+        fi;
+        if itest ${has_m4} == 1; then
+          setenv fdtname ${fdtname}-m4;
+        fi;
+      fi;
+    fi;
+
+    if test ${soc} = imx7d || test ${soc} = mx6 ; then
+      if test -n ${wifi_module} ; then
+        setenv fdtname ${fdtname}-${wifi_module};
+      fi;
+      if itest ${has_m4} == 1; then
+        setenv fdtname ${fdtname}-m4;
+      fi;
+    fi;
+
+    setenv fdtfile ${fdtname}.dtb;
+  else
+    echo WARNING: No suitable som, form and baseboard defined...;
+  fi;
+  if test ${fdtfile} = undefined; then
+    echo WARNING: Could not find a suitable dtb to use...;
+  fi;
+  if test -e ${devtype} ${devnum}:${distro_bootpart} ${prefix}${fdtfile}; then
+    setenv has_fdt 1;
+  fi;
+'
+# sets the video=... bootargs
+setenv findvideo '
+  setenv nextcon 0;
+  setenv videoargs ' ';
+  if test -n ${displayinfo}; then
+    setenv videoargs ${displayinfo}
+    if test -n ${fbmem} ; then
+      setenv videoargs ${videoargs} ${fbmem};
+    fi;
+  else
+    if test ${soc} = imx8m || test ${som} = imx6q || test ${som} = imx6dl ; then
+      if test ${panel} = "FT5x06"* || itest ${has_touch} == 1; then
+        setenv videoargs ${videoargs} video=mxcfb${nextcon}:dev=lcd,800x480@60,if=RGB24 fbmem=10M;
+        setexpr nextcon ${nextcon} + 1;
+      fi;
+    fi;
+    if hdmidet; then
+      setenv videoargs ${videoargs} video=mxcfb${nextcon}:dev=hdmi,1280x720M@60,if=RGB24 fbmem=28M;
+      setexpr nextcon ${nextcon} + 1;
+    fi;
+  fi;
+'
+
+# set uEnv.txt related environment settings/scripts
+setenv load_uenv_txt 'fatload ${devtype} ${devnum}:${distro_bootpart} ${loadaddr} ${prefix}${bootenv}; env import -t ${loadaddr} ${filesize};'
+setenv scan_dev_for_uenv_txt 'if test -e ${devtype} ${devnum}:${distro_bootpart} ${prefix}${bootenv}; then echo Found envronment setting ${prefix}${bootenv}; run load_uenv_txt; else echo Load envronment setting ${prefix}${bootenv} FAILED: continuing...; fi;'
+setenv callback_uenv_cmd 'if test -n ${uenvcmd}; then echo Running defined uenvcmd from ${prefix}${bootenv}; run uenvcmd; fi;'
+
+# set m4 related environment settings/scripts
+setenv m4boot 'fatload ${devtype} ${devnum}:${distro_bootpart} ${m4_addr} ${m4image}; dcache flush; bootaux ${m4_addr}'
+setenv scan_dev_for_m4_image 'if itest ${has_m4} == 1 && test -e ${devtype} ${devnum}:${distro_bootpart} ${prefix}${m4image}; then echo Found m4 image ${prefix}${m4image}; run m4boot; else echo Load m4 image ${prefix}${m4image} FAILED: continuing...; fi;'
+
+# set rescue related environment settings/scripts
+setenv boot_rescue_binary 'setenv bootargs ${jh_clk} ${videoargs} console=${console} root=/dev/ram0 rootwait rw modules-load=g_acm_ms g_acm_ms.stall=0 g_acm_ms.removable=1 g_acm_ms.file=${mmcrootdev} g_acm_ms.iSerialNumber=${ethaddr} g_acm_ms.iManufacturer=TechNexion; fatload ${devtype} ${devnum}:${distro_bootpart} ${fit_addr} ${prefix}${rescuefile}; bootm ${fit_addr}#config@${fdtname}'
+setenv scan_dev_for_rescue_files 'if test -e ${devtype} ${devnum}:${distro_bootpart} ${prefix}${rescuefile}; then echo Boot rescue image ${prefix}${rescuefile}; run boot_rescue_binary; else echo Load rescue image ${prefix}${rescuefile} FAILED: continuing...; fi;'
+
+# setup boot args, load image and fdt file
+setenv boot_mmc_binary 'echo Booting from ${devtype}${devnum}; setenv bootargs ${jh_clk} ${videoargs} console=${console} root=PARTUUID=${rootuuid} rootwait rw; ${cmdboot} ${loadaddr} - ${fdt_addr};'
+setenv loadimage 'fatload ${devtype} ${devnum}:${distro_bootpart} ${loadaddr} ${prefix}${imagefile}'
+setenv loadfdt 'if itest ${has_fdt} == 1 ; then echo Found device tree file ${prefix}${fdtfile}; fatload ${devtype} ${devnum}:${distro_bootpart} ${fdt_addr} ${prefix}${fdtfile}; run boot_mmc_binary; else echo Load device tree file ${prefix}${fdtfile} FAILED: continuing...; fi;'
+setenv scan_dev_for_boot_files 'if test -e ${devtype} ${devnum}:${distro_bootpart} ${prefix}${imagefile}; then echo Load kernel image ${prefix}${imagefile}; run loadimage; run loadfdt; else echo Load kernel image ${prefix}${imagefile} FAILED: continuing...; fi;'
+
+
+
+#
+# Start by setting som to $soc_type
+#
+setenv som ${soc_type}
+
+#
+# Load the uEnv.txt first
+#
+run scan_dev_for_uenv_txt;
+
+#
+# Load m4 if the som supports it
+#
+run scan_dev_for_m4_image;
+
+#
+# find a suitable fdt file to load
+#
+run findcmd;
+run findroot;
+run findfdt;
+run findvideo;
+
+#
+# call back to uenv_cmd script defined in uEnv.txt to do last minute changes before rescue/mmc boot
+#
+run callback_uenv_cmd;
+
+#
+# Load rescue image if it is in mmc storage media
+#
+run scan_dev_for_rescue_files;
+
+#
+# Load kernel image, fdb from mmc storage media
+#
+run scan_dev_for_boot_files;
+
