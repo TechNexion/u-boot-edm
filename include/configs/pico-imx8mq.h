@@ -26,6 +26,8 @@
 #define CONFIG_SYS_MMCSD_RAW_MODE_U_BOOT_SECTOR	0x300
 #define CONFIG_SYS_MMCSD_FS_BOOT_PARTITION	1
 
+#define CONFIG_ENV_VARS_UBOOT_RUNTIME_CONFIG
+
 #ifdef CONFIG_SPL_BUILD
 /*#define CONFIG_ENABLE_DDR_TRAINING_DEBUG*/
 #define CONFIG_SPL_WATCHDOG_SUPPORT
@@ -38,7 +40,6 @@
 #define CONFIG_SPL_LIBGENERIC_SUPPORT
 #define CONFIG_SPL_SERIAL_SUPPORT
 #define CONFIG_SPL_GPIO_SUPPORT
-#define CONFIG_SPL_MMC_SUPPORT
 #define CONFIG_SPL_BSS_START_ADDR      0x00180000
 #define CONFIG_SPL_BSS_MAX_SIZE        0x2000	/* 8 KB */
 #define CONFIG_SYS_SPL_MALLOC_START    0x42200000
@@ -59,8 +60,6 @@
 #define CONFIG_SYS_I2C_MXC_I2C1		/* enable I2C bus 1 */
 #define CONFIG_SYS_I2C_MXC_I2C2		/* enable I2C bus 2 */
 #define CONFIG_SYS_I2C_MXC_I2C3		/* enable I2C bus 3 */
-
-#define CONFIG_ENV_VARS_UBOOT_RUNTIME_CONFIG
 
 #define CONFIG_POWER
 #define CONFIG_POWER_I2C
@@ -86,9 +85,6 @@
 /* ENET Config */
 /* ENET1 */
 #if defined(CONFIG_CMD_NET)
-#define CONFIG_CMD_PING
-#define CONFIG_CMD_DHCP
-#define CONFIG_CMD_MII
 #define CONFIG_MII
 #define CONFIG_ETHPRIME                 "FEC"
 
@@ -113,118 +109,51 @@
 	"jh_mmcboot=setenv fdt_file fsl-imx8mq-evk-root.dtb; " \
 		"setenv jh_clk clk_ignore_unused; " \
 			   "if run loadimage; then " \
-				   "run mmcboot; " \
+				   "run bootcmd_mmc"__stringify(CONFIG_SYS_MMC_ENV_DEV)"; " \
 			   "else run jh_netboot; fi; \0" \
-	"jh_netboot=setenv fdt_file fsl-imx8mq-evk-root.dtb; setenv jh_clk clk_ignore_unused; run netboot; \0 "
+	"jh_netboot=setenv fdt_file fsl-imx8mq-evk-root.dtb; setenv jh_clk clk_ignore_unused; run bootcmd_dhcp; \0 "
 
 #define CONFIG_MFG_ENV_SETTINGS \
 	CONFIG_MFG_ENV_SETTINGS_DEFAULT \
 	"initrd_addr=0x43800000\0" \
 	"initrd_high=0xffffffffffffffff\0" \
 	"emmc_dev=0\0"\
-	"sd_dev=1\0" \
+	"sd_dev=1\0"
 
 /* M4 specific */
 #define SYS_AUXCORE_BOOTDATA_DDR	0x80000000
 #define SYS_AUXCORE_BOOTDATA_TCM	0x007E0000
 
 /* Initial environment variables */
-#define CONFIG_EXTRA_ENV_SETTINGS		\
+#define CONFIG_EXTRA_ENV_SETTINGS \
 	CONFIG_MFG_ENV_SETTINGS \
 	JAILHOUSE_ENV \
-	"script=boot.scr\0" \
-	"image=Image\0" \
 	"console=ttymxc0,115200 earlycon=ec_imx6q,0x30860000,115200\0" \
 	"splashpos=m,m\0" \
-	"fdt_addr=0x43000000\0"			\
-	"fdt_high=0xffffffffffffffff\0"		\
-	"boot_fdt=try\0" \
-	"fdt_file=undefined\0" \
-	"initrd_addr=0x43800000\0"		\
-	"initrd_high=0xffffffffffffffff\0" \
+	"ip_dyn=yes\0" \
+	"fdtfile=undefined\0" \
+	"fdt_high=0xffffffff\0" \
+	"fdt_addr=0x43000000\0" \
+	"fdt_addr_r=0x43000000\0" \
+	"ramdisk_addr_r=0x43800000\0" \
+	"kernel_addr_r="__stringify(CONFIG_LOADADDR)"\0" \
+	"pxefile_addr_r="__stringify(CONFIG_LOADADDR)"\0" \
+	"scriptaddr="__stringify(CONFIG_LOADADDR)"\0" \
+	"initrd_high=0xffffffff\0" \
+	"initrd_addr=0x43800000\0" \
 	"m4image=hello_world.bin\0" \
-	"m4loadaddr="__stringify(SYS_AUXCORE_BOOTDATA_TCM)"\0" \
-	"m4boot=fatload mmc ${mmcdev}:${mmcpart} ${m4loadaddr} ${m4image}; " \
-	"dcache flush; bootaux ${m4loadaddr}\0" \
-	"mmcdev="__stringify(CONFIG_SYS_MMC_ENV_DEV)"\0" \
-	"mmcpart=" __stringify(CONFIG_SYS_MMC_IMG_LOAD_PART) "\0" \
-	"mmcroot=" CONFIG_MMCROOT " rootwait rw\0" \
-	"mmcautodetect=yes\0" \
-	"mmcargs=setenv bootargs ${jh_clk} console=${console} root=${mmcroot}\0 " \
-	"UMS=ums 0 mmc ${mmcdev}\0" \
-	"loadbootscript=fatload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${script};\0" \
-	"bootscript=echo Running bootscript from mmc ...; " \
-		"source\0" \
-	"loadimage=fatload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${image}\0" \
-	"loadfdt=fatload mmc ${mmcdev}:${mmcpart} ${fdt_addr} ${fdt_file}\0" \
+	"m4_addr="__stringify(SYS_AUXCORE_BOOTDATA_TCM)"\0" \
 	"bootenv=uEnv.txt\0" \
-	"loadbootenv=fatload mmc ${mmcdev} ${loadaddr} ${bootenv}\0" \
-	"importbootenv=echo Importing environment from mmc ...; " \
-		"env import -t -r $loadaddr $filesize\0" \
-	"mmcboot=echo Booting from mmc ...; " \
-		"run mmcargs; " \
-		"if test ${boot_fdt} = yes || test ${boot_fdt} = try; then " \
-			"if run loadfdt; then " \
-				"booti ${loadaddr} - ${fdt_addr}; " \
-			"else " \
-				"echo WARN: Cannot load the DT; " \
-			"fi; " \
-		"else " \
-			"echo wait for boot; " \
-		"fi;\0" \
-	"netargs=setenv bootargs ${jh_clk} console=${console} " \
-		"root=/dev/nfs " \
-		"ip=dhcp nfsroot=${serverip}:${nfsroot},v3,tcp\0" \
-	"netboot=echo Booting from net ...; " \
-		"run netargs;  " \
-		"if test ${ip_dyn} = yes; then " \
-			"setenv get_cmd dhcp; " \
-		"else " \
-			"setenv get_cmd tftp; " \
-		"fi; " \
-		"${get_cmd} ${loadaddr} ${image}; " \
-		"if test ${boot_fdt} = yes || test ${boot_fdt} = try; then " \
-			"if ${get_cmd} ${fdt_addr} ${fdt_file}; then " \
-				"booti ${loadaddr} - ${fdt_addr}; " \
-			"else " \
-				"echo WARN: Cannot load the DT; " \
-			"fi; " \
-		"else " \
-			"booti; " \
-		"fi;\0" \
-	"fitboard=pi_hdmi\0" \
+	"rescuefile=tnrescue.itb\0" \
 	"fit_addr=0x45800000\0" \
-	"fit_high=0xffffffff\0" \
-	"fitargs=setenv bootargs ${jh_clk} console=${console} root=/dev/ram0 rootwait rw " \
-		"modules-load=g_acm_ms g_acm_ms.stall=0 g_acm_ms.removable=1 g_acm_ms.file=/dev/mmcblk2 " \
-		"g_acm_ms.iSerialNumber=${ethaddr} g_acm_ms.iManufacturer=TechNexion\0" \
-	"loadfit=fatload mmc ${mmcdev}:${mmcpart} ${fit_addr} tnrescue.itb\0" \
-	"fitboot=echo Booting from FIT image ...; " \
-		"run fitargs; " \
-		"bootm ${fit_addr}#config@${soc_type}_${fitboard}\0"
+	BOOTENV
 
-#define CONFIG_BOOTCOMMAND \
-	   "mmc dev ${mmcdev}; if mmc rescan; then " \
-		   "if run loadbootenv; then " \
-			   "echo Loaded environment from ${bootenv}; " \
-			   "run importbootenv; " \
-		   "fi; " \
-		   "if test -n $uenvcmd; then " \
-			   "echo Running uenvcmd ...; " \
-			   "run uenvcmd; " \
-		   "fi; " \
-		   "if run loadbootscript; then " \
-			   "run bootscript; " \
-		   "fi; " \
-		   "if run loadfit; then " \
-			   "run fitboot; " \
-		   "fi; " \
-		   "if run loadimage; then " \
-			   "run mmcboot; " \
-		   "else " \
-			   "echo WARN: Cannot load kernel from boot media; " \
-		   "fi; " \
-	   "else run netboot; fi"
+#define BOOT_TARGET_DEVICES(func) \
+	func(MMC, mmc, 0) \
+	func(MMC, mmc, 1) \
+	func(DHCP, dhcp, na)
+
+#include <config_distro_bootcmd.h>
 
 /* Link Definitions */
 #define CONFIG_LOADADDR			0x40480000
@@ -239,8 +168,8 @@
         (CONFIG_SYS_INIT_RAM_ADDR + CONFIG_SYS_INIT_SP_OFFSET)
 
 #define CONFIG_ENV_OVERWRITE
-#define CONFIG_ENV_OFFSET               (64 * SZ_64K)
-#define CONFIG_ENV_SIZE			0x1000
+#define CONFIG_ENV_OFFSET               (64 * SZ_64K) /* at 4MB (sector 8192) */
+#define CONFIG_ENV_SIZE			0x3000 /* 12,288 bytes (24 sectors) */
 #define CONFIG_SYS_MMC_ENV_DEV		1   /* USDHC2 */
 #define CONFIG_MMCROOT			"/dev/mmcblk1p2"  /* USDHC2 */
 
@@ -277,7 +206,6 @@
 
 #define CONFIG_IMX_BOOTAUX
 
-#define CONFIG_CMD_MMC
 #define CONFIG_FSL_ESDHC
 #define CONFIG_FSL_USDHC
 
