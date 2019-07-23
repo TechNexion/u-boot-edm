@@ -19,9 +19,6 @@
 			load = <0x40480000>;
 			entry = <0x40480000>;
 			hash@1 {
-				algo = "md5";
-			};
-			hash@2 {
 				algo = "sha1";
 			};
 		};
@@ -41,21 +38,6 @@
 		};
 
 		fdt@1 {
-			description = "Pico imx8mm flat device tree blob for MIPI 5 inch panel";
-			data = /incbin/("./dtb/imx8mm-pico-pi-ili9881c.dtb");
-			type = "flat_dt";
-			arch = "arm64";
-			compression = "none";
-			load = <0x43000000>;
-			hash@1 {
-				algo = "crc32";
-			};
-			hash@2 {
-				algo = "sha1";
-			};
-		};
-
-		fdt@2 {
 			description = "Pico imx8mm flat device tree blob for no display";
 			data = /incbin/("./dtb/imx8mm-pico-pi.dtb");
 			type = "flat_dt";
@@ -63,29 +45,144 @@
 			compression = "none";
 			load = <0x43000000>;
 			hash@1 {
-				algo = "crc32";
-			};
-			hash@2 {
 				algo = "sha1";
 			};
 		};
+
+		fdt@2 {
+			description = "Pico imx8mm flat device tree blob for MIPI 5 inch panel";
+			data = /incbin/("./dtb/imx8mm-pico-pi-ili9881c.dtb");
+			type = "flat_dt";
+			arch = "arm64";
+			compression = "none";
+			load = <0x43000000>;
+			hash@1 {
+				algo = "sha1";
+			};
+		};
+
+		fdt@3 {
+			description = "Pico imx8mm flat device tree blob for MIPI 8 inch panel";
+			data = /incbin/("./dtb/imx8mm-pico-pi-g080uan01.dtb");
+			type = "flat_dt";
+			arch = "arm64";
+			compression = "none";
+			load = <0x43000000>;
+			hash@1 {
+				algo = "sha1";
+			};
+		};
+
+		fdt@4 {
+			description = "Pico imx8mm flat device tree blob for MIPI 10 inch panel";
+			data = /incbin/("./dtb/imx8mm-pico-pi-g101uan02.dtb");
+			type = "flat_dt";
+			arch = "arm64";
+			compression = "none";
+			load = <0x43000000>;
+			hash@1 {
+				algo = "sha1";
+			};
+		};
+
+		fdt@5 {
+			description = "Pico imx8mm flat device tree blob for MIPI-LVDS bridge to 7 inch panel";
+			data = /incbin/("./dtb/imx8mm-pico-pi-sn65dsi84-hj070na.dtb");
+			type = "flat_dt";
+			arch = "arm64";
+			compression = "none";
+			load = <0x43000000>;
+			hash@1 {
+				algo = "sha1";
+			};
+		};
+
+		fdt@6 {
+			description = "Pico imx8mm flat device tree blob for MIPI-LVDS bridge to 10 inch panel";
+			data = /incbin/("./dtb/imx8mm-pico-pi-sn65dsi84-m101nwwb.dtb");
+			type = "flat_dt";
+			arch = "arm64";
+			compression = "none";
+			load = <0x43000000>;
+			hash@1 {
+				algo = "sha1";
+			};
+		};
+
+		fdt@7 {
+			description = "Pico imx8mm flat device tree blob with m4 MCU";
+			data = /incbin/("./dtb/imx8mm-pico-pi-m4.dtb");
+			type = "flat_dt";
+			arch = "arm64";
+			compression = "none";
+			load = <0x43000000>;
+			hash@1 {
+				algo = "sha1";
+			};
+		};
+
+		fdt@8 {
+			description = "Pico imx8mm flat device tree blob for VoiceHat";
+			data = /incbin/("./dtb/imx8mm-pico-pi-voicehat.dtb");
+			type = "flat_dt";
+			arch = "arm64";
+			compression = "none";
+			load = <0x43000000>;
+			hash@1 {
+				algo = "sha1";
+			};
+		};
+
 	};
 
 	configurations {
-		default = "config@imx8mm_pi_mipi";
-
-		config@imx8mm_pi_mipi {
+		config@imx8mm-pico-pi {
 			description = "Boot IMX8mm with MIPI";
 			kernel = "kernel@1";
 			ramdisk = "ramdisk@1";
 			fdt = "fdt@1";
 		};
-
-		config@imx8mm_pi {
-			description = "Boot IMX8mm with no display";
+		config@imx8mm-pico-pi-ili9881c {
+			description = "Boot IMX8mm with 5' mipi";
 			kernel = "kernel@1";
 			ramdisk = "ramdisk@1";
 			fdt = "fdt@2";
+		};
+		config@imx8mm-pico-pi-g080uan01 {
+			description = "Boot IMX8mm with 8' mipi";
+			kernel = "kernel@1";
+			ramdisk = "ramdisk@1";
+			fdt = "fdt@3";
+		};
+		config@imx8mm-pico-pi-g101uan02 {
+			description = "Boot IMX8mm with 10' mipi";
+			kernel = "kernel@1";
+			ramdisk = "ramdisk@1";
+			fdt = "fdt@4";
+		};
+		config@imx8mm-pico-pi-sn65dsi84-hj070na {
+			description = "Boot IMX8mm with bridged lvds 7' panel";
+			kernel = "kernel@1";
+			ramdisk = "ramdisk@1";
+			fdt = "fdt@5";
+		};
+		config@imx8mm-pico-pi-sn65dsi84-m101nwwb {
+			description = "Boot IMX8mm with bridged lvds 10' panel";
+			kernel = "kernel@1";
+			ramdisk = "ramdisk@1";
+			fdt = "fdt@6";
+		};
+		config@imx8mm-pico-pi-m4 {
+			description = "Boot IMX8mm with m4 MCU";
+			kernel = "kernel@1";
+			ramdisk = "ramdisk@1";
+			fdt = "fdt@7";
+		};
+		config@imx8mm-pico-pi-voicehat {
+			description = "Boot IMX8mm with voicehat";
+			kernel = "kernel@1";
+			ramdisk = "ramdisk@1";
+			fdt = "fdt@8";
 		};
 	};
 };
