@@ -410,28 +410,37 @@ size_t display_count = ARRAY_SIZE(displays);
 
 #define FT5336_TOUCH_I2C_BUS 0
 #define FT5336_TOUCH_I2C_ADDR 0x38
+int detect_touch(void) {
+	struct udevice *bus;
+	struct udevice *i2c_dev = NULL;
+	int ret = 0;
+
+	ret = uclass_get_device_by_seq(UCLASS_I2C, FT5336_TOUCH_I2C_BUS, &bus);
+	if (ret) {
+		printf("%s: Can't find bus\n", __func__);
+		return -EINVAL;
+	}
+	ret = dm_i2c_probe(bus, FT5336_TOUCH_I2C_ADDR, 0, &i2c_dev);
+#ifdef CONFIG_ENV_VARS_UBOOT_RUNTIME_CONFIG
+	if (ret) {
+		env_set("has_touch", "0");
+	} else {
+		env_set("has_touch", "1");
+	}
+#endif
+	return ret;
+}
 
 int board_late_init(void)
 {
-	struct udevice *bus;
-	struct udevice *i2c_dev = NULL;
-	int ret;
-	char *fdt_file;
+	int ret = 0;
 
-	fdt_file = env_get("fdt_file");
-	if (fdt_file && !strcmp(fdt_file, "undefined")) {
-		ret = uclass_get_device_by_seq(UCLASS_I2C, FT5336_TOUCH_I2C_BUS, &bus);
-		if (ret) {
-			printf("%s: Can't find bus\n", __func__);
-			return -EINVAL;
-		}
+#ifdef CONFIG_ENV_VARS_UBOOT_RUNTIME_CONFIG
+	env_set("form", "flex");
+	env_set("has_m4", "1");
+#endif
 
-		ret = dm_i2c_probe(bus, FT5336_TOUCH_I2C_ADDR, 0, &i2c_dev);
-		if (ret)
-			env_set("fdt_file", "imx8mm-flex-pi.dtb");
-		else
-			env_set("fdt_file", "imx8mm-flex-pi-ili9881c.dtb");
-	}
+	ret = detect_touch();
 
 #ifdef CONFIG_ENV_IS_IN_MMC
 	board_late_mmc_env_init();
