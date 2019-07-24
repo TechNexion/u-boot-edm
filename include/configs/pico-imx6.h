@@ -19,6 +19,8 @@
 #include "imx6_spl.h"
 #endif
 
+#define CONFIG_SYS_BOOTM_LEN       0xA000000
+
 #define CONFIG_DISPLAY_BOARDINFO_LATE  /* display board info (after reloc) */
 
 #define CONFIG_CMDLINE_TAG
@@ -96,7 +98,6 @@
 #define CONFIG_VIDEO_LOGO
 #define CONFIG_VIDEO_BMP_LOGO
 /* #define CONFIG_IPUV3_CLK 260000000 -- not used, IPUV3_CLK_MX6Q is 26400000, IPUV3_CLK_MX6DL is 19800000 */
-#define CONFIG_CMD_HDMIDETECT
 #define CONFIG_IMX_HDMI
 #define CONFIG_IMX_VIDEO_SKIP
 
@@ -107,166 +108,30 @@
 
 #define CONFIG_ENV_VARS_UBOOT_RUNTIME_CONFIG
 #define CONFIG_EXTRA_ENV_SETTINGS \
-	"script=boot.scr\0" \
-	"image=zImage\0" \
-	"console=ttymxc0\0" \
+	"console=ttymxc0,"__stringify(CONFIG_BAUDRATE)"\0" \
 	"splashpos=m,m\0" \
-	"som=autodetect\0" \
-	"form=pico\0" \
-	"baseboard=pi\0" \
-	"wifi_module=qca\0" \
-	"default_baseboard=pi\0" \
+	"ip_dyn=no\0" \
 	"fdtfile=undefined\0" \
 	"fdt_high=0xffffffff\0" \
-	"initrd_high=0xffffffff\0" \
 	"fdt_addr=0x18000000\0" \
-	"ip_dyn=no\0" \
-	"mmcdev=" __stringify(CONFIG_SYS_MMC_ENV_DEV) "\0" \
-	"mmcpart=1\0" \
-	"searchbootdev=" \
-		"if test ${bootdev} = SD0; then " \
-			"setenv mmcrootdev /dev/mmcblk2; " \
-			"setenv mmcroot /dev/mmcblk2p2 rootwait rw; " \
-		"else " \
-			"setenv mmcrootdev /dev/mmcblk0; " \
-			"setenv mmcroot /dev/mmcblk0p2 rootwait rw; " \
-		"fi\0" \
-	"mmcargs=setenv bootargs console=${console},${baudrate} " \
-		"root=${mmcroot}; run videoargs\0" \
-	"fdtfile_autodetect=on\0" \
-	"bootdev_autodetect=on\0" \
-	"display_autodetect=on\0" \
-	"videoargs=" \
-		"if test ${display_autodetect} = off; then " \
-			"echo Applying custom display setting...;" \
-			"setenv bootargs ${bootargs} ${displayinfo} ${fbmem};" \
-		"else " \
-			"echo Detecting monitor...;" \
-			"setenv nextcon 0; " \
-			"i2c dev 1; " \
-			"if i2c probe 0x38; then " \
-				"setenv bootargs ${bootargs} " \
-					"video=mxcfb${nextcon}:dev=lcd,800x480@60," \
-						"if=RGB24; " \
-				"if test 0 -eq ${nextcon}; then " \
-					"setenv fbmem fbmem=10M; " \
-				"else " \
-					"setenv fbmem ${fbmem},10M; " \
-				"fi; " \
-				"setexpr nextcon ${nextcon} + 1; " \
-			"else " \
-				"echo '- no FT5x06 touch display';" \
-			"fi; " \
-			"if hdmidet; then " \
-				"setenv bootargs ${bootargs} " \
-					"video=mxcfb${nextcon}:dev=hdmi,1280x720M@60," \
-						"if=RGB24; " \
-				"setenv fbmem fbmem=28M; " \
-				"setexpr nextcon ${nextcon} + 1; " \
-			"else " \
-				"echo - no HDMI monitor;" \
-			"fi; " \
-			"setenv bootargs ${bootargs} ${fbmem};" \
-		"fi;\0" \
-	"loadbootscript=" \
-		"fatload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${script};\0" \
-	"bootscript=echo Running bootscript from mmc ...; " \
-		"source\0" \
-	"loadimage=fatload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${image}\0" \
-	"setfdt=" \
-		"if test -n ${wifi_module} && test ${wifi_module} = qca; then " \
-			"setenv fdtfile ${som}-${form}-${wifi_module}_${baseboard}.dtb; " \
-			"setenv form ${form}-${wifi_module}; " \
-		"else " \
-			"setenv fdtfile ${som}-${form}_${baseboard}.dtb;" \
-		"fi\0" \
-	"loadfdt=fatload mmc ${mmcdev}:${mmcpart} ${fdt_addr} ${fdtfile}\0" \
-	"mmcboot=echo Booting from mmc ...; " \
-		"run searchbootdev; " \
-		"run mmcargs; " \
-		"echo baseboard is ${baseboard}; " \
-		"run setfdt; " \
-		"if test ${boot_fdt} = yes || test ${boot_fdt} = try; then " \
-			"if run loadfdt; then " \
-				"bootz ${loadaddr} - ${fdt_addr}; " \
-			"else " \
-				"if test ${boot_fdt} = try; then " \
-					"echo WARN: Cannot load the DT; " \
-					"echo fall back to load the default DT; " \
-					"setenv baseboard ${default_baseboard}; " \
-					"run setfdt; " \
-					"run loadfdt; " \
-					"bootz ${loadaddr} - ${fdt_addr}; " \
-				"else " \
-					"echo WARN: Cannot load the DT; " \
-				"fi; " \
-			"fi; " \
-		"else " \
-			"bootz; " \
-		"fi;\0" \
+	"fdt_addr_r=0x18000000\0" \
+	"ramdisk_addr_r=0x18000000\0" \
+	"kernel_addr_r="__stringify(CONFIG_LOADADDR)"\0" \
+	"pxefile_addr_r="__stringify(CONFIG_LOADADDR)"\0" \
+	"scriptaddr="__stringify(CONFIG_LOADADDR)"\0" \
+	"initrd_high=0xffffffff\0" \
+	"initrd_addr==0x18000000\0" \
 	"bootenv=uEnv.txt\0" \
-	"loadbootenv=fatload mmc ${mmcdev} ${loadaddr} ${bootenv}\0" \
-	"importbootenv=echo Importing environment from mmc ...; " \
-		"env import -t -r $loadaddr $filesize\0" \
-	"netargs=setenv bootargs console=${console},${baudrate} " \
-		"root=/dev/nfs " \
-		"ip=${ipaddr} nfsroot=${serverip}:${nfsroot},v3,tcp rw; run videoargs\0" \
-	"netboot=echo Booting from net ...; " \
-		"if test ${ip_dyn} = yes; then " \
-			"setenv get_cmd dhcp; " \
-		"else " \
-			"setenv get_cmd tftp; " \
-		"fi; " \
-		"run loadbootenv; " \
-		"run importbootenv; " \
-		"run setfdt; " \
-		"run netargs; " \
-		"${get_cmd} ${loadaddr} ${image}; " \
-		"if test ${boot_fdt} = yes || test ${boot_fdt} = try; then " \
-			"if ${get_cmd} ${fdt_addr} ${fdtfile}; then " \
-				"bootz ${loadaddr} - ${fdt_addr}; " \
-			"else " \
-				"if test ${boot_fdt} = try; then " \
-					"bootz; " \
-				"else " \
-					"echo WARN: Cannot load the DT; " \
-				"fi; " \
-			"fi; " \
-		"else " \
-			"bootz; " \
-		"fi;\0" \
+	"rescuefile=tnrescue.itb\0" \
 	"fit_addr=0x21100000\0" \
-	"fit_high=0xffffffff\0" \
-	"fitargs=setenv bootargs console=${console},${baudrate} root=/dev/ram0 rootwait rw " \
-		"modules-load=g_acm_ms g_acm_ms.stall=0 g_acm_ms.removable=1 g_acm_ms.file=${mmcrootdev} " \
-		"g_acm_ms.iSerialNumber=${ethaddr} g_acm_ms.iManufacturer=TechNexion; run videoargs\0" \
-	"loadfit=fatload mmc ${mmcdev} ${fit_addr} tnrescue.itb\0" \
-	"fitboot=echo Booting from FIT image...; " \
-		"run searchbootdev; run setfdt; run fitargs; " \
-		"bootm ${fit_addr}#config@${som}-${form}_${baseboard};\0"
+	BOOTENV
 
-#define CONFIG_BOOTCOMMAND \
-	   "mmc dev ${mmcdev}; if mmc rescan; then " \
-		   "if run loadbootenv; then " \
-			   "echo Loaded environment from ${bootenv};" \
-			   "run importbootenv;" \
-		   "fi;" \
-		   "if test -n $uenvcmd; then " \
-			   "echo Running uenvcmd ...;" \
-			   "run uenvcmd;" \
-		   "fi;" \
-		   "if run loadbootscript; then " \
-			   "run bootscript; " \
-		   "fi; " \
-		   "if run loadfit; then " \
-			   "run fitboot; " \
-		   "fi; " \
-		   "if run loadimage; then " \
-			   "run mmcboot; " \
-		   "else " \
-			   "echo WARN: Cannot load kernel from boot media; " \
-		   "fi; " \
-	   "else run netboot; fi"
+#define BOOT_TARGET_DEVICES(func) \
+	func(MMC, mmc, 0) \
+	func(MMC, mmc, 1) \
+	func(DHCP, dhcp, na)
+
+#include <config_distro_bootcmd.h>
 
 /* Miscellaneous configurable options */
 /* #define CONFIG_SYS_LONGHELP -- redefined */
@@ -290,10 +155,8 @@
 #define CONFIG_SYS_INIT_SP_ADDR \
 	(CONFIG_SYS_INIT_RAM_ADDR + CONFIG_SYS_INIT_SP_OFFSET)
 
-#define CONFIG_ENV_SIZE			(8 * 1024)
-
-#define CONFIG_ENV_IS_IN_MMC
-#define CONFIG_ENV_OFFSET		(6 * 64 * 1024)
+#define CONFIG_ENV_SIZE			0x3000 /* 12,288 bytes (24 sectors) */
+#define CONFIG_ENV_OFFSET		(8 * SZ_64K) /* at 512KB (sector 1024) address */
 #define CONFIG_SYS_MMC_ENV_DEV		0
 
 #if defined(CONFIG_ANDROID_SUPPORT)
