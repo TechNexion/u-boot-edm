@@ -19,9 +19,6 @@
 			load = <0x40480000>;
 			entry = <0x40480000>;
 			hash@1 {
-				algo = "md5";
-			};
-			hash@2 {
 				algo = "sha1";
 			};
 		};
@@ -41,51 +38,114 @@
 		};
 
 		fdt@1 {
-			description = "Pico imx8m flat device tree blob for HDMI";
+			description = "pico imx8mq for HDMI";
 			data = /incbin/("./dtb/imx8mq-pico-pi.dtb");
 			type = "flat_dt";
 			arch = "arm64";
 			compression = "none";
 			load = <0x43000000>;
 			hash@1 {
-				algo = "crc32";
-			};
-			hash@2 {
 				algo = "sha1";
 			};
 		};
 
 		fdt@2 {
-			description = "Pico imx8m flat device tree blob for MIPI DSI";
+			description = "pico imx8mq for 5' MIPI";
 			data = /incbin/("./dtb/imx8mq-pico-pi-dcss-ili9881c.dtb");
 			type = "flat_dt";
 			arch = "arm64";
 			compression = "none";
 			load = <0x43000000>;
 			hash@1 {
-				algo = "crc32";
+				algo = "sha1";
 			};
-			hash@2 {
+		};
+
+		fdt@3 {
+			description = "pico imx8mq for DUAL display";
+			data = /incbin/("./dtb/imx8mq-pico-pi-dual.dtb");
+			type = "flat_dt";
+			arch = "arm64";
+			compression = "none";
+			load = <0x43000000>;
+			hash@1 {
+				algo = "sha1";
+			};
+		};
+
+		fdt@4 {
+			description = "pico imx8mq for m4 MCU";
+			data = /incbin/("./dtb/imx8mq-pico-pi-m4.dtb");
+			type = "flat_dt";
+			arch = "arm64";
+			compression = "none";
+			load = <0x43000000>;
+			hash@1 {
+				algo = "sha1";
+			};
+		};
+
+		fdt@5 {
+			description = "pico imx8mq for voicehat";
+			data = /incbin/("./dtb/imx8mq-pico-pi-voicehat.dtb");
+			type = "flat_dt";
+			arch = "arm64";
+			compression = "none";
+			load = <0x43000000>;
+			hash@1 {
+				algo = "sha1";
+			};
+		};
+
+		fdt@6 {
+			description = "pico imx8mq for lcdif to mipi-lvds bridge 7' panel";
+			data = /incbin/("./dtb/imx8mq-pico-pi-lcdif-sn65dsi84-hj070na.dtb");
+			type = "flat_dt";
+			arch = "arm64";
+			compression = "none";
+			load = <0x43000000>;
+			hash@1 {
 				algo = "sha1";
 			};
 		};
 	};
 
 	configurations {
-		default = "config@imx8mq_pi_hdmi";
-
-		config@imx8mq_pi_hdmi {
+		config@imx8mq-pico-pi {
 			description = "Boot IMX8mq with HDMI";
 			kernel = "kernel@1";
 			ramdisk = "ramdisk@1";
 			fdt = "fdt@1";
 		};
-
-		config@imx8mq_pi {
-			description = "Boot IMX8mq with MIPI DSI";
+		config@imx8mq-pico-pi-dcss-ili9881c {
+			description = "Boot IMX8mq with 5' MIPI";
 			kernel = "kernel@1";
 			ramdisk = "ramdisk@1";
 			fdt = "fdt@2";
+		};
+		config@imx8mq-pico-pi-dual {
+			description = "Boot IMX8mq with DUAL Display";
+			kernel = "kernel@1";
+			ramdisk = "ramdisk@1";
+			fdt = "fdt@3";
+		};
+		config@imx8mq-pico-pi-m4 {
+			description = "Boot IMX8mq with m4 MCU";
+			kernel = "kernel@1";
+			ramdisk = "ramdisk@1";
+			fdt = "fdt@4";
+		};
+		config@imx8mq-pico-pi-voicehat {
+			description = "Boot IMX8mq with voicehat";
+			kernel = "kernel@1";
+			ramdisk = "ramdisk@1";
+			fdt = "fdt@5";
+		};
+		config@imx8mq-pico-pi-lcdif-sn65dsi84-hj070na {
+			description = "Boot IMX8mq with lcdif to mipi-lvds bridge 7' panel";
+			kernel = "kernel@1";
+			ramdisk = "ramdisk@1";
+			fdt = "fdt@6";
 		};
 	};
 };
