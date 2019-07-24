@@ -460,7 +460,7 @@ struct display_info_t const displays[] = {{
 	.detect	= detect_i2c,
 	.enable	= enable_ft5x06_wvga,
 	.mode	= {
-		.name           = "FT5x06-WVGA",
+		.name           = "FT5x06-WVGA", /* ej050na */
 		.refresh        = 60,
 		.xres           = 800,
 		.yres           = 480,
@@ -571,12 +571,13 @@ static const struct boot_mode board_boot_modes[] = {
 };
 #endif
 
+#define PMIC_I2C_BUS 1
 int board_init_pmic(void) {
 	struct pmic *p;
 	unsigned int reg;
 
 	/* configure PFUZE100 PMIC */
-	power_pfuze100_init(I2C_PMIC_BUS);
+	power_pfuze100_init(PMIC_I2C_BUS);
 	p = pmic_get("PFUZE100");
 	if (p && !pmic_probe(p)) {
 		pmic_reg_read(p, PFUZE100_DEVICEID, &reg);
@@ -594,6 +595,8 @@ int board_init_pmic(void) {
 
 int board_late_init(void)
 {
+	int ret = 0;
+
 	if (is_cpu_type(MXC_CPU_MX6Q) || is_cpu_type(MXC_CPU_MX6D)) {
 		setup_i2c(1, CONFIG_SYS_I2C_SPEED, 0x7f, &mx6q_i2c2_pad_info);
 
@@ -616,19 +619,14 @@ int board_late_init(void)
 	gpio_set_value(BT_NRST, 1);
 
 #ifdef CONFIG_ENV_VARS_UBOOT_RUNTIME_CONFIG
-	env_set("som", get_som_type());
-#endif
-
-	if ((s = env_get ("fdtfile_autodetect")) != NULL) {
-		if (strncmp (s, "off", 3) != 0) {
-			if (is_mx6dqp())
-				env_set("som", "imx6qp");
-			else if (is_mx6dq())
-				env_set("som", "imx6q");
-			else
-				env_set("som", get_som_type());
-		}
+	env_set("form", "pico");
+	struct display_info_t const *dev = &displays[2];
+	if (dev->detect) {
+		ret = dev->detect(dev);
+		env_set("has_touch", ret ? "1" : "0");
 	}
+	env_set("has_m4", "0");
+#endif
 
 	if ((s = env_get ("bootdev_autodetect")) != NULL) {
 		if (strncmp (s, "off", 3) != 0) {

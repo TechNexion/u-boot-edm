@@ -60,7 +60,6 @@
 #define CONFIG_SYS_I2C_MXC_I2C2         /* enable I2C bus 2 */
 #define CONFIG_SYS_I2C_MXC_I2C3         /* enable I2C bus 3 */
 #define CONFIG_SYS_I2C_SPEED		100000
-#define I2C_PMIC_BUS			1
 
 /* PMIC */
 #define CONFIG_POWER
