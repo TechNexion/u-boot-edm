@@ -291,6 +291,12 @@ struct lcd_panel_info_t {
 	struct fb_videomode mode;
 };
 
+static int detect_i2c(uint32_t bus, uint8_t addr)
+{
+	return (0 == i2c_set_bus_num(bus)) &&
+			(0 == i2c_probe(addr));
+}
+
 void do_enable_parallel_lcd(struct lcd_panel_info_t const *dev)
 {
 	imx_iomux_v3_setup_multiple_pads(lcd_pads, ARRAY_SIZE(lcd_pads));
@@ -688,6 +694,8 @@ int power_init_board(void)
 
 int board_late_init(void)
 {
+	int ret = 0;
+
 #ifdef CONFIG_CMD_BMODE
 	add_board_boot_modes(board_boot_modes);
 #endif /* CONFIG_CMD_BMODE */
@@ -701,7 +709,10 @@ int board_late_init(void)
 	set_wdog_reset((struct wdog_regs *)WDOG1_BASE_ADDR);
 
 #ifdef CONFIG_ENV_VARS_UBOOT_RUNTIME_CONFIG
-	env_set("som", get_som_type());
+	env_set("form", "pico");
+	ret = detect_i2c(3, 0x38);
+	env_set("has_touch", ret ? "1" : "0");
+	env_set("has_m4", "1");
 #endif
 
 	return 0;
