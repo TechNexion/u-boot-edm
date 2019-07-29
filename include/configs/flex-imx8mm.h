@@ -28,6 +28,8 @@
 #define CONFIG_SYS_MMCSD_FS_BOOT_PARTITION	1
 #define CONFIG_SYS_UBOOT_BASE		(QSPI0_AMBA_BASE + CONFIG_SYS_MMCSD_RAW_MODE_U_BOOT_SECTOR * 512)
 
+#define CONFIG_ENV_VARS_UBOOT_RUNTIME_CONFIG
+
 #ifdef CONFIG_SPL_BUILD
 /*#define CONFIG_ENABLE_DDR_TRAINING_DEBUG*/
 #define CONFIG_SPL_WATCHDOG_SUPPORT
@@ -65,8 +67,6 @@
 #define CONFIG_SYS_I2C_MXC_I2C3		/* enable I2C bus 3 */
 #define CONFIG_SYS_I2C_MXC_I2C4		/* enable I2C bus 4 */
 
-#define CONFIG_ENV_VARS_UBOOT_RUNTIME_CONFIG
-
 #if defined(CONFIG_NAND_BOOT)
 #define CONFIG_SPL_NAND_SUPPORT
 #define CONFIG_SPL_DMA_SUPPORT
@@ -90,7 +90,6 @@
 #define CONFIG_OF_BOARD_SETUP
 
 #undef CONFIG_CMD_EXPORTENV
-#undef CONFIG_CMD_IMPORTENV
 #undef CONFIG_CMD_IMLS
 
 #undef CONFIG_CMD_CRC32
@@ -99,9 +98,6 @@
 /* ENET Config */
 /* ENET1 */
 #if defined(CONFIG_CMD_NET)
-#define CONFIG_CMD_PING
-#define CONFIG_CMD_DHCP
-#define CONFIG_CMD_MII
 #define CONFIG_MII
 #define CONFIG_ETHPRIME                 "FEC"
 
@@ -123,17 +119,8 @@
  */
 #define JAILHOUSE_ENV \
 	"jh_clk= \0 " \
-	"jh_mmcboot=setenv fdt_file fsl-imx8mm-evk-root.dtb; setenv jh_clk clk_ignore_unused; run mmcboot\0 " \
-	"jh_netboot=setenv fdt_file fsl-imx8mm-evk-root.dtb; setenv jh_clk clk_ignore_unused; run netboot\0 "
-
-/* Boot M4 */
-#define CONFIG_SYS_AUXCORE_BOOTDATA 0x7E0000 /* Set to TCML address */
-
-#define M4_BOOT_ENV \
-	"m4_image=m4.bin\0" \
-	"loadm4image=fatload mmc ${mmcdev}:${mmcpart} "__stringify(CONFIG_SYS_AUXCORE_BOOTDATA)" ${m4_image}\0" \
-	"updatem4fdtfile=setexpr fdt_file sub \"\\\\.\" -m4.\0" \
-	"m4boot=if run loadm4image; then dcache flush; bootaux "__stringify(CONFIG_SYS_AUXCORE_BOOTDATA)"; run updatem4fdtfile; fi;\0" \
+	"jh_mmcboot=setenv fdt_file fsl-imx8mm-evk-root.dtb; setenv jh_clk clk_ignore_unused; run bootcmd_mmc"__stringify(CONFIG_SYS_MMC_ENV_DEV)"\0" \
+	"jh_netboot=setenv fdt_file fsl-imx8mm-evk-root.dtb; setenv jh_clk clk_ignore_unused; run bootcmd_dhcp\0 "
 
 #ifdef CONFIG_NAND_BOOT
 #define MFG_NAND_PARTITION "mtdparts=gpmi-nand:64m(nandboot),16m(nandfit),32m(nandkernel),16m(nanddtb),8m(nandtee),-(nandrootfs) "
@@ -142,91 +129,43 @@
 #define CONFIG_MFG_ENV_SETTINGS \
 	CONFIG_MFG_ENV_SETTINGS_DEFAULT \
 	"initrd_addr=0x43800000\0" \
-	"initrd_high=0xffffffffffffffff\0" \
+	"initrd_high=0xffffffff\0" \
 	"emmc_dev=1\0"\
-	"sd_dev=0\0" \
+	"sd_dev=0\0"
+
+/* M4 specific */
+#define SYS_AUXCORE_BOOTDATA_TCM	0x007E0000
 
 /* Initial environment variables */
-#define CONFIG_EXTRA_ENV_SETTINGS		\
+#define CONFIG_EXTRA_ENV_SETTINGS \
 	CONFIG_MFG_ENV_SETTINGS \
-	M4_BOOT_ENV \
 	JAILHOUSE_ENV \
-	"script=boot.scr\0" \
-	"image=Image\0" \
 	"console=ttymxc1,115200 earlycon=ec_imx6q,0x30890000,115200\0" \
-	"fdt_addr=0x43000000\0"			\
-	"fdt_high=0xffffffffffffffff\0"		\
-	"boot_fdt=try\0" \
-	"fdt_file=undefined\0" \
-	"initrd_addr=0x43800000\0"		\
-	"initrd_high=0xffffffffffffffff\0" \
-	"mmcdev="__stringify(CONFIG_SYS_MMC_ENV_DEV)"\0" \
-	"mmcpart=" __stringify(CONFIG_SYS_MMC_IMG_LOAD_PART) "\0" \
-	"mmcroot=" CONFIG_MMCROOT " rootwait rw\0" \
-	"mmcautodetect=yes\0" \
-	"mmcargs=setenv bootargs ${jh_clk} console=${console} root=${mmcroot}\0 " \
-	"loadbootscript=fatload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${script};\0" \
-	"bootscript=echo Running bootscript from mmc ...; " \
-		"source\0" \
-	"loadimage=fatload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${image}\0" \
-	"loadfdt=fatload mmc ${mmcdev}:${mmcpart} ${fdt_addr} ${fdt_file}\0" \
-	"mmcboot=echo Booting from mmc ...; " \
-		"run mmcargs; " \
-		"if test ${boot_fdt} = yes || test ${boot_fdt} = try; then " \
-			"if run loadfdt; then " \
-				"booti ${loadaddr} - ${fdt_addr}; " \
-			"else " \
-				"echo WARN: Cannot load the DT; " \
-			"fi; " \
-		"else " \
-			"echo wait for boot; " \
-		"fi;\0" \
-	"netargs=setenv bootargs ${jh_clk} console=${console} " \
-		"root=/dev/nfs " \
-		"ip=dhcp nfsroot=${serverip}:${nfsroot},v3,tcp\0" \
-	"netboot=echo Booting from net ...; " \
-		"run netargs;  " \
-		"if test ${ip_dyn} = yes; then " \
-			"setenv get_cmd dhcp; " \
-		"else " \
-			"setenv get_cmd tftp; " \
-		"fi; " \
-		"${get_cmd} ${loadaddr} ${image}; " \
-		"if test ${boot_fdt} = yes || test ${boot_fdt} = try; then " \
-			"if ${get_cmd} ${fdt_addr} ${fdt_file}; then " \
-				"booti ${loadaddr} - ${fdt_addr}; " \
-			"else " \
-				"echo WARN: Cannot load the DT; " \
-			"fi; " \
-		"else " \
-			"booti; " \
-		"fi;\0" \
-	"fitboard=flex_mipi\0" \
+	"splashpos=m,m\0" \
+	"ip_dyn=yes\0" \
+	"fdtfile=undefined\0" \
+	"fdt_high=0xffffffff\0" \
+	"fdt_addr=0x43000000\0" \
+	"fdt_addr_r=0x43000000\0" \
+	"ramdisk_addr_r=0x43800000\0" \
+	"kernel_addr_r="__stringify(CONFIG_LOADADDR)"\0" \
+	"pxefile_addr_r="__stringify(CONFIG_LOADADDR)"\0" \
+	"scriptaddr="__stringify(CONFIG_LOADADDR)"\0" \
+	"initrd_high=0xffffffff\0" \
+	"initrd_addr=0x43800000\0" \
+	"m4image=hello_world.bin\0" \
+	"m4_addr="__stringify(SYS_AUXCORE_BOOTDATA_TCM)"\0" \
+	"bootenv=uEnv.txt\0" \
+	"rescuefile=tnrescue.itb\0" \
 	"fit_addr=0x45800000\0" \
-	"fit_high=0xffffffff\0" \
-	"fitargs=setenv bootargs ${jh_clk} console=${console} root=/dev/ram0 rootwait rw " \
-		"modules-load=g_acm_ms g_acm_ms.stall=0 g_acm_ms.removable=1 g_acm_ms.file=/dev/mmcblk2 " \
-		"g_acm_ms.iSerialNumber=${ethaddr} g_acm_ms.iManufacturer=TechNexion\0" \
-	"loadfit=fatload mmc ${mmcdev}:${mmcpart} ${fit_addr} tnrescue.itb\0" \
-	"fitboot=echo Booting from FIT image ...; " \
-		"run fitargs; " \
-		"bootm ${fit_addr}#config@${soc_type}-${fitboard}\0"
+	BOOTENV
 
-#define CONFIG_BOOTCOMMAND \
-	   "mmc dev ${mmcdev}; if mmc rescan; then " \
-		   "if run loadbootscript; then " \
-			   "run bootscript; " \
-		   "fi; " \
-		   "if run loadfit; then " \
-			   "run fitboot; " \
-		   "fi; " \
-		   "if run loadimage; then " \
-                           "run m4boot; " \
-			   "run mmcboot; " \
-		   "else " \
-			   "echo WARN: Cannot load kernel from boot media; " \
-		   "fi; " \
-	   "else run netboot; fi"
+#define BOOT_TARGET_DEVICES(func) \
+	func(MMC, mmc, 0) \
+	func(MMC, mmc, 1) \
+	func(DHCP, dhcp, na)
+
+#include <config_distro_bootcmd.h>
 
 /* Link Definitions */
 #define CONFIG_LOADADDR			0x40480000
@@ -242,7 +181,7 @@
 
 #define CONFIG_ENV_OVERWRITE
 #if defined(CONFIG_ENV_IS_IN_MMC)
-#define CONFIG_ENV_OFFSET               (64 * SZ_64K)
+#define CONFIG_ENV_OFFSET               (64 * SZ_64K)  /* at 4MB (sector 8192) */
 #elif defined(CONFIG_ENV_IS_IN_SPI_FLASH)
 #define CONFIG_ENV_OFFSET		(4 * 1024 * 1024)
 #define CONFIG_ENV_SECT_SIZE		(64 * 1024)
@@ -251,11 +190,10 @@
 #define CONFIG_ENV_SPI_MODE		CONFIG_SF_DEFAULT_MODE
 #define CONFIG_ENV_SPI_MAX_HZ		CONFIG_SF_DEFAULT_SPEED
 #elif defined(CONFIG_ENV_IS_IN_NAND)
-#define CONFIG_ENV_OFFSET       (60 << 20)
+#define CONFIG_ENV_OFFSET		(60 << 20)
 #endif
-#define CONFIG_ENV_SIZE			0x1000
+#define CONFIG_ENV_SIZE			0x3000 /* 12,288 bytes (24 sectors) */
 #define CONFIG_SYS_MMC_ENV_DEV		0   /* USDHC2 */
-#define CONFIG_MMCROOT			"/dev/mmcblk1p2"  /* USDHC2 */
 
 /* Size of malloc() pool */
 #define CONFIG_SYS_MALLOC_LEN		((CONFIG_ENV_SIZE + (2*1024) + (16*1024)) * 1024)
@@ -291,7 +229,6 @@
 #define CONFIG_IMX_BOOTAUX
 
 /* USDHC */
-#define CONFIG_CMD_MMC
 #define CONFIG_FSL_ESDHC
 #define CONFIG_FSL_USDHC
 
