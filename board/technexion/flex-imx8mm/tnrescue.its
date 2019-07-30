@@ -18,7 +18,7 @@
 			compression = "none";
 			load = <0x40480000>;
 			entry = <0x40480000>;
-			hash@2 {
+			hash@1 {
 				algo = "sha1";
 			};
 		};
@@ -44,7 +44,7 @@
 			arch = "arm64";
 			compression = "none";
 			load = <0x43000000>;
-			hash@2 {
+			hash@1 {
 				algo = "sha1";
 			};
 		};
@@ -56,7 +56,7 @@
 			arch = "arm64";
 			compression = "none";
 			load = <0x43000000>;
-			hash@2 {
+			hash@1 {
 				algo = "sha1";
 			};
 		};
@@ -68,7 +68,7 @@
 			arch = "arm64";
 			compression = "none";
 			load = <0x43000000>;
-			hash@2 {
+			hash@1 {
 				algo = "sha1";
 			};
 		};
@@ -80,7 +80,7 @@
 			arch = "arm64";
 			compression = "none";
 			load = <0x43000000>;
-			hash@2 {
+			hash@1 {
 				algo = "sha1";
 			};
 		};
@@ -92,41 +92,41 @@
 			arch = "arm64";
 			compression = "none";
 			load = <0x43000000>;
-			hash@2 {
+			hash@1 {
 				algo = "sha1";
 			};
 		};
 	};
 
 	configurations {
-		default = "config@imx8mm-flex_mipi";
-		config@imx8mm-flex {
+
+		config@imx8mm-flex-pi {
 			description = "Boot IMX8mm with no display";
 			kernel = "kernel@1";
 			ramdisk = "ramdisk@1";
 			fdt = "fdt@1";
 		};
 
-		config@imx8mm-flex_mipi {
+		config@imx8mm-flex-pi-ili9881c {
 			description = "Boot IMX8mm with MIPI";
 			kernel = "kernel@1";
 			ramdisk = "ramdisk@1";
 			fdt = "fdt@2";
 		};
-		config@imx8mm-flex_mipim4 {
-			description = "Boot IMX8mm with MIPI";
+		config@imx8mm-flex-pi-ili9881c-m4 {
+			description = "Boot IMX8mm with MIPI and MCU";
 			kernel = "kernel@1";
 			ramdisk = "ramdisk@1";
 			fdt = "fdt@3";
 		};
-		config@imx8mm-flex_m4 {
-			description = "Boot IMX8mm with MIPI";
+		config@imx8mm-flex-pi-m4 {
+			description = "Boot IMX8mm with MCU";
 			kernel = "kernel@1";
 			ramdisk = "ramdisk@1";
 			fdt = "fdt@4";
 		};
-		config@imx8mm-flex_voicehat {
-			description = "Boot IMX8mm with MIPI";
+		config@imx8mm-flex-pi-voicehat {
+			description = "Boot IMX8mm with VoiceHat";
 			kernel = "kernel@1";
 			ramdisk = "ramdisk@1";
 			fdt = "fdt@5";
