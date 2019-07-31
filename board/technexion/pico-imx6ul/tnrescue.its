@@ -243,26 +243,26 @@
 			ramdisk = "ramdisk@1";
 			fdt = "fdt@4";
 		};
-		config@imx6ul-pico_dwarf {
-			description = "PICO-DWARF-IMX6UL";
+		config@imx6ul-pico-qca_dwarf {
+			description = "PICO-DWARF-QCA-IMX6UL";
 			kernel = "kernel@1";
 			ramdisk = "ramdisk@1";
 			fdt = "fdt@5";
 		};
-		config@imx6ul-pico_nymph {
-			description = "PICO-NYMPH-IMX6UL";
+		config@imx6ul-pico-qca_nymph {
+			description = "PICO-NYMPH-QCA-IMX6UL";
 			kernel = "kernel@1";
 			ramdisk = "ramdisk@1";
 			fdt = "fdt@6";
 		};
-		config@imx6ul-pico_hobbit {
-			description = "PICO-HOBBIT-IMX6UL";
+		config@imx6ul-pico-qca_hobbit {
+			description = "PICO-HOBBIT-QCA-IMX6UL";
 			kernel = "kernel@1";
 			ramdisk = "ramdisk@1";
 			fdt = "fdt@7";
 		};
-		config@imx6ul-pico_pi {
-			description = "PICO-PI-IMX6UL";
+		config@imx6ul-pico-qca_pi {
+			description = "PICO-PI-QCA-IMX6UL";
 			kernel = "kernel@1";
 			ramdisk = "ramdisk@1";
 			fdt = "fdt@8";
