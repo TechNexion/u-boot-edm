@@ -17,14 +17,14 @@ setenv findfdt '
   if test -n ${som} && test -n ${form} && test -n ${baseboard}; then
     setenv fdtname ${som}-${form}-${baseboard}
 
-    if test ${som} = imx8mm ; then
+    if test ${som} = imx8mm; then
       if test -n ${bridge} ; then
         setenv fdtname ${fdtname}-${bridge};
       fi;
       if test -n ${panel}; then
         setenv fdtname ${fdtname}-${panel};
       else
-        if test -n ${voicehat} ; then
+        if test -n ${voicehat}; then
           setenv fdtname ${fdtname}-${voicehat};
         fi;
         if itest ${has_m4} == 1; then
@@ -33,17 +33,17 @@ setenv findfdt '
       fi;
     fi;
 
-    if test ${som} = imx8mq ; then
-      if test -m ${dispif} ; then
+    if test ${som} = imx8mq; then
+      if test -m ${dispif}; then
         setenv fdtname ${fdtname}-${dispif};
-        if test -n ${bridge} ; then
+        if test -n ${bridge}; then
           setenv fdtname ${fdtname}-${bridge};
         fi;
         if test -n ${panel}; then
           setenv fdtname ${fdtname}-${panel};
         fi;
       else
-        if test -n ${voicehat} ; then
+        if test -n ${voicehat}; then
           setenv fdtname ${fdtname}-${voicehat};
         fi;
         if itest ${has_m4} == 1; then
@@ -52,8 +52,8 @@ setenv findfdt '
       fi;
     fi;
 
-    if test ${soc} = imx7d || test ${soc} = mx6 ; then
-      if test -n ${wifi_module} ; then
+    if test ${soc} = imx7d || test ${soc} = mx6; then
+      if test -n ${wifi_module}; then
         setenv fdtname ${fdtname}-${wifi_module};
       fi;
       if itest ${has_m4} == 1; then
@@ -78,11 +78,11 @@ setenv findvideo '
   setenv videoargs ' ';
   if test -n ${displayinfo}; then
     setenv videoargs ${displayinfo}
-    if test -n ${fbmem} ; then
-      setenv videoargs ${videoargs} ${fbmem};
+    if test -n ${fbmem}; then
+      setenv videoargs ${videoargs} fbmem=${fbmem};
     fi;
   else
-    if test ${soc} = imx8m || test ${som} = imx6q || test ${som} = imx6dl ; then
+    if test ${som} = imx8mq || test ${som} = imx8mm || test ${som} = imx6q || test ${som} = imx6dl; then
       if test ${panel} = "FT5x06"* || itest ${has_touch} == 1; then
         setenv videoargs ${videoargs} video=mxcfb${nextcon}:dev=lcd,800x480@60,if=RGB24 fbmem=10M;
         setexpr nextcon ${nextcon} + 1;
@@ -92,6 +92,13 @@ setenv findvideo '
       setenv videoargs ${videoargs} video=mxcfb${nextcon}:dev=hdmi,1280x720M@60,if=RGB24 fbmem=28M;
       setexpr nextcon ${nextcon} + 1;
     fi;
+  fi;
+'
+# sets the loglevel=... bootargs
+setenv findloglevel '
+  setenv logargs ' ';
+  if test -n ${loglevel} && itest ${loglevel} >= 0 && itest ${loglevel} < 8; then
+    setenv logargs loglevel=${loglevel}
   fi;
 '
 
@@ -105,13 +112,13 @@ setenv m4boot 'fatload ${devtype} ${devnum}:${distro_bootpart} ${m4_addr} ${m4im
 setenv scan_dev_for_m4_image 'if itest ${has_m4} == 1 && test -e ${devtype} ${devnum}:${distro_bootpart} ${prefix}${m4image}; then echo Found m4 image ${prefix}${m4image}; run m4boot; else echo Load m4 image ${prefix}${m4image} FAILED: continuing...; fi;'
 
 # set rescue related environment settings/scripts
-setenv boot_rescue_binary 'setenv bootargs ${jh_clk} ${videoargs} console=${console} root=/dev/ram0 rootwait rw modules-load=g_acm_ms g_acm_ms.stall=0 g_acm_ms.removable=1 g_acm_ms.file=${mmcrootdev} g_acm_ms.iSerialNumber=${ethaddr} g_acm_ms.iManufacturer=TechNexion; fatload ${devtype} ${devnum}:${distro_bootpart} ${fit_addr} ${prefix}${rescuefile}; bootm ${fit_addr}#config@${fdtname}'
+setenv boot_rescue_binary 'setenv bootargs ${jh_clk} ${videoargs} ${logargs} console=${console} root=/dev/ram0 rootwait rw modules-load=g_acm_ms g_acm_ms.stall=0 g_acm_ms.removable=1 g_acm_ms.file=${mmcrootdev} g_acm_ms.iSerialNumber=${ethaddr} g_acm_ms.iManufacturer=TechNexion; fatload ${devtype} ${devnum}:${distro_bootpart} ${fit_addr} ${prefix}${rescuefile}; bootm ${fit_addr}#config@${fdtname}'
 setenv scan_dev_for_rescue_files 'if test -e ${devtype} ${devnum}:${distro_bootpart} ${prefix}${rescuefile}; then echo Boot rescue image ${prefix}${rescuefile}; run boot_rescue_binary; else echo Load rescue image ${prefix}${rescuefile} FAILED: continuing...; fi;'
 
 # setup boot args, load image and fdt file
-setenv boot_mmc_binary 'echo Booting from ${devtype}${devnum}; setenv bootargs ${jh_clk} ${videoargs} console=${console} root=PARTUUID=${rootuuid} rootwait rw; ${cmdboot} ${loadaddr} - ${fdt_addr};'
+setenv boot_mmc_binary 'echo Booting from ${devtype}${devnum}; setenv bootargs ${jh_clk} ${videoargs} ${logargs} console=${console} root=PARTUUID=${rootuuid} rootwait rw; ${cmdboot} ${loadaddr} - ${fdt_addr};'
 setenv loadimage 'fatload ${devtype} ${devnum}:${distro_bootpart} ${loadaddr} ${prefix}${imagefile}'
-setenv loadfdt 'if itest ${has_fdt} == 1 ; then echo Found device tree file ${prefix}${fdtfile}; fatload ${devtype} ${devnum}:${distro_bootpart} ${fdt_addr} ${prefix}${fdtfile}; run boot_mmc_binary; else echo Load device tree file ${prefix}${fdtfile} FAILED: continuing...; fi;'
+setenv loadfdt 'if itest ${has_fdt} == 1; then echo Found device tree file ${prefix}${fdtfile}; fatload ${devtype} ${devnum}:${distro_bootpart} ${fdt_addr} ${prefix}${fdtfile}; run boot_mmc_binary; else echo Load device tree file ${prefix}${fdtfile} FAILED: continuing...; fi;'
 setenv scan_dev_for_boot_files 'if test -e ${devtype} ${devnum}:${distro_bootpart} ${prefix}${imagefile}; then echo Load kernel image ${prefix}${imagefile}; run loadimage; run loadfdt; else echo Load kernel image ${prefix}${imagefile} FAILED: continuing...; fi;'
 
 
@@ -138,6 +145,7 @@ run findcmd;
 run findroot;
 run findfdt;
 run findvideo;
+run findloglevel;
 
 #
 # call back to uenv_cmd script defined in uEnv.txt to do last minute changes before rescue/mmc boot
