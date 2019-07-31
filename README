@@ -1,1 +1,18 @@
-New TechNexion uboot boot process
+# Copyright (C) 2015-2016 Technexion Ltd.
+
+boot.scr.uimg is the main boot process flow to boot a bootable disk image for all TechNexion boards.
+
+The main boot process flow follows the steps below:
+
+1. set the som env variable from ${soc_type} which was set in the u-boot c-code
+2. load the uEnv.txt file
+3. load the M4 image according to has_m4 env variable flag
+4. find a suitable fdt file to load
+    a.) run findcmd, i.e. determine whether to use booti or bootz, and Image or zImage
+    b.) run findroot, i.e. determine the uuid of the emmc partition which has /sbin/init
+    c.) run findfdt, i.e. determine the fdt filename to load
+    d.) run findvideo, i.e. determine the video=... argument in boot_args to pass to kernel
+5. run/callback to uenvcmd defined in uEnv.txt for the last minute customized changes
+6. load TechNexion rescue loader's image
+7. load kernel, fdt files from specified storage media, e.g. mmc0, mmc1, dhcp, etc.
+
