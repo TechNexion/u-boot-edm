@@ -87,7 +87,7 @@
 
 		fdt@5 {
 			description = "Edm imx8mq for MIPI 5 inch via lcdif interface";
-			data = /incbin/("./dtb/imx8mq-edm-wizard-lcdif-ili9881c");
+			data = /incbin/("./dtb/imx8mq-edm-wizard-lcdif-adv7535.dtb");
 			type = "flat_dt";
 			arch = "arm64";
 			compression = "none";
@@ -137,8 +137,8 @@
 			ramdisk = "ramdisk@1";
 			fdt = "fdt@4";
 		};
-		config@imx8mq-edm-wizard-lcdif-ili9881c {
-			description = "Boot IMX8mq with lcdif 5 inch panel";
+		config@imx8mq-edm-wizard-lcdif-adv7535 {
+			description = "Boot IMX8mq with lcdif and mipi to hdmi bridge";
 			kernel = "kernel@1";
 			ramdisk = "ramdisk@1";
 			fdt = "fdt@5";
