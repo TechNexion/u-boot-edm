@@ -157,6 +157,13 @@
 	"bootenv=uEnv.txt\0" \
 	"rescuefile=tnrescue.itb\0" \
 	"fit_addr=0x45800000\0" \
+	"default_bootcmd=setenv devnum "__stringify(CONFIG_SYS_MMC_ENV_DEV)"; " \
+	    "setenv partnum "__stringify(CONFIG_SYS_MMC_IMG_LOAD_PART)"; " \
+	    "part uuid mmc ${devnum}:${partnum} rootuuid; " \
+	    "setenv bootargs ${jh_clk} console=${console} root=PARTUUID=${rootuuid} rootwait rw; " \
+	    "fatload mmc ${devnum}:${partnum} ${loadaddr} Image; " \
+	    "fatload mmc ${devnum}:${partnum} ${fdt_addr} imx8mm-pico-pi.dtb; " \
+	    "booti ${loadaddr} - ${fdt_addr}\0" \
 	BOOTENV
 
 #define BOOT_TARGET_DEVICES(func) \
@@ -192,7 +199,7 @@
 #define CONFIG_ENV_OFFSET       (60 << 20)
 #endif
 #define CONFIG_ENV_SIZE			0x3000 /* 12,288 bytes (24 sectors) */
-#define CONFIG_SYS_MMC_ENV_DEV		0   /* USDHC2 */
+#define CONFIG_SYS_MMC_ENV_DEV		1
 
 /* Size of malloc() pool */
 #define CONFIG_SYS_MALLOC_LEN		((CONFIG_ENV_SIZE + (2*1024) + (16*1024)) * 1024)
@@ -239,7 +246,7 @@
 #define CONFIG_SYS_FSL_ESDHC_ADDR       0
 
 #define CONFIG_SUPPORT_EMMC_BOOT	/* eMMC specific */
-#define CONFIG_SYS_MMC_IMG_LOAD_PART	1
+#define CONFIG_SYS_MMC_IMG_LOAD_PART	2 /* the partition containing rootfs */
 
 #define CONFIG_MXC_GPIO
 
