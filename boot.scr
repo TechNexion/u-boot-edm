@@ -50,6 +50,9 @@ setenv findfdt '
           setenv fdtname ${fdtname}-m4;
         fi;
       fi;
+      if itest ${has_hdmi} == 1; && itest ${has_touch} == 0; then
+        setenv fdtname ${som}-${form}-${baseboard};
+      fi
     fi;
 
     if test ${soc} = imx7d || test ${soc} = mx6; then
@@ -89,6 +92,7 @@ setenv findvideo '
       fi;
     fi;
     if hdmidet; then
+      setenv has_hdmi 1;
       setenv videoargs ${videoargs} video=mxcfb${nextcon}:dev=hdmi,1280x720M@60,if=RGB24 fbmem=28M;
       setexpr nextcon ${nextcon} + 1;
     fi;
