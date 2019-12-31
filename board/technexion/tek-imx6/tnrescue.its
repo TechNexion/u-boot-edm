@@ -16,8 +16,8 @@
 			arch = "arm";
 			os = "linux";
 			compression = "none";
-			load = <0x12000000>;
-			entry = <0x12000000>;
+			load = <0x19F00000>;
+			entry = <0x19F00000>;
 			hash@2 {
 				algo = "sha1";
 			};
@@ -30,7 +30,7 @@
 			arch = "arm";
 			os = "linux";
 			compression = "none";
-			load = <0x12C00000>;
+			load = <0x1B000000>;
 			entry = <0x1B000000>;
 			hash@1 {
 				algo = "sha1";
@@ -43,7 +43,7 @@
 			type = "flat_dt";
 			arch = "arm";
 			compression = "none";
-			load = <0x12BE0000>;
+			load = <0x19E00000>;
 			hash@1 {
 				algo = "sha1";
 			};
@@ -54,7 +54,7 @@
 			type = "flat_dt";
 			arch = "arm";
 			compression = "none";
-			load = <0x12BE0000>;
+			load = <0x19E00000>;
 			hash@1 {
 				algo = "sha1";
 			};
@@ -65,7 +65,7 @@
 			type = "flat_dt";
 			arch = "arm";
 			compression = "none";
-			load = <0x12BE0000>;
+			load = <0x19E00000>;
 			hash@1 {
 				algo = "sha1";
 			};
@@ -77,7 +77,7 @@
 			type = "flat_dt";
 			arch = "arm";
 			compression = "none";
-			load = <0x12BE0000>;
+			load = <0x19E00000>;
 			hash@1 {
 				algo = "sha1";
 			};
@@ -88,7 +88,7 @@
 			type = "flat_dt";
 			arch = "arm";
 			compression = "none";
-			load = <0x12BE0000>;
+			load = <0x19E00000>;
 			hash@1 {
 				algo = "sha1";
 			};
@@ -99,7 +99,7 @@
 			type = "flat_dt";
 			arch = "arm";
 			compression = "none";
-			load = <0x12BE0000>;
+			load = <0x19E00000>;
 			hash@1 {
 				algo = "sha1";
 			};
@@ -107,7 +107,6 @@
 	};
 
 	configurations {
-		default = "config@imx6dl-pico_dwarf";
 		/* imx6dl */
 		config@imx6dl-tek3_tek3 {
 			description = "TEK3-IMX6DL";
