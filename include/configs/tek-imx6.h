@@ -220,11 +220,11 @@
 	"loadbootenv=fatload ${bootmedia} ${mmcdev} ${loadaddr} ${bootenv}\0" \
 	"importbootenv=echo Importing environment from ${bootmedia} ...; " \
 		"env import -t -r $loadaddr $filesize\0" \
-	"fitargs=setenv bootargs console=${console},${baudrate} root=/dev/ram0 rootwait rw " \
+	"fit_args=setenv bootargs console=${console},${baudrate} root=/dev/ram0 rootwait rw " \
 		"modules-load=g_acm_ms g_acm_ms.stall=0 g_acm_ms.removable=1 g_acm_ms.file=${mmcrootdev} " \
 		"g_acm_ms.iSerialNumber=${ethaddr} g_acm_ms.iManufacturer=TechNexion; run videoargs\0" \
 	"loadfit=fatload mmc ${mmcdev} 0x17880000 tnrescue.itb\0" \
-	"fitboot=run fitargs; bootm 17880000#config@${som}-${form}${fitboard};\0"
+	"fitboot=run fit_args; bootm 17880000#config@${som}-${form}${fitboard};\0"
 
 #define CONFIG_BOOTCOMMAND \
 	   "mmc dev ${mmcdev}; if mmc rescan; then " \
