@@ -27,7 +27,7 @@
 #define CONFIG_SYS_THUMB_BUILD
 #define CONFIG_SPL_LDSCRIPT	"arch/arm/mach-omap2/u-boot-spl.lds"
 #if defined(CONFIG_MX7S) || defined(CONFIG_MX7D)
-#define CONFIG_SPL_TEXT_BASE		0x00911000
+#define CONFIG_SPL_TEXT_BASE		0x00911500
 #define CONFIG_SPL_STACK		0x00920000
 #else
 #define CONFIG_SPL_TEXT_BASE		0x00909000
