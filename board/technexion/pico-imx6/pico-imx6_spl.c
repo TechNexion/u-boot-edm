@@ -130,6 +130,34 @@ struct mx6sdl_iomux_grp_regs mx6sdl_grp_ioregs = {
 	.grp_b7ds = IMX6SDL_DRIVE_STRENGTH,
 };
 
+/* Kingston B5116ECMDXGJD-U for i.mx6Quad operating DDR at 528MHz */
+static struct mx6_ddr3_cfg b511ecmdxg_1066mhz = {
+	.mem_speed = 1066,
+	.density = 8,
+	.width = 16,
+	.banks = 8,
+	.rowaddr = 16,
+	.coladdr = 10,
+	.pagesz = 2,
+	.trcd = 1312,
+	.trcmin = 5062,
+	.trasmin = 3750,
+};
+
+/* Kingston D2516ECMDXGJD-U for i.mx6Quad operating DDR at 528MHz */
+static struct mx6_ddr3_cfg d2516ecmdxgjd_1066mhz = {
+	.mem_speed = 1066,
+	.density = 4,
+	.width = 16,
+	.banks = 8,
+	.rowaddr = 15,
+	.coladdr = 10,
+	.pagesz = 2,
+	.trcd = 1312,
+	.trcmin = 5062,
+	.trasmin = 3750,
+};
+
 /* H5T04G63AFR-PB for i.mx6Solo/DL operating DDR at 400MHz */
 static struct mx6_ddr3_cfg h5t04g63afr_800mhz = {
 	.mem_speed = 800,
@@ -163,50 +191,21 @@ static struct mx6_ddr3_cfg h5tq2g63ffr_800mhz = {
  */
 
 static struct mx6_mmdc_calibration mx6q_2g_mmdc_calib = {
-	.p0_mpwldectrl0 = 0x00000000,
-	.p0_mpwldectrl1 = 0x00000000,
-	.p1_mpwldectrl0 = 0x00000000,
-	.p1_mpwldectrl1 = 0x00000000,
-	.p0_mpdgctrl0 = 0x032C0340,
-	.p0_mpdgctrl1 = 0x03300324,
-	.p1_mpdgctrl0 = 0x032C0338,
-	.p1_mpdgctrl1 = 0x03300274,
-	.p0_mprddlctl = 0x423A383E,
-	.p1_mprddlctl = 0x3638323E,
-	.p0_mpwrdlctl = 0x363C4640,
-	.p1_mpwrdlctl = 0x4034423C,
+	.p0_mpwldectrl0 = 0x001A001F,
+	.p0_mpwldectrl1 = 0x002A001B,
+	.p0_mpdgctrl0 = 0x03380344,
+	.p0_mpdgctrl1 = 0x032C032C,
+	.p0_mprddlctl = 0x44383838,
+	.p0_mpwrdlctl = 0x36383838,
 };
 
-/* DDR 64bit 2GB */
-static struct mx6_ddr_sysinfo mem_q = {
-	.dsize		= 2,
-	.cs1_mirror	= 0,
-	/* config for full 4GB range so that get_mem_size() works */
-	.cs_density	= 32,
-	.ncs		= 1,
-	.bi_on		= 1,
-	.rtt_nom	= 1,
-	.rtt_wr		= 0,
-	.ralat		= 5,
-	.walat		= 0,
-	.mif3_mode	= 3,
-	.rst_to_cke	= 0x23,
-	.sde_to_rst	= 0x10,
-};
-
-static struct mx6_mmdc_calibration mx6d_1g_mmdc_calib = {
-	.p0_mpwldectrl0 = 0x00000000,
-	.p0_mpwldectrl1 = 0x00000000,
-	.p1_mpwldectrl0 = 0x00000000,
-	.p1_mpwldectrl1 = 0x00000000,
-	.p0_mpdgctrl0 = 0x03280334,
-	.p0_mpdgctrl1 = 0x03280320,
-	.p1_mpdgctrl0 = 0x0330033C,
-	.p1_mpdgctrl1 = 0x033C0278,
-	.p0_mprddlctl = 0x423A3A3E,
-	.p1_mprddlctl = 0x3C3E3842,
-	.p0_mpwrdlctl = 0x36384240,
-	.p1_mpwrdlctl = 0x4A384440,
+static struct mx6_mmdc_calibration mx6q_1g_mmdc_calib = {
+	.p0_mpwldectrl0 = 0x000C0019,
+	.p0_mpwldectrl1 = 0x001C0014,
+	.p0_mpdgctrl0 = 0x0314031C,
+	.p0_mpdgctrl1 = 0x03080308,
+	.p0_mprddlctl =0x3E363438,
+	.p0_mpwrdlctl = 0x30363836,
 };
 
 static struct mx6_mmdc_calibration mx6dl_1g_mmdc_calib = {
@@ -233,24 +232,7 @@ static struct mx6_mmdc_calibration mx6s_512m_mmdc_calib = {
 	.p0_mpwrdlctl = 0x38362E2E,
 };
 
-/* DDR 64bit 1GB */
-static struct mx6_ddr_sysinfo mem_dl = {
-	.dsize		= 2,
-	.cs1_mirror	= 0,
-	/* config for full 4GB range so that get_mem_size() works */
-	.cs_density	= 32,
-	.ncs		= 1,
-	.bi_on		= 1,
-	.rtt_nom	= 1,
-	.rtt_wr		= 0,
-	.ralat		= 5,
-	.walat		= 0,
-	.mif3_mode	= 3,
-	.rst_to_cke	= 0x23,
-	.sde_to_rst	= 0x10,
-};
-
-/* DDR 32bit 512MB */
+/* DDR 32bit */
 static struct mx6_ddr_sysinfo mem_s = {
 	.dsize		= 1,
 	.cs1_mirror	= 0,
@@ -258,7 +240,7 @@ static struct mx6_ddr_sysinfo mem_s = {
 	.cs_density	= 32,
 	.ncs		= 1,
 	.bi_on		= 1,
-	.rtt_nom	= 1,
+	.rtt_nom	= 2,
 	.rtt_wr		= 0,
 	.ralat		= 5,
 	.walat		= 0,
@@ -564,6 +546,8 @@ static void enable_spread_spectrum(void)
 
 static void spl_dram_init(void)
 {
+	unsigned long ram_size;
+
 #ifdef CONFIG_IMX6_SPREAD_SPECTRUM
 	enable_spread_spectrum();
 #endif
@@ -582,7 +566,16 @@ static void spl_dram_init(void)
 			spl_dram_init_lpddr2();
 		} else {
 			mx6dq_dram_iocfg(32, &mx6dq_ddr_ioregs, &mx6dq_grp_ioregs);
-			mx6_dram_cfg(&mem_s, &mx6q_2g_mmdc_calib, &h5t04g63afr_800mhz);
+			mx6_dram_cfg(&mem_s, &mx6q_2g_mmdc_calib, &b511ecmdxg_1066mhz);
+
+			/*
+			* Get actual RAM size, so we can adjust DDR row size for <SZ_2G
+			* memories
+			*/
+			ram_size = get_ram_size((void *)CONFIG_SYS_SDRAM_BASE, SZ_2G);
+			if (ram_size < SZ_2G) {
+				mx6_dram_cfg(&mem_s, &mx6q_1g_mmdc_calib, &d2516ecmdxgjd_1066mhz);
+			}
 		}
 		break;
 	}
